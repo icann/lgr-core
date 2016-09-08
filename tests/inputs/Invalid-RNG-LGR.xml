@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<lgr xmlns="http://www.iana.org/lgr/0.1">
+  <meta>
+    <version comment="LGR not in valid RNG format">1</version>
+    <date>2015-06-05</date>
+    <unicode-version>6.3.0</unicode-version>
+  </meta>
+  <data>
+    <range first-cp="0001" last-cp="0010">
+      <var cp="0002" type="blocked" />
+    </range>
+  </data>
+</lgr>

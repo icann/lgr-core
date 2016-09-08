@@ -1,0 +1,4 @@
+include runtests.sh README.md LICENSE requirements.txt
+recursive-include resources *.xml *.rng
+recursive-include tests *.py *.xml *.txt
+include doc doc/conf.py doc/index.rst doc/Makefile
