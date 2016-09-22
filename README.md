@@ -4,7 +4,10 @@ Core library and LGR data structure used to manipulate an LGR.
 
 This version conforms to the specification [draft-davies-idntables-09](https://tools.ietf.org/html/draft-davies-idntables-09).
 
-This toolset was implemented by Viagenie and Wil Tan on an ICANN contract.
+## Acknowledgment
+
+This toolset was implemented by Viagenie (Audric Schiltknecht, David
+Drouin and Marc Blanchet) and Wil Tan on an ICANN contract.
 
 ## License
 
