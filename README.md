@@ -101,6 +101,7 @@ Other tools are available to manipulate LGR files and labels:
 * `lgr_compare.py` is used to compare 2 LGR (output textual diff, merge, intersection).
 * `lgr_diff_collision.py` takes 2 LGR and one set of labels,
   and test for collisions between labels and generated variants from the 2 LGR.
+* `lgr_merge_set.py` takes some LGRs and create a merged LGR from the provided set.
 
 ### LGR Diff and Collision
 

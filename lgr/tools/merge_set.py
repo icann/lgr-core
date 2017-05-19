@@ -48,7 +48,7 @@ def merge_version(lgr_set):
     """
     values = set()
     comments = set()
-    for version in map(lambda x: x.lgr.metadata.version, lgr_set):
+    for version in map(lambda x: x.metadata.version, lgr_set):
         if not version:
             continue
         if version.value:
@@ -69,9 +69,9 @@ def merge_description(lgr_set):
     # Check that none of the object is None before processing
     description_type = 'text/enriched'
     values = []
-    for lgr_info in lgr_set:
-        description = lgr_info.lgr.metadata.description
-        script = get_script(lgr_info.lgr)
+    for lgr in lgr_set:
+        description = lgr.metadata.description
+        script = get_script(lgr)
         if description:
             value = """
 Script: '{script}' - MIME-type: '{type}':
@@ -101,7 +101,7 @@ def merge_metadata(lgr_set):
     validity_start = None
     validity_end = None
     unicode_version = None
-    for metadata in map(lambda x: x.lgr.metadata, lgr_set):
+    for metadata in map(lambda x: x.metadata, lgr_set):
         scopes.update(set(metadata.scopes))
         languages.update(set(metadata.languages))
         output.validity_start = compare_objects(validity_start,
@@ -345,7 +345,7 @@ def merge_lgr_set(lgr_set, name):
     ref_mapping = {}
     metadata = copy.deepcopy(merge_metadata(lgr_set))
     merged_lgr = LGR(name=name, metadata=metadata)
-    for lgr in map(lambda x: x.lgr, lgr_set):
+    for lgr in lgr_set:
         script = get_script(lgr)
         lgr.expand_ranges()
 
