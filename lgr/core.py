@@ -8,6 +8,7 @@ import logging
 import collections
 import math
 from cStringIO import StringIO
+from collections import OrderedDict
 
 from lgr.metadata import ReferenceManager, Metadata
 from lgr.char import Repertoire, CharSequence
@@ -109,7 +110,7 @@ class LGR(object):
         # - store its name in self.rules array (ordered structure).
         # - store the rule in the self.rules_lookup dict (indexed by its name).
         self.rules = []
-        self.rules_lookup = {}
+        self.rules_lookup = OrderedDict()
         # Until we know how to edit rules, keep the XML text here
         self.rules_xml = []
 
@@ -117,7 +118,7 @@ class LGR(object):
         # - store its name in self.classes array (ordered structure).
         # - store the rule in the self.classes_lookup dict (indexed by its name).
         self.classes = []
-        self.classes_lookup = {}
+        self.classes_lookup = OrderedDict()
         # Until we know how to edit classes, keep the XML text here
         self.classes_xml = []
 
@@ -1007,7 +1008,6 @@ class LGR(object):
             ch = logging.StreamHandler(log_output)
             ch.setLevel(logging.INFO)
             rule_logger.addHandler(ch)
-
 
         # Start by testing presence of code points in LGR
         (valid, label_part, not_in_lgr) = self._test_preliminary_eligibility(label)
