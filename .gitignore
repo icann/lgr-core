@@ -1,0 +1,32 @@
+# Byte-compiled / optimized
+__pycache__/
+*.py[cod]
+
+# Distribution
+build/
+dist/
+*.egg-info/
+PKG-INFO
+
+# Vim's swap files
+*.swp
+
+# MacOSX's stuff
+.DS_Store
+
+# Virtual env
+venv/
+
+# Cover testing
+.coverage
+cover/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# IDE
+.idea
+
+# Documentation
+doc/_build/
