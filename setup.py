@@ -19,6 +19,9 @@ setup(
              'tools/rfc3743_dump.py',
              'tools/xml_dump.py',
              'tools/make_idna_repertoire.py',
+             'tools/lgr_annotate.py',
+             'tools/lgr_collision.py',
+             'tools/lgr_compare.py',
              'tools/lgr_diff_collisions.py'
     ],
     tests_require=['nose', 'coverage'],
