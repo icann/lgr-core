@@ -282,27 +282,55 @@ def merge_chars(lgr, script, merged_lgr, ref_mapping):
     :param merged_lgr: The merged LGR
     :param ref_mapping: The reference mapping from base LGR to new LGR
     """
+    new_variants = []
     merged_cps = set([cp for cp in map(lambda x: merged_lgr.get_char(x), {c.cp for c in merged_lgr.repertoire})])
     for cp in map(lambda x: lgr.get_char(x), {c.cp for c in lgr.repertoire}):
-        if cp.when or cp.not_when:
-            # when and not-when are renamed per script, cannot get intersection
-            # TODO won't work if there is twice the same script
-            existing = False
-        else:
-            existing = merged_cps.intersection([cp])
-        if existing:
-            assert len(existing) == 1
+        existing_cp = None
+        if not cp.when and not cp.not_when:
+            # when and not-when are renamed per script, cannot get same cp
+            # TODO won't work if there is twice the same script but we will also have already exists errors
+            for merged_cp in merged_cps:
+                if merged_cp == cp:
+                    existing_cp = merged_cp
+                    break
+        if existing_cp:
             # same cp already in LGR
-            existing_cp = existing.pop()
             existing_cp.comment = let_user_choose(existing_cp.comment, cp.comment)
             new_tags = [t for t in map(lambda x: script + '-' + x if ':' not in x else x, cp.tags)]
             existing_cp.tags = set.union(set(existing_cp.tags), set(new_tags))
             existing_cp.references = set.union(set(existing_cp.references), set(cp.references))
-            for v in set.difference(set(cp.get_variants()), set(existing_cp.get_variants())):
+
+            # if 2 scripts have different variants on a character, we need to add the variants for script 1 as
+            # variant on script 2 to keep transitivity (e.g. b is variant of a in script 1, c is variant of a in
+            # script 2, we need to set b as c variant and conversely). We do that after processing all code points
+            #  as the code point for the new variant may not be in the merged LGR in the current iteration.
+            new_v1 = set.difference(set(cp.get_variants()), set(existing_cp.get_variants()))
+            new_v2 = set.difference(set(existing_cp.get_variants()), set(cp.get_variants()))
+            # remove cp itself to avoid error with reflexive variants
+            for v in new_v1:
+                if v.cp == existing_cp.cp:
+                    new_v1.remove(v)
+                    break
+            for v in new_v2:
+                if v.cp == existing_cp.cp:
+                    new_v2.remove(v)
+                    break
+            if new_v1 and new_v2:
+                new_variants.append((new_v1, new_v2))
+
+            # add new variants to current code point
+            for v in set.difference(set(cp.get_variants()), set(existing_cp.get_variants())):  # do not keep new_v1 as reflexive variant may have been removed
                 new_ref = [r for r in map(lambda x: ref_mapping[script].get(x, x), v.references)]
+                new_when = None
+                new_not_when = None
+                if v.when:
+                    new_when = script + '-' + v.when
+                if v.not_when:
+                    new_not_when = script + '-' + v.not_when
                 merged_lgr.add_variant(existing_cp.cp, v.cp, variant_type='blocked',
-                                       when=script + '-' + v.when, not_when=script + '-' + v.not_when,
+                                       when=new_when, not_when=new_not_when,
                                        comment=v.comment, ref=new_ref)
+
             # existing variants comment or references are note updated as it is not really important
             continue
 
@@ -330,6 +358,15 @@ def merge_chars(lgr, script, merged_lgr, ref_mapping):
             merged_lgr.add_variant(cp.cp, v.cp, variant_type='blocked',
                                    comment=v.comment, ref=new_ref,
                                    when=when, not_when=not_when)
+
+    # handle transitivity for variants that differ between scripts
+    for var1_list, var2_list in new_variants:
+        for v1 in var1_list:
+            for v2 in var2_list:
+                merged_lgr.add_variant(v1.cp, v2.cp, variant_type='blocked',
+                                       comment='New variant for merge to keep transitivity')
+                merged_lgr.add_variant(v2.cp, v1.cp, variant_type='blocked',
+                                       comment='New variant for merge to keep transitivity')
 
 
 def merge_lgr_set(lgr_set, name):
