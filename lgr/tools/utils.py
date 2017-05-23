@@ -9,12 +9,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def read_labels(input, unidb):
+def read_labels(input, unidb, do_raise=False):
     """
     Read a label file and format lines to get a list of correct labels
 
     :param input: The name of the file containing the labels
     :param unidb: The UnicodeDatabase
+    :param do_raise: Whether the label parsing exceptions are raised or not
     :return: The list of labels
     """
     # Compute index label
@@ -34,6 +35,8 @@ def read_labels(input, unidb):
         try:
             label = parse_label_input(label, unidb.idna_decode_label, False)
         except BaseException as ex:
+            if do_raise:
+                raise
             label = "{}: {}".format(label, unicode(ex))
         yield label
 
