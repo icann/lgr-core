@@ -53,6 +53,7 @@ def _generate_indexes(lgr, labels, keep=False, quiet=False):
                                            'cp_out': label_cp_out,
                                            'disp': {label: '-'},
                                            'rules': {label: '-'},
+                                           'action_idx': {label: '-'}
                                            })
 
     for (label_index, primaries) in deepcopy(label_indexes).items():
@@ -65,7 +66,7 @@ def _generate_indexes(lgr, labels, keep=False, quiet=False):
             label = primary['label']
             for (variant_cp,
                  variant_disp,
-                 _, _,
+                 action_idx, _,
                  log) in lgr.compute_label_disposition(label_cp,
                                                        include_invalid=True,
                                                        collect_log=not quiet):
@@ -86,15 +87,15 @@ def _generate_indexes(lgr, labels, keep=False, quiet=False):
                                                        'cat': VARIANT,
                                                        'cp': variant_cp,
                                                        'cp_out': variant_cp_out,
-                                                       'disp': {label:
-                                                                variant_disp},
-                                                       'rules': {label:
-                                                                 log},
+                                                       'disp': {label: variant_disp},
+                                                       'rules': {label: log},
+                                                       'action_idx': {label: action_idx}
                                                       })
                 else:
                     assert len(existing) == 1
                     existing[0]['disp'][label] = variant_disp
                     existing[0]['rules'][label] = log
+                    existing[0]['action_idx'][label] = action_idx
 
     return label_indexes
 
@@ -274,7 +275,7 @@ def _write_complete_output(label_indexes):
 
                     yield "\n### Details for label" \
                           " {label} [{cp}] ###\n".format(label=primary['bidi'],
-                                                           cp=cp_out)
+                                                         cp=cp_out)
                     if label['label'] != prim and label['cat'] != PRIMARY:
                         yield MD
                         yield output_dr.format(cat=label['cat'],
@@ -389,7 +390,7 @@ def collision(lgr, labels_input, show_dump=False, quiet=False):
     """
     Show collisions in a list of labels for a given LGR
 
-    :param lgr: The LGR info object.
+    :param lgr: The LGR object.
     :param labels_input: The file containing the labels
     :param show_dump: Generate a full dump
     :param quiet: Do not print rules
@@ -409,5 +410,30 @@ def collision(lgr, labels_input, show_dump=False, quiet=False):
         yield "\n# Summary #\n\n"
         for output in _full_dump(label_indexes):
             yield output
+
+
+def get_collisions(lgr, labels_input, quiet=True):
+    """
+    Get collisions index in a list of labels for a given LGR
+
+    :param lgr: The LGR object
+    :param labels_input: The file containing the labels
+    :param quiet: Do not get rules
+    :return: The indexes for collisions
+    """
+    labels = set(read_labels(labels_input, lgr.unicode_database))
+    label_indexes = _generate_indexes(lgr, labels, keep=False, quiet=quiet)
+    return label_indexes
+
+
+def is_collision(lgr, labels_input):
+    """
+    Check if there is a collision in a list of labels for a given LGR
+
+    :param lgr: The LGR object
+    :param labels_input: The file containing the labels
+    :return: Whether there is a collision or not
+    """
+    return len(get_collisions(lgr, labels_input)) > 0
 
 
