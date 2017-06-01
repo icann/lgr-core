@@ -18,11 +18,8 @@ import logging
 import re
 from datetime import date
 
-from django.utils import six
-
 from lgr.tools.compare.utils import compare_objects
 
-from lgr.parser import xml_serializer
 from lgr.exceptions import LGRFormatException
 from lgr.core import LGR, DEFAULT_ACTIONS
 from lgr.metadata import Metadata, Version, Description
@@ -138,10 +135,10 @@ def merge_reference(lgr, script, merged_lgr, ref_mapping):
     """
     ref_mapping.setdefault(script, {})
     if lgr.reference_manager:
-        for ref_id, ref_dict in six.iteritems(lgr.reference_manager):
+        for ref_id, ref_dict in lgr.reference_manager.items():
             ref = ref_dict['value']
             if ref not in map(lambda x: x['value'], merged_lgr.reference_manager.values()):
-                if ref_id not in six.iterkeys(merged_lgr.reference_manager):
+                if ref_id not in merged_lgr.reference_manager.keys():
                     merged_lgr.reference_manager.add_reference(ref, ref_id=ref_id, comment=ref_dict.get('comment'))
                 else:
                     new_id = merged_lgr.add_reference(ref, comment=ref_dict.get('comment'))
@@ -222,7 +219,7 @@ def merge_rules(lgr, script, merged_lgr):
     """
     logger.debug("Merge rules")
 
-    for rule in six.itervalues(lgr.rules_lookup):
+    for rule in lgr.rules_lookup.values():
         rule_xml = lgr.rules_xml[lgr.rules.index(rule.name)]
         rule_name, rule_xml = rename_rule(rule, rule_xml, script)
         if rule_name in merged_lgr.rules:
@@ -264,7 +261,7 @@ def merge_classes(lgr, script, merged_lgr):
     """
     logger.debug("Merge classes")
 
-    for class_name, classe in six.iteritems(lgr.classes_lookup):
+    for class_name, classe in lgr.classes_lookup.items():
         if class_name not in lgr.classes:
             # fake classes from tags
             continue
