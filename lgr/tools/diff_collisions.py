@@ -9,7 +9,6 @@ from copy import deepcopy
 
 from collections import Counter
 
-from lgr.tools.utils import read_labels
 from lgr.utils import format_cp
 from lgr.exceptions import InvalidSymmetry
 
@@ -348,6 +347,7 @@ def diff(lgr_1, lgr_2, labels_input, show_collision=True,
     :param show_dump: Generate a full dump
     :param quiet: Do not print rules
     """
+    from lgr.tools.utils import read_labels
     labels = set(read_labels(labels_input, lgr_1.unicode_database))
 
     # get diff between labels and variants for the two LGR
@@ -395,6 +395,7 @@ def collision(lgr, labels_input, show_dump=False, quiet=False):
     :param show_dump: Generate a full dump
     :param quiet: Do not print rules
     """
+    from lgr.tools.utils import read_labels
     labels = set(read_labels(labels_input, lgr.unicode_database))
 
     # get diff between labels and variants for the two LGR
@@ -421,6 +422,7 @@ def get_collisions(lgr, labels_input, quiet=True):
     :param quiet: Do not get rules
     :return: The indexes for collisions
     """
+    from lgr.tools.utils import read_labels
     labels = set(read_labels(labels_input, lgr.unicode_database))
     label_indexes = _generate_indexes(lgr, labels, keep=False, quiet=quiet)
     return label_indexes

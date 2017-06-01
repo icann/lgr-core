@@ -14,15 +14,10 @@ import logging
 from munidata import UnicodeDataVersionManager
 
 from lgr.parser.xml_serializer import serialize_lgr_xml
-from lgr.parser.xml_parser import XMLParser
 
-from lgr.tools.merge_set import merge_lgr_set
+from lgr.tools.utils import write_output, merge_lgrs
 
 logger = logging.getLogger("lgr_merge_set")
-
-
-def write_output(s):
-    print(s.encode('utf-8'))
 
 
 def main():
@@ -47,31 +42,11 @@ def main():
         logger.error("Please provide more than one LGR to make a set")
         return
 
-    lgr_set = []
-    for lgr_file in args.lgr_set:
-        lgr_parser = XMLParser(lgr_file)
-        lgr_parser.unicode_database = unidb
+    logger.warning('Please wait, this can take some time...\n')
 
-        if args.rng is not None:
-            validation_result = lgr_parser.validate_document(args.rng)
-            if validation_result is not None:
-                logger.error('Errors for RNG validation of LGR %s: %s',
-                             lgr_file, validation_result)
-
-        lgr = lgr_parser.parse_document()
-        if lgr is None:
-            logger.error("Error while parsing LGR file %s." % lgr_file)
-            logger.error("Please check compliance with RNG.")
-            return
-
-        lgr_set.append(lgr)
-
-    write_output('Please wait, this can take some time...\n')
-
-    name = 'merged-lgr-set'
-    if args.name:
-        name = args.name
-    merged_lgr = merge_lgr_set(lgr_set, name)
+    merged_lgr, _ = merge_lgrs(args.lgr_set, name=args.name, rng=args.rng, unidb=unidb)
+    if not merged_lgr:
+        return
     write_output(serialize_lgr_xml(merged_lgr, pretty_print=True))
 
 if __name__ == '__main__':

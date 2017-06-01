@@ -22,6 +22,7 @@ from django.utils import six
 
 from lgr.tools.compare.utils import compare_objects
 
+from lgr.parser import xml_serializer
 from lgr.exceptions import LGRFormatException
 from lgr.core import LGR, DEFAULT_ACTIONS
 from lgr.metadata import Metadata, Version, Description

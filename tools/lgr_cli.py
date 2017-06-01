@@ -12,12 +12,9 @@ import logging
 
 from munidata import UnicodeDataVersionManager
 
+from lgr.tools.utils import write_output
+
 logger = logging.getLogger("lgr_cli")
-
-
-def write_output(s, test):
-    if test:
-        print(s.encode('utf-8'))
 
 
 def check_label(lgr, label, invalid, test):

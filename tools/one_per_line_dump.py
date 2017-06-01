@@ -9,10 +9,10 @@ import argparse
 import logging
 import os
 import io
-from lxml import etree
+
 
 def main():
-    from lgr.parser.line_parser import parse_document
+    from lgr.parser.line_parser import LineParser
     from lgr.parser.xml_serializer import serialize_lgr_xml
 
     parser = argparse.ArgumentParser(description='Parse and dump a "one codepoint per line" file')
@@ -26,7 +26,8 @@ def main():
 
     logging.basicConfig(stream=sys.stderr, level=logging.DEBUG if args.verbose else logging.INFO)
 
-    lgr = parse_document(args.file)
+    parser = LineParser(args.file)
+    lgr = parser.parse_document()
 
     xml = serialize_lgr_xml(lgr, pretty_print=True)
     if args.output is not None:
