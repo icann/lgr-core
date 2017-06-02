@@ -23,7 +23,8 @@ setup(
              'tools/lgr_collision.py',
              'tools/lgr_compare.py',
              'tools/lgr_diff_collisions.py',
-             'tools/lgr_merge_set.py'
+             'tools/lgr_merge_set.py',
+             'tools/lgr_cross_script_variants.py'
     ],
     tests_require=['nose', 'coverage'],
     test_suite='tests.unit',
