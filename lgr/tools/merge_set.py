@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-# Author: Viagénie
-# Date: 16-05-06
 """
 merge_lgr_set.py - merge a LGR set
 
