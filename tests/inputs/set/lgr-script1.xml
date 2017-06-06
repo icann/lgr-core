@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lgr xmlns="urn:ietf:params:xml:ns:lgr-1.0">
+    <meta>
+        <version comment="LGR 1 for fr script">1</version>
+        <date>2015-06-05</date>
+        <language>fr</language>
+        <scope type="domain">.</scope>
+        <validity-start>2017-06-01</validity-start>
+        <unicode-version>6.3.0</unicode-version>
+        <description type="text/plain">Description LGR 1</description>
+        <references>
+            <reference id="0" comment="Clashing reference">First reference</reference>
+            <reference id="1" comment="Clashing reference">Id clashing reference</reference>
+            <reference id="2" comment="Clashing reference">Name clashing reference</reference>
+            <reference id="3" comment="Clashing reference">Name and Id clashing reference</reference>
+            <reference id="10" comment="Regular reference">Regular reference</reference>
+        </references>
+    </meta>
+    <data>
+        <char cp="0041" ref="1">
+            <var cp="0061" type="allocatable"/>
+        </char>
+        <char cp="0061" comment="Overlap with second LGR">
+            <var cp="0041" type="allocatable" ref="1"/>
+        </char>
+        <char cp="0062" ref="2"/>
+        <char cp="0063" tag="first-tag"/>
+        <char cp="0064"/>
+        <char cp="0065"/>
+        <char cp="0066"/>
+        <char cp="0067"/>
+        <char cp="0068"/>
+        <char cp="0069"/>
+        <char cp="006A"/>
+        <char cp="006B"/>
+        <char cp="006C"/>
+        <char cp="006D"/>
+        <char cp="006E"/>
+        <char cp="006F"/>
+        <char cp="006F 0065">
+            <var cp="0153" type="allocatable"/>
+        </char>
+        <char cp="0070"/>
+        <char cp="0071"/>
+        <char cp="0072"/>
+        <char cp="0073"/>
+        <char cp="0074"/>
+        <char cp="0075"/>
+        <char cp="0076"/>
+        <char cp="0077"/>
+        <char cp="0078"/>
+        <char cp="0079"/>
+        <char cp="007A"/>
+        <char cp="0153">
+            <var cp="006F 0065" type="allocatable"/>
+        </char>
+    </data>
+    <rules/>
+</lgr>

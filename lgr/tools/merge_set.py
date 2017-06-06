@@ -27,6 +27,7 @@ from lgr.utils import let_user_choose
 logger = logging.getLogger(__name__)
 
 MSR_2_RULES = ['leading-combining-mark']
+MSR_NEGATIVE_LOOK_AHEAD = r'(?!' + '|'.join(MSR_2_RULES) + r')'
 
 
 def get_script(lgr):
@@ -95,28 +96,22 @@ def merge_metadata(lgr_set):
 
     scopes = set()
     languages = set()
-    validity_start = None
-    validity_end = None
-    unicode_version = None
     for metadata in map(lambda x: x.metadata, lgr_set):
         scopes.update(set(metadata.scopes))
         languages.update(set(metadata.languages))
-        output.validity_start = compare_objects(validity_start,
+        output.validity_start = compare_objects(output.validity_start,
                                                 metadata.validity_start,
                                                 max)
-        output.validity_end = compare_objects(validity_end,
+        output.validity_end = compare_objects(output.validity_end,
                                               metadata.validity_end,
                                               min)
 
-        output.unicode_version = compare_objects(unicode_version,
+        output.unicode_version = compare_objects(output.unicode_version,
                                                  metadata.unicode_version,
                                                  max)
 
-    output.scopes = scopes
-    output.languages = languages
-    output.validity_start = validity_start
-    output.validity_end = validity_end
-    output.unicode_version = unicode_version
+    output.scopes = list(scopes)
+    output.languages = list(languages)
 
     output.date = date.today().isoformat()
 
@@ -134,14 +129,18 @@ def merge_references(lgr, script, merged_lgr, ref_mapping):
     """
     ref_mapping.setdefault(script, {})
     if lgr.reference_manager:
+        inserted_references = {x['value']: ref_id for ref_id, x in merged_lgr.reference_manager.items()}
         for ref_id, ref_dict in lgr.reference_manager.items():
             ref = ref_dict['value']
-            if ref not in map(lambda x: x['value'], merged_lgr.reference_manager.values()):
+            if ref not in inserted_references:
                 if ref_id not in merged_lgr.reference_manager.keys():
                     merged_lgr.reference_manager.add_reference(ref, ref_id=ref_id, comment=ref_dict.get('comment'))
                 else:
                     new_id = merged_lgr.add_reference(ref, comment=ref_dict.get('comment'))
                     ref_mapping[script][ref_id] = new_id
+            else:
+                if ref_id != inserted_references[ref]:
+                    ref_mapping[script][ref_id] = inserted_references[ref]
 
 
 def rename_action(action, action_xml, script):
@@ -195,14 +194,17 @@ def rename_rule(rule, rule_xml, script):
     :return: Updated rule, updated rule XML
     """
     new_rule_name = ''
-    if rule.name and rule.name not in MSR_2_RULES:
-        new_rule_name = script + '-' + rule.name
-        rule_xml = re.sub(r'name="([^"]+)"', r'name="{}-\1"'.format(script), rule_xml)
-    if not rule.by_ref or rule.by_ref not in MSR_2_RULES:
-        # do not replace references in MSR Rules that keep unchanged
-        # the following sub should replace all references in rules content, ignore tags with ':'
-        rule_xml = re.sub(r'by-ref="([^"]+)"', r'by-ref="{}-\1"'.format(script), rule_xml)
-        rule_xml = re.sub(r'from-tag="([^:"]+)"', r'from-tag="{}-\1"'.format(script), rule_xml)
+    if rule.name:
+        if rule.name not in MSR_2_RULES:
+            new_rule_name = script + '-' + rule.name
+            rule_xml = re.sub(r'name="([^"]+)"', r'name="{}-\1"'.format(script), rule_xml)
+        else:
+            new_rule_name = rule.name
+    # do not replace references in MSR Rules that keep unchanged
+    # the following sub should replace all references in rules content, ignore tags with ':'
+    rule_xml = re.sub(r'by-ref="' + MSR_NEGATIVE_LOOK_AHEAD + r'([^"]+)"', r'by-ref="{}-\1"'.format(script), rule_xml)
+    # Rule can contain (anonymous) classes, so also deal with from-tag
+    rule_xml = re.sub(r'from-tag="([^:"]+)"', r'from-tag="{}-\1"'.format(script), rule_xml)
 
     return new_rule_name, rule_xml
 
