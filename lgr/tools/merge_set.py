@@ -18,11 +18,10 @@ import logging
 import re
 from datetime import date
 
-from lgr.tools.compare.utils import compare_objects
-
 from lgr.exceptions import LGRFormatException
 from lgr.core import LGR, DEFAULT_ACTIONS
 from lgr.metadata import Metadata, Version, Description
+from lgr.tools.compare.utils import compare_objects
 from lgr.utils import let_user_choose
 
 logger = logging.getLogger(__name__)
@@ -124,9 +123,9 @@ def merge_metadata(lgr_set):
     return output
 
 
-def merge_reference(lgr, script, merged_lgr, ref_mapping):
+def merge_references(lgr, script, merged_lgr, ref_mapping):
     """
-    Merge reference from LGR set.
+    Merge references from LGR set.
 
     :param lgr: The LGR for which to merge references
     :param script:  The LGR script
@@ -167,7 +166,7 @@ def rename_action(action, action_xml, script):
 
 def merge_actions(lgr, script, merged_lgr):
     """
-    Merge rules from LGR set.
+    Merge actions from LGR set.
 
     :param lgr: A LGR from the set
     :param script: The LGR script
@@ -301,7 +300,7 @@ def merge_chars(lgr, script, merged_lgr, ref_mapping):
             # if 2 scripts have different variants on a character, we need to add the variants for script 1 as
             # variant on script 2 to keep transitivity (e.g. b is variant of a in script 1, c is variant of a in
             # script 2, we need to set b as c variant and conversely). We do that after processing all code points
-            #  as the code point for the new variant may not be in the merged LGR in the current iteration.
+            # as the code point for the new variant may not be in the merged LGR in the current iteration.
             new_v1 = set.difference(set(cp.get_variants()), set(existing_cp.get_variants()))
             new_v2 = set.difference(set(existing_cp.get_variants()), set(cp.get_variants()))
             # remove cp itself to avoid error with reflexive variants
@@ -317,7 +316,8 @@ def merge_chars(lgr, script, merged_lgr, ref_mapping):
                 new_variants.append((new_v1, new_v2))
 
             # add new variants to current code point
-            for v in set.difference(set(cp.get_variants()), set(existing_cp.get_variants())):  # do not keep new_v1 as reflexive variant may have been removed
+            # do not keep new_v1 as reflexive variant may have been removed
+            for v in set.difference(set(cp.get_variants()), set(existing_cp.get_variants())):
                 new_ref = [r for r in map(lambda x: ref_mapping[script].get(x, x), v.references)]
                 new_when = None
                 new_not_when = None
@@ -384,7 +384,7 @@ def merge_lgr_set(lgr_set, name):
         script = get_script(lgr)
         lgr.expand_ranges()
 
-        merge_reference(lgr, script, merged_lgr, ref_mapping)
+        merge_references(lgr, script, merged_lgr, ref_mapping)
         merge_chars(lgr, script, merged_lgr, ref_mapping)
         merge_actions(lgr, script, merged_lgr)
         merge_rules(lgr, script, merged_lgr)
