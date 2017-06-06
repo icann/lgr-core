@@ -17,11 +17,14 @@ import copy
 import logging
 import re
 from datetime import date
+from cStringIO import StringIO
 
 from lgr.exceptions import LGRFormatException
 from lgr.core import LGR, DEFAULT_ACTIONS
 from lgr.metadata import Metadata, Version, Description
 from lgr.tools.compare.utils import compare_objects
+from lgr.parser.xml_parser import XMLParser
+from lgr.parser.xml_serializer import serialize_lgr_xml
 from lgr.utils import let_user_choose
 
 logger = logging.getLogger(__name__)
@@ -193,13 +196,11 @@ def rename_rule(rule, rule_xml, script):
     :param script:  The LGR script
     :return: Updated rule, updated rule XML
     """
-    new_rule_name = ''
-    if rule.name:
-        if rule.name not in MSR_2_RULES:
-            new_rule_name = script + '-' + rule.name
-            rule_xml = re.sub(r'name="([^"]+)"', r'name="{}-\1"'.format(script), rule_xml)
-        else:
-            new_rule_name = rule.name
+    new_rule_name = rule.name
+    if rule.name not in MSR_2_RULES:
+        new_rule_name = script + '-' + rule.name
+        rule_xml = re.sub(r'name="([^"]+)"', r'name="{}-\1"'.format(script), rule_xml)
+
     # do not replace references in MSR Rules that keep unchanged
     # the following sub should replace all references in rules content, ignore tags with ':'
     rule_xml = re.sub(r'by-ref="' + MSR_NEGATIVE_LOOK_AHEAD + r'([^"]+)"', r'by-ref="{}-\1"'.format(script), rule_xml)
@@ -239,9 +240,7 @@ def rename_class(classe, class_xml, script):
     :param script:  The LGR script
     :return: Updated class, updated class XML
     """
-    new_class_name = ''
-    if classe.name:
-        new_class_name = script + '-' + classe.name
+    new_class_name = script + '-' + classe.name
 
     class_xml = re.sub(r'name="([^:"]+)"', r'name="{}-\1"'.format(script), class_xml)
     class_xml = re.sub(r'by-ref="([^"]+)"', r'by-ref="{}-\1"'.format(script), class_xml)
@@ -282,20 +281,25 @@ def merge_chars(lgr, script, merged_lgr, ref_mapping):
     :param ref_mapping: The reference mapping from base LGR to new LGR
     """
     new_variants = []
-    merged_cps = set([cp for cp in map(lambda x: merged_lgr.get_char(x), {c.cp for c in merged_lgr.repertoire})])
-    for cp in map(lambda x: lgr.get_char(x), {c.cp for c in lgr.repertoire}):
+    merged_codepoints = set([cp for cp in merged_lgr.repertoire])
+    for cp in lgr.repertoire:
         existing_cp = None
         if not cp.when and not cp.not_when:
             # when and not-when are renamed per script, cannot get same cp
             # TODO won't work if there is twice the same script but we will also have already exists errors
-            for merged_cp in merged_cps:
+            for merged_cp in merged_codepoints:
                 if merged_cp == cp:
+                    # Note that we actually want the object from merged_codepoints, that contains additional information
+                    # not present on cp, even if Char.__hash__() lets think so.
+                    # For example, cannot use:
+                    # if cp in merged_codepoints:
+                    #   existing_cp = cp
                     existing_cp = merged_cp
                     break
         if existing_cp:
             # same cp already in LGR
             existing_cp.comment = let_user_choose(existing_cp.comment, cp.comment)
-            new_tags = [t for t in map(lambda x: script + '-' + x if ':' not in x else x, cp.tags)]
+            new_tags = (script + '-' + x if ':' not in x else x for x in cp.tags)
             existing_cp.tags = set.union(set(existing_cp.tags), set(new_tags))
             existing_cp.references = set.union(set(existing_cp.references), set(cp.references))
 
@@ -320,7 +324,7 @@ def merge_chars(lgr, script, merged_lgr, ref_mapping):
             # add new variants to current code point
             # do not keep new_v1 as reflexive variant may have been removed
             for v in set.difference(set(cp.get_variants()), set(existing_cp.get_variants())):
-                new_ref = [r for r in map(lambda x: ref_mapping[script].get(x, x), v.references)]
+                new_ref = [ref_mapping[script].get(x, x) for x in v.references]
                 new_when = None
                 new_not_when = None
                 if v.when:
@@ -392,4 +396,11 @@ def merge_lgr_set(lgr_set, name):
         merge_rules(lgr, script, merged_lgr)
         merge_classes(lgr, script, merged_lgr)
 
-    return merged_lgr
+    # XXX As the created merged_lgr is not a valid Python LGR object,
+    # we have to serialize it/parse it to get a valid object.
+
+    merged_lgr_xml = StringIO(serialize_lgr_xml(merged_lgr))
+
+    lgr_parser = XMLParser(source=merged_lgr_xml, filename=name)
+
+    return lgr_parser.parse_document()
