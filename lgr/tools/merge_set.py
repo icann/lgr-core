@@ -3,7 +3,7 @@
 merge_lgr_set.py - merge a LGR set
 
 Algorithm:
- - prefix rules common to all LGR in the set with common-
+ - prefix rules common to all LGR in the set with 'Common-'
  - prefix other rules, tags, character classes by the script code for its LGR
  - tag codepoints with their script extensions values (scx: i.e. a list of script identifiers)
  - merge actions preserving their order of precedence
@@ -154,11 +154,19 @@ def rename_action(action, action_xml, script):
     :return: Updated action, updated action XML
     """
     new_action = copy.deepcopy(action)
-    if action.match and action.match not in MSR_2_RULES:
-        new_action.match = script + '-' + action.match
+    if action.match:
+        if action.match not in MSR_2_RULES:
+            new_action.match = script + '-' + action.match
+        else:
+            # Prefix MSR action with 'Common-'
+            new_action.match = 'Common-' + action.match
         action_xml = action_xml.replace(action.match, new_action.match)
-    if action.not_match and action.not_match not in MSR_2_RULES:
-        new_action.not_match = script + '-' + action.not_match
+    if action.not_match:
+        if action.not_match not in MSR_2_RULES:
+            new_action.not_match = script + '-' + action.not_match
+        else:
+            # Prefix MSR action with 'Common-'
+            new_action.not_match = 'Common-' + action.not_match
         action_xml = action_xml.replace(action.not_match, new_action.not_match)
 
     return new_action, action_xml
@@ -194,14 +202,19 @@ def rename_rule(rule, rule_xml, script):
     :param script:  The LGR script
     :return: Updated rule, updated rule XML
     """
-    new_rule_name = rule.name
     if rule.name not in MSR_2_RULES:
         new_rule_name = script + '-' + rule.name
-        rule_xml = re.sub(r'name="([^"]+)"', r'name="{}-\1"'.format(script), rule_xml)
+        rule_xml = re.sub(r'name="' + rule.name + '"', r'name="{}-{}"'.format(script, rule.name), rule_xml)
+    else:
+        # Prefix MSR rule with 'Common-'
+        new_rule_name = 'Common-' + rule.name
+    rule_xml = re.sub(r'name="' + rule.name + '"', r'name="' + new_rule_name + '"', rule_xml)
 
     # do not replace references in MSR Rules that keep unchanged
     # the following sub should replace all references in rules content, ignore tags with ':'
     rule_xml = re.sub(r'by-ref="' + MSR_NEGATIVE_LOOK_AHEAD + r'([^"]+)"', r'by-ref="{}-\1"'.format(script), rule_xml)
+    # Prefix MSR references with 'Common-'
+    rule_xml = re.sub(r'by-ref="(' + '|'.join(MSR_2_RULES) + r')"', r'by-ref="Common-\1"'.format(script), rule_xml)
     # Rule can contain (anonymous) classes, so also deal with from-tag
     rule_xml = re.sub(r'from-tag="([^:"]+)"', r'from-tag="{}-\1"'.format(script), rule_xml)
 

@@ -61,15 +61,15 @@ class TestLGRSet(unittest.TestCase):
         action_xml = """<action disp="invalid" match="leading-combining-mark"/>"""
         new_action, new_action_xml = rename_action(action, action_xml, 'fr')
 
-        self.assertEqual(new_action.match, 'leading-combining-mark')
-        self.assertIsNotNone(re.search(r'''match="leading-combining-mark"''', new_action_xml))
+        self.assertEqual(new_action.match, 'Common-leading-combining-mark')
+        self.assertIsNotNone(re.search(r'''match="Common-leading-combining-mark"''', new_action_xml))
 
         action = Action(not_match='leading-combining-mark', disp='invalid')
         action_xml = """<action disp="invalid" not-match="leading-combining-mark"/>"""
         new_action, new_action_xml = rename_action(action, action_xml, 'fr')
 
-        self.assertEqual(new_action.not_match, 'leading-combining-mark')
-        self.assertIsNotNone(re.search(r'''not-match="leading-combining-mark"''', new_action_xml))
+        self.assertEqual(new_action.not_match, 'Common-leading-combining-mark')
+        self.assertIsNotNone(re.search(r'''not-match="Common-leading-combining-mark"''', new_action_xml))
 
     def test_merge_actions(self):
         merged_lgr = LGR()
@@ -111,8 +111,8 @@ class TestLGRSet(unittest.TestCase):
         rule_xml = """<rule name="leading-combining-mark"><rule by-ref="rule2-name" count=42/></rule>"""
         new_rule_name, new_rule_xml = rename_rule(rule, rule_xml, 'fr')
 
-        self.assertEqual(new_rule_name, 'leading-combining-mark')
-        self.assertIsNotNone(re.search(r'''name="leading-combining-mark"''', new_rule_xml))
+        self.assertEqual(new_rule_name, 'Common-leading-combining-mark')
+        self.assertIsNotNone(re.search(r'''name="Common-leading-combining-mark"''', new_rule_xml))
         self.assertIsNotNone(re.search(r'''by-ref="fr-rule2-name" count=42''', new_rule_xml))
 
         rule = Rule(name='rule-name')
@@ -124,7 +124,7 @@ class TestLGRSet(unittest.TestCase):
 
         self.assertEqual(new_rule_name, 'fr-rule-name')
         self.assertIsNotNone(re.search(r'''name="fr-rule-name"''', new_rule_xml))
-        self.assertIsNotNone(re.search(r'''by-ref="leading-combining-mark" count=42''', new_rule_xml))
+        self.assertIsNotNone(re.search(r'''by-ref="Common-leading-combining-mark" count=42''', new_rule_xml))
 
     def test_rename_rule_with_anonymous_class(self):
         rule = Rule(name='rule-name')
@@ -206,12 +206,12 @@ class TestLGRSet(unittest.TestCase):
         merge_rules(lgr, 'fr', merged_lgr)
         self.assertEqual(len(merged_lgr.rules), 3)
         self.assertEqual(len(merged_lgr.rules_xml), 3)
-        self.assertEqual(merged_lgr.rules[2], 'leading-combining-mark')
+        self.assertEqual(merged_lgr.rules[2], 'Common-leading-combining-mark')
 
         merge_rules(lgr, 'fr', merged_lgr)
         self.assertEqual(len(merged_lgr.rules), 3)
         self.assertEqual(len(merged_lgr.rules_xml), 3)
-        self.assertEqual(merged_lgr.rules[2], 'leading-combining-mark')
+        self.assertEqual(merged_lgr.rules[2], 'Common-leading-combining-mark')
 
     def test_rename_class(self):
         clz = UnionClass(name='class-name')
