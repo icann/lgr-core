@@ -12,11 +12,12 @@ import sys
 import codecs
 import argparse
 import logging
+import io
 
 from munidata import UnicodeDataVersionManager
 
 from lgr.parser.xml_parser import XMLParser
-from lgr.tools.utils import write_output, merge_lgrs
+from lgr.tools.utils import write_output, merge_lgrs, read_set_labels
 from lgr.tools.diff_collisions import get_collisions
 
 logger = logging.getLogger("lgr_validate")
@@ -116,16 +117,14 @@ def main():
             logger.error('For LGR set, LGR set labels file is required')
             return
 
-        with open(args.set_labels, 'rb') as set_labels_input:
-            merged_lgr, lgr_set, set_labels = merge_lgrs(args.lgr_xml,
-                                                         set_labels_file=set_labels_input,
-                                                         unidb=unidb,
-                                                         unidb_manager=manager,
-                                                         validate_labels=args.check_labels)
+        merged_lgr, lgr_set = merge_lgrs(args.lgr_xml, unidb=unidb)
         if not merged_lgr:
+            logger.error('Error while creating the merged LGR')
             return
 
-        set_labels = list(set_labels)
+        set_labels = set()
+        with io.open(args.labels, 'r', encoding='utf-8') as set_labels_input:
+            set_labels = read_set_labels(merged_lgr, set_labels_input, validate_labels=args.check_labels)
 
         script_lgr = None
         for lgr_s in lgr_set:

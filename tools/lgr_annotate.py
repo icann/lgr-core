@@ -15,7 +15,7 @@ import io
 from munidata import UnicodeDataVersionManager
 
 from lgr.parser.xml_parser import XMLParser
-from lgr.tools.utils import merge_lgrs
+from lgr.tools.utils import merge_lgrs, read_set_labels
 from lgr.tools.annotate import annotate, lgr_set_annotate
 
 logger = logging.getLogger("lgr_annotate")
@@ -55,21 +55,16 @@ def main():
             logger.error('For LGR set, lgr script is required')
             return
 
-        if not args.set_labels:
-            logger.error('For LGR set, LGR set labels file is required')
-            return
-
-        with open(args.set_labels, 'rb') as set_labels_input:
-            merged_lgr, lgr_set, set_labels = merge_lgrs(args.lgr_xml,
-                                                         set_labels_file=set_labels_input,
-                                                         rng=args.rng,
-                                                         unidb=unidb,
-                                                         unidb_manager=manager,
-                                                         validate_labels=args.check_labels)
+        merged_lgr, lgr_set = merge_lgrs(args.lgr_xml,
+                                         rng=args.rng,
+                                         unidb=unidb)
         if not merged_lgr:
+            logger.error('Error while creating the merged LGR')
             return
 
-        set_labels = list(set_labels)
+        set_labels = set()
+        with io.open(args.labels, 'r', encoding='utf-8') as set_labels_input:
+            set_labels = read_set_labels(merged_lgr, set_labels_input, validate_labels=args.check_labels)
 
         script_lgr = None
         for lgr_s in lgr_set:
@@ -101,13 +96,13 @@ def main():
             return
 
     # Compute index label
-    with io.open(args.labels, 'r', encoding='utf-8') as labels_input:
+    with io.open(args.labels, 'r', encoding='utf-8') as set_labels_input:
         with io.open(args.output, 'w', encoding='utf-8') as labels_output:
             if len(args.lgr_xml) > 1:
-                for out in lgr_set_annotate(merged_lgr, script_lgr, set_labels, labels_input):
+                for out in lgr_set_annotate(merged_lgr, script_lgr, set_labels, set_labels_input):
                     labels_output.write(out)
             else:
-                for out in annotate(lgr, labels_input):
+                for out in annotate(lgr, set_labels_input):
                     labels_output.write(out)
 
 

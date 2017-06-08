@@ -6,11 +6,7 @@ from __future__ import unicode_literals
 
 import logging
 
-from cStringIO import StringIO
-from codecs import iterdecode
-
 from lgr.parser.xml_parser import XMLParser
-from lgr.parser.xml_serializer import serialize_lgr_xml
 
 from lgr.exceptions import LGRInvalidLabelException, LGRLabelCollisionException
 from lgr.tools.merge_set import merge_lgr_set
@@ -23,7 +19,7 @@ def read_labels(input, unidb, do_raise=False, keep_commented=False):
     """
     Read a label file and format lines to get a list of correct labels
 
-    :param input: The name of the file containing the labels
+    :param input: The name of the file containing the labels, as an iterator of Unicode strings.
     :param unidb: The UnicodeDatabase
     :param do_raise: Whether the label parsing exceptions are raised or not
     :param keep_commented: Whether commented labels are returned (still commented) or not
@@ -52,6 +48,39 @@ def read_labels(input, unidb, do_raise=False, keep_commented=False):
                 raise
             label = "{}: {}".format(label, unicode(ex))
         yield label
+
+
+def read_set_labels(merged_lgr, labels, validate_labels=True, do_raise=False):
+    """
+    Given a merged common LGR and a list of labels, read the labels and validate them against the common LGR.
+
+    :param merged_lgr: Merged common LGR.
+    :param labels: Iterator of labels.
+    :param validate_labels: Whether the set labels should be validated in the merged LGR
+    :param do_raise: Whether the label parsing exceptions are raised or not
+    :return: The LGR set labels
+    """
+    set_labels = set()
+    for label in read_labels(labels, merged_lgr.unicode_database, do_raise=do_raise):
+        if validate_labels:
+            label_cp = tuple([ord(c) for c in label])
+            (eligible, __, __, __, __, logs) = merged_lgr.test_label_eligible(label_cp)
+            if not eligible:
+                logger.error('Label %s from LGR set labels is not valid: %s' % (label, logs.strip().split('\n')[-1]))
+                if do_raise:
+                    raise LGRInvalidLabelException(label, logs.strip().split('\n')[-1])
+                else:
+                    continue
+
+        set_labels.add(label)
+
+    if validate_labels:
+        if is_collision(merged_lgr, set_labels):
+            logger.error('Input label file contains collision(s)')
+            if do_raise:
+                raise LGRLabelCollisionException
+
+    return set_labels
 
 
 def parse_single_cp_input(s):
@@ -192,19 +221,15 @@ def write_output(s, test=True):
         print(s.encode('utf-8'))
 
 
-def merge_lgrs(input_lgrs, set_labels_file=None, name=None, rng=None, unidb=None,
-               unidb_manager=None, validate_labels=True):
+def merge_lgrs(input_lgrs, name=None, rng=None, unidb=None):
     """
     Merge LGRs to create a LGR set
 
     :param input_lgrs: The LGRs belonging to the set
-    :param set_labels_file: The labels belonging to the set
     :param name: The merged LGR name
     :param rng: The RNG file to validate input LGRs
     :param unidb: The unicode database
-    :param unidb_manager: The unicode database manager
-    :param validate_labels: Whether the set labels should be validated in the merged LGR
-    :return: The merged LGR, the LGRs in the set and the labels if input label was provided
+    :return: The merged LGR and the LGRs in the set.
     """
     lgr_set = []
     for lgr_file in input_lgrs:
@@ -233,73 +258,4 @@ def merge_lgrs(input_lgrs, set_labels_file=None, name=None, rng=None, unidb=None
     if unidb:
         merged_lgr.unicode_database = unidb
 
-    if not set_labels_file:
-        return merged_lgr, lgr_set
-
-    merged_lgr, _, labels = prepare_merged_lgr(merged_lgr, merged_lgr.name,
-                                               set_labels_file.read().decode('utf-8'),
-                                               unidb_manager,
-                                               validate_labels=validate_labels)
-
-    return merged_lgr, lgr_set, labels
-
-
-def prepare_merged_lgr(merged_lgr, merged_lgr_name, labels_input, unidb_manager, validate_labels=True, do_raise=False):
-    """
-    Take labels from an input file and merged LGR and prepare them to obtain usable data
-
-    :param merged_lgr: The merged LGR
-    :param merged_lgr_name: The merged LGR name
-    :param labels_input: The input labels
-    :param unidb_manager: The unicode database manager
-    :param validate_labels: Whether the set labels should be validated in the merged LGR
-    :param do_raise: Whether the label parsing exceptions are raised or not
-    :return: The LGR set labels
-    """
-    xml = serialize_lgr_xml(merged_lgr)
-    lgr, labels = prepare_labels({'xml': xml.decode('utf-8'), 'name': merged_lgr_name}, labels_input, unidb_manager)
-    set_labels = set()
-    for label in read_labels(labels, lgr.unicode_database, do_raise=do_raise):
-        if validate_labels:
-            label_cp = tuple([ord(c) for c in label])
-            (eligible, __, __, __, __, logs) = lgr.test_label_eligible(label_cp)
-            if not eligible:
-                logger.error('Label %s from LGR set labels is not valid: %s' % (label, logs.strip().split('\n')[-1]))
-                raise LGRInvalidLabelException(label, logs.strip().split('\n')[-1])
-
-        set_labels.add(label)
-
-    if validate_labels:
-        if is_collision(lgr, set_labels):
-            logger.error('Input label file contains collision(s)')
-            raise LGRLabelCollisionException
-
-    return lgr, xml, set_labels
-
-
-def prepare_labels(lgr_infos, labels, unidb_manager):
-    """
-    Get relevant information to parse labels and correctly encode label content
-
-    :param lgr_infos: The related LGRs information
-    :param labels: The label file content
-    :param unidb_manager: The unicode database manager
-    :return: The related LGRs and the labels content in a correct format
-    """
-    if not isinstance(lgr_infos, list):
-        lgr_infos = [lgr_infos]
-
-    lgrs = []
-    for lgr_info in lgr_infos:
-        lgr_parser = XMLParser(StringIO(lgr_info['xml'].encode('utf-8')),
-                               lgr_info['name'])
-        lgr = lgr_parser.parse_document()
-        lgr.unicode_database = unidb_manager.get_db_by_version(lgr.metadata.unicode_version)
-        lgrs.append(lgr)
-
-    labels = iterdecode(StringIO(labels.encode('utf-8')), 'utf-8')
-
-    if len(lgrs) == 1:
-        lgrs = lgrs[0]
-
-    return lgrs, labels
+    return merged_lgr, lgr_set
