@@ -36,10 +36,10 @@ rule_logger = logging.getLogger('lgr-rule-logger')
 
 # Default disposition used in
 # 7.3.  Determining a Disposition for a Label or Variant Label, step 3
-DEFAULT_DISPOSITION = "allocate"
+DEFAULT_DISPOSITION = "allocatable"
 
-# Invalid disposition which cuases the label to be removed
-# 7.2.  Determining Variants for a Label, step 5
+# Invalid disposition which causes the label to be removed
+# 8.2.  Determining Variants for a Label, step 5
 INVALID_DISPOSITION = "invalid"
 
 # Defaults actions
