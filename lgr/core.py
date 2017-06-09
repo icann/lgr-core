@@ -43,24 +43,24 @@ DEFAULT_DISPOSITION = "allocatable"
 INVALID_DISPOSITION = "invalid"
 
 # Defaults actions
-# 6.6.  Default Actions
+# 7.6.  Default Actions
 DEFAULT_ACTIONS = (
     Action(disp='invalid', comment="Default action for invalid",
            any_variant=['invalid']),
-    Action(disp='block', comment="Default action for block",
-           any_variant=['block']),
-    Action(disp='allocate', comment="Default action for allocate",
-           any_variant=['allocate']),
-    Action(disp='activate', comment="Default action for activate",
-           all_variants=['activate']),
-    Action(disp='allocate', comment="Default catch-all")
+    Action(disp='blocked', comment="Default action for blocked",
+           any_variant=['blocked']),
+    Action(disp='allocatable', comment="Default action for allocatable",
+           any_variant=['allocatable']),
+    Action(disp='activated', comment="Default action for activated",
+           all_variants=['activated']),
+    Action(disp='valid', comment="Default catch-all")
 )
 DEFAULT_ACTIONS_XML = (
     '<action disp="invalid" comment="Default action for invalid" any-variant="invalid"/>',
-    '<action disp="block" comment="Default action for block" any-variant="block"/>',
-    '<action disp="allocate" comment="Default action for allocate" any-variant="allocate"/>',
-    '<action disp="activate" comment="Default action for activate" all-variants="activate"/>',
-    '<action disp="allocate" comment="Default catch-all" />'
+    '<action disp="blocked" comment="Default action for blocked" any-variant="blocked"/>',
+    '<action disp="allocatable" comment="Default action for allocatable" any-variant="allocatable"/>',
+    '<action disp="activated" comment="Default action for activated" all-variants="activated"/>',
+    '<action disp="valid" comment="Default catch-all" />'
 )
 
 # Maximum number of variants to generate
