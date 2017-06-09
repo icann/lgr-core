@@ -365,7 +365,7 @@ Script: '{script}' - MIME-type: '{type}':
 
         # Test tags handling
         cp = merged_lgr.get_char(0x0063)
-        self.assertEqual(cp.tags, {'fr-first-tag', 'und-Khmer-second-tag'})
+        self.assertListEqual(cp.tags, ['fr-first-tag', 'und-Khmer-second-tag'])
 
     def _test_merged_metadata(self, metadata):
         self.assertEqual(len(metadata.scopes), 1)

@@ -294,6 +294,11 @@ def merge_chars(lgr, script, merged_lgr, ref_mapping):
     new_variants = []
     merged_codepoints = set([cp for cp in merged_lgr.repertoire])
     for cp in lgr.repertoire:
+        if len(cp.cp) == 1 and lgr.unicode_database is not None:
+            script_extensions = lgr.unicode_database.get_script_extensions(cp.cp[0])
+        else:
+            script_extensions = []
+        new_tags = set(script + '-' + x if ':' not in x else x for x in cp.tags) | set(script_extensions)
         existing_cp = None
         if not cp.when and not cp.not_when:
             # when and not-when are renamed per script, cannot get same cp
@@ -310,8 +315,7 @@ def merge_chars(lgr, script, merged_lgr, ref_mapping):
         if existing_cp:
             # same cp already in LGR
             existing_cp.comment = let_user_choose(existing_cp.comment, cp.comment)
-            new_tags = (script + '-' + x if ':' not in x else x for x in cp.tags)
-            existing_cp.tags = set.union(set(existing_cp.tags), set(new_tags))
+            existing_cp.tags = list(set.union(set(existing_cp.tags), set(new_tags)))
             existing_cp.references = set.union(set(existing_cp.references), set(cp.references))
 
             # if 2 scripts have different variants on a character, we need to add the variants for script 1 as
@@ -359,7 +363,7 @@ def merge_chars(lgr, script, merged_lgr, ref_mapping):
 
         new_ref = [r for r in map(lambda x: ref_mapping[script].get(x, x), cp.references)]
         merged_lgr.add_cp(cp.cp, comment=cp.comment, ref=new_ref,
-                          tag=[t for t in map(lambda x: script + '-' + x if ':' not in x else x, cp.tags)],
+                          tag=list(new_tags),
                           when=when, not_when=not_when)
         for v in cp.get_variants():
             when = None
