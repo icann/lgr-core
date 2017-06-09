@@ -398,6 +398,13 @@ def merge_lgr_set(lgr_set, name):
     """
     logger.debug("Merge %s", name)
 
+    # Ensure all unicode version are correct
+    unicode_version = set()
+    for lgr in lgr_set:
+        unicode_version.add(lgr.metadata.unicode_version)
+    if len(unicode_version) > 1:
+        logger.warning("Different unicode version in set: %s", unicode_version)
+
     ref_mapping = {}
     metadata = copy.deepcopy(merge_metadata(lgr_set))
     merged_lgr = LGR(name=name, metadata=metadata)
