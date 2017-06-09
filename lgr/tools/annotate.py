@@ -34,15 +34,26 @@ def lgr_set_annotate(lgr, script_lgr, set_labels, labels_input):
     :param set_labels: The labels in the lgr set
     :param labels_input: The file containing the labels
     """
+    # First, we need to filter-out out-of-LGR labels from the set_labels:
+    yield "# The following labels from the set labels are invalid\n"
+    filtered_set = []
+    for label in set_labels:
+        label_cp = tuple([ord(c) for c in label])
+        if not lgr._test_preliminary_eligibility(label_cp)[0]:
+            yield "%s: Not LGR Set\n" % label
+        else:
+            filtered_set.append(label)
+    yield "# End of filtered set labels\n\n"
+
     for label in read_labels(labels_input, script_lgr.unicode_database):
         label_cp = tuple([ord(c) for c in label])
         (eligible, _, _, disp, _, _) = script_lgr.test_label_eligible(label_cp, collect_log=False)
         collision = ''
         if eligible:
-            if label in set_labels:
+            if label in filtered_set:
                 collision = 'Label is in the LGR set labels'
             # check for collisions
-            indexes = get_collisions(lgr, set_labels + [label], quiet=False)
+            indexes = get_collisions(lgr, filtered_set + [label], quiet=False)
             if len(indexes) > 0:
                 collision = 'Label collides with the LGR set labels'
 
