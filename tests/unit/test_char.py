@@ -508,6 +508,33 @@ class TestRepertoire(unittest.TestCase):
         self.assertListEqual(char_list,
                              [c4, c3, c2, c1])
 
+    def test_get_variant_sets(self):
+        self.cd.add_char([0x002A])
+        self.cd.add_char([0x002B])
+        self.cd.add_char([0x002C])
+        self.cd.add_char([0x002D])
+        self.cd.add_char([0x002E])
+        self.cd.add_char([0x002F])
+
+        # Set 1 {2A, 2C, 2F}
+        self.cd.add_variant([0x002A], [0x002C])
+        self.cd.add_variant([0x002A], [0x002F])
+        self.cd.add_variant([0x002C], [0x002A])
+        self.cd.add_variant([0x002C], [0x002F])
+        self.cd.add_variant([0x002F], [0x002A])
+        self.cd.add_variant([0x002F], [0x002C])
+
+        # Set 2 {2B, 2E}
+        self.cd.add_variant([0x002B], [0x002E])
+        self.cd.add_variant([0x002E], [0x002B])
+
+        variant_sets = self.cd.get_variant_sets()
+        self.assertEqual(len(variant_sets), 2)
+
+        self.assertSetEqual(variant_sets,
+                            {((0x002A,), (0x002C,), (0x002F,)),
+                             ((0x002B,), (0x002E,))})
+
 if __name__ == '__main__':
     import logging
     logging.getLogger('lgr').addHandler(logging.NullHandler())
