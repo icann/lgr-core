@@ -63,7 +63,7 @@ class Class(object):
         """
         self.name = name
         self.comment = comment
-        self.ref = ref
+        self.ref = ref or []
         self.from_tag = from_tag
         self.unicode_property = unicode_property
         self.codepoints = set(codepoints or [])
