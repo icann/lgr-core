@@ -733,7 +733,11 @@ class Repertoire(object):
             for variant in char.get_variants():
                 if variant.cp in visited:
                     continue
-                reverse_char = self.get_char(variant.cp)
+                try:
+                    reverse_char = self.get_char(variant.cp)
+                except NotInLGR:
+                    # Ignore invalid LGR
+                    continue
                 dfs(reverse_char, visited)
             return visited
 
