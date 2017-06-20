@@ -99,7 +99,7 @@ class Scope(object):
         self.scope_type = scope_type
 
     def __unicode__(self):
-        return self.value
+        return '{}: {}'.format(self.scope_type, self.value)
 
     def __eq__(self, other):
         return (self.value == other.value) \
