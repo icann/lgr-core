@@ -23,7 +23,7 @@ def read_labels(input, unidb, do_raise=False, keep_commented=False):
     :param unidb: The UnicodeDatabase
     :param do_raise: Whether the label parsing exceptions are raised or not
     :param keep_commented: Whether commented labels are returned (still commented) or not
-    :return: The list of labels
+    :return: The list of labels as unicode strings
     """
     # Compute index label
     labels = map(lambda x: x.strip(), input)

@@ -12,8 +12,7 @@ import codecs
 
 from munidata import UnicodeDataVersionManager
 
-from lgr.utils import format_cp
-from lgr.tools.utils import write_output, merge_lgrs, read_labels
+from lgr.tools.utils import merge_lgrs, write_output
 from lgr.tools.cross_script_variants import cross_script_variants
 
 logger = logging.getLogger("lgr_cross_script_variants")
@@ -47,14 +46,9 @@ def main():
         return
     label_input = codecs.getreader('utf8')(sys.stdin)
 
-    for label_cp in read_labels(label_input, unidb):
-        write_output("Input label {} ({})".format(format_cp(label_cp), ''.join([unichr(c) for c in label_cp])))
-        for script, variants in cross_script_variants(lgr_set, label_cp):
-            write_output("- Script {}".format(script))
-            for var, disp in variants:
-                write_output("\t- Variant {} ({}), disposition {}".format(format_cp(var),
-                                                                          ''.join([unichr(c) for c in var]),
-                                                                          disp))
+    for out in cross_script_variants(merged_lgr, label_input):
+        write_output(out)
+
 
 if __name__ == '__main__':
     main()
