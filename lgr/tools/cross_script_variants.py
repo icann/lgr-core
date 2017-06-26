@@ -57,5 +57,5 @@ def cross_script_variants(lgr_set, unidb, labels_input):
             yield "- Script {}\n".format(script)
             for var, disp in variants:
                 yield "\t- Variant {} ({}), disposition {}\n".format(format_cp(var),
-                                                                   ''.join([unichr(c) for c in var]),
-                                                                   disp)
+                                                                     ''.join([unichr(c) for c in var]),
+                                                                     disp)

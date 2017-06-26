@@ -46,7 +46,7 @@ def main():
         return
     label_input = codecs.getreader('utf8')(sys.stdin)
 
-    for out in cross_script_variants(merged_lgr, label_input):
+    for out in cross_script_variants(lgr_set, unidb, label_input):
         write_output(out)
 
 
