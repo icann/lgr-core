@@ -23,7 +23,7 @@ def read_labels(input, unidb, do_raise=False, keep_commented=False):
     :param unidb: The UnicodeDatabase
     :param do_raise: Whether the label parsing exceptions are raised or not
     :param keep_commented: Whether commented labels are returned (still commented) or not
-    :return: The list of labels as unicode strings
+    :return: [(label, valid, error)]
     """
     # Compute index label
     labels = map(lambda x: x.strip(), input)
@@ -34,53 +34,23 @@ def read_labels(input, unidb, do_raise=False, keep_commented=False):
             pos = label.find('#')
             if pos == 0:
                 if keep_commented:
-                    yield label
+                    yield label, True, ''
                 continue
             label = label[:pos].strip()
         if len(label) == 0:
             continue
 
+        error = ''
+        valid = True
         # transform U-label and A-label in unicode strings
         try:
             label = parse_label_input(label, unidb.idna_decode_label, False)
         except BaseException as ex:
             if do_raise:
                 raise
-            label = "{}: {}".format(label, unicode(ex))
-        yield label
-
-
-def read_set_labels(merged_lgr, labels, validate_labels=True, do_raise=False):
-    """
-    Given a merged common LGR and a list of labels, read the labels and validate them against the common LGR.
-
-    :param merged_lgr: Merged common LGR.
-    :param labels: Iterator of labels.
-    :param validate_labels: Whether the set labels should be validated in the merged LGR
-    :param do_raise: Whether the label parsing exceptions are raised or not
-    :return: The LGR set labels
-    """
-    set_labels = set()
-    for label in read_labels(labels, merged_lgr.unicode_database, do_raise=do_raise):
-        if validate_labels:
-            label_cp = tuple([ord(c) for c in label])
-            (eligible, __, __, __, __, logs) = merged_lgr.test_label_eligible(label_cp)
-            if not eligible:
-                logger.error('Label %s from LGR set labels is not valid: %s' % (label, logs.strip().split('\n')[-1]))
-                if do_raise:
-                    raise LGRInvalidLabelException(label, logs.strip().split('\n')[-1])
-                else:
-                    continue
-
-        set_labels.add(label)
-
-    if validate_labels:
-        if is_collision(merged_lgr, set_labels):
-            logger.error('Input label file contains collision(s)')
-            if do_raise:
-                raise LGRLabelCollisionException
-
-    return set_labels
+            valid = False
+            error = unicode(ex)
+        yield label, valid, error
 
 
 def parse_single_cp_input(s):

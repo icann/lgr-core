@@ -348,7 +348,12 @@ def diff(lgr_1, lgr_2, labels_input, show_collision=True,
     :param quiet: Do not print rules
     """
     from lgr.tools.utils import read_labels
-    labels = set(read_labels(labels_input, lgr_1.unicode_database))
+    labels = set()
+    for label, valid, error in read_labels(labels_input, lgr_1.unicode_database):
+        if valid:
+            labels.add(label)
+        else:
+            yield "Label {}: {}\n".format(label, error)
 
     # get diff between labels and variants for the two LGR
     # keep label without collision as we need to compare
@@ -396,7 +401,12 @@ def collision(lgr, labels_input, show_dump=False, quiet=False):
     :param quiet: Do not print rules
     """
     from lgr.tools.utils import read_labels
-    labels = set(read_labels(labels_input, lgr.unicode_database))
+    labels = set()
+    for label, valid, error in read_labels(labels_input, lgr.unicode_database):
+        if valid:
+            labels.add(label)
+        else:
+            yield "Label {}: {}\n".format(label, error)
 
     # get diff between labels and variants for the two LGR
     # only keep label without collision for a full dump
@@ -423,7 +433,10 @@ def get_collisions(lgr, labels_input, quiet=True):
     :return: The indexes for collisions
     """
     from lgr.tools.utils import read_labels
-    labels = set(read_labels(labels_input, lgr.unicode_database))
+    labels = set()
+    for label, valid, error in read_labels(labels_input, lgr.unicode_database):
+        if valid:
+            labels.add(label)
     label_indexes = _generate_indexes(lgr, labels, keep=False, quiet=quiet)
     return label_indexes
 

@@ -50,12 +50,15 @@ def cross_script_variants(lgr_set, unidb, labels_input):
     :param unidb: The unicode database to use.
     :param labels_input: The file containing the labels
     """
-    for label in read_labels(labels_input, unidb):
-        label_cp = tuple([ord(c) for c in label])
-        yield "Input label {} ({})\n".format(format_cp(label_cp), label)
-        for script, variants in get_variants(lgr_set, label_cp):
-            yield "- Script {}\n".format(script)
-            for var, disp in variants:
-                yield "\t- Variant {} ({}), disposition {}\n".format(format_cp(var),
-                                                                     ''.join([unichr(c) for c in var]),
-                                                                     disp)
+    for label, valid, error in read_labels(labels_input, unidb):
+        if not valid:
+            yield "Input label {}: {}\n".format(label, error)
+        else:
+            label_cp = tuple([ord(c) for c in label])
+            yield "Input label {} ({})\n".format(format_cp(label_cp), label)
+            for script, variants in get_variants(lgr_set, label_cp):
+                yield "- Script {}\n".format(script)
+                for var, disp in variants:
+                    yield "\t- Variant {} ({}), disposition {}\n".format(format_cp(var),
+                                                                         ''.join([unichr(c) for c in var]),
+                                                                         disp)

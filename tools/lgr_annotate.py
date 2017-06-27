@@ -11,11 +11,12 @@ import sys
 import argparse
 import logging
 import io
+from cStringIO import StringIO
 
 from munidata import UnicodeDataVersionManager
 
 from lgr.parser.xml_parser import XMLParser
-from lgr.tools.utils import merge_lgrs, read_set_labels
+from lgr.tools.utils import merge_lgrs, read_labels
 from lgr.tools.annotate import annotate, lgr_set_annotate
 
 logger = logging.getLogger("lgr_annotate")
@@ -38,8 +39,6 @@ def main():
                         help='If LGR is a set, the script used to validate input labels')
     parser.add_argument('-f', '--set-labels', metavar='SET_LABELS',
                         help='If LGR is a set, the file containing the label of the LGR set')
-    parser.add_argument('-c', '--check-labels', action='store_true',
-                        help='If LGR is a set, check labels from the set')
     parser.add_argument('labels', metavar='LABELS', help='File path to the reference labels to annotate')
     args = parser.parse_args()
 
@@ -62,23 +61,24 @@ def main():
             logger.error('Error while creating the merged LGR')
             return
 
-        set_labels = set()
-        with io.open(args.labels, 'r', encoding='utf-8') as set_labels_input:
-            set_labels = read_set_labels(merged_lgr, set_labels_input, validate_labels=args.check_labels)
+        set_labels = StringIO()
+        if args.set_labels:
+            with io.open(args.set_labels, 'r', encoding='utf-8') as set_labels_input:
+                set_labels = StringIO(set_labels_input.read())
 
         script_lgr = None
         for lgr_s in lgr_set:
             try:
                 if lgr_s.metadata.languages[0] == args.lgr_script:
                     if script_lgr:
-                        logger.warning('Script %s is provided in more than one LGR of the set, will only evaluate '
-                                       'with %s' % (args.lgr_script, lgr_s.name))
+                        logger.warning('Script %s is provided in more than one LGR of the set, '
+                                       'will only evaluate with %s', args.lgr_script, lgr_s.name)
                     script_lgr = lgr_s
             except (AttributeError, IndexError):
                 pass
 
         if not script_lgr:
-            logger.error('Cannot find script %s in any of the LGR provided as input' % args.lgr_script)
+            logger.error('Cannot find script %s in any of the LGR provided as input', args.lgr_script)
             return
     else:
         lgr_parser = XMLParser(args.lgr_xml[0])
@@ -96,13 +96,13 @@ def main():
             return
 
     # Compute index label
-    with io.open(args.labels, 'r', encoding='utf-8') as set_labels_input:
+    with io.open(args.labels, 'r', encoding='utf-8') as labels_input:
         with io.open(args.output, 'w', encoding='utf-8') as labels_output:
             if len(args.lgr_xml) > 1:
-                for out in lgr_set_annotate(merged_lgr, script_lgr, set_labels, set_labels_input):
+                for out in lgr_set_annotate(merged_lgr, script_lgr, set_labels, labels_input):
                     labels_output.write(out)
             else:
-                for out in annotate(lgr, set_labels_input):
+                for out in annotate(lgr, labels_input):
                     labels_output.write(out)
 
 

@@ -13,11 +13,12 @@ import codecs
 import argparse
 import logging
 import io
+from cStringIO import StringIO
 
 from munidata import UnicodeDataVersionManager
 
 from lgr.parser.xml_parser import XMLParser
-from lgr.tools.utils import write_output, merge_lgrs, read_set_labels
+from lgr.tools.utils import write_output, merge_lgrs, read_labels
 from lgr.tools.diff_collisions import get_collisions
 
 logger = logging.getLogger("lgr_validate")
@@ -97,8 +98,6 @@ def main():
                         help='If LGR is a set, the script used to validate input labels')
     parser.add_argument('-f', '--set-labels', metavar='SET_LABELS',
                         help='If LGR is a set, the file containing the label of the LGR set')
-    parser.add_argument('-c', '--check-labels', action='store_true',
-                        help='If LGR is a set, check labels from the set')
     args = parser.parse_args()
 
     log_level = logging.DEBUG if args.verbose else logging.WARNING
@@ -122,23 +121,22 @@ def main():
             logger.error('Error while creating the merged LGR')
             return
 
-        set_labels = set()
         with io.open(args.labels, 'r', encoding='utf-8') as set_labels_input:
-            set_labels = read_set_labels(merged_lgr, set_labels_input, validate_labels=args.check_labels)
+            set_labels = StringIO(set_labels_input.read())
 
         script_lgr = None
         for lgr_s in lgr_set:
             try:
                 if lgr_s.metadata.languages[0] == args.lgr_script:
                     if script_lgr:
-                        logger.warning('Script %s is provided in more than one LGR of the set, will only evaluate '
-                                       'with %s' % (args.lgr_script, lgr_s.name))
+                        logger.warning('Script %s is provided in more than one LGR of the set, '
+                                       'will only evaluate with %s', args.lgr_script, lgr_s.name)
                     script_lgr = lgr_s
             except (AttributeError, IndexError):
                 pass
 
         if not script_lgr:
-            logger.error('Cannot find script %s in any of the LGR provided as input' % args.lgr_script)
+            logger.error('Cannot find script %s in any of the LGR provided as input', args.lgr_script)
             return
     else:
         lgr_parser = XMLParser(args.lgr_xml[0])
@@ -157,9 +155,24 @@ def main():
 
     label_input = codecs.getreader('utf8')(sys.stdin)
 
+    filtered_set_labels = []
+    if len(args.lgr_xml) > 1:
+        write_output("# The following labels from the set labels are invalid\n")
+        for label, valid, error in read_labels(set_labels, script_lgr.unicode_database):
+            if not valid:
+                write_output.write("{}: {}\n".format(label, error))
+            else:
+                label_cp = tuple([ord(c) for c in label])
+                if not lgr._test_preliminary_eligibility(label_cp)[0]:
+                    write_output("%s: Not LGR Set\n" % label)
+                else:
+                    filtered_set_labels.append(label)
+        write_output("# End of filtered set labels\n\n")
+
     for label in label_input.read().splitlines():
         if len(args.lgr_xml) > 1:
-            check_label(script_lgr, label, args.variants, merged_lgr=merged_lgr, set_labels=set_labels)
+            check_label(script_lgr, label, args.variants,
+                        merged_lgr=merged_lgr, set_labels=filtered_set_labels)
         else:
             check_label(lgr, label, args.variants)
 
