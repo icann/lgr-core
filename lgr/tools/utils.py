@@ -8,9 +8,7 @@ import logging
 
 from lgr.parser.xml_parser import XMLParser
 
-from lgr.exceptions import LGRInvalidLabelException, LGRLabelCollisionException
 from lgr.tools.merge_set import merge_lgr_set
-from lgr.tools.diff_collisions import is_collision
 
 logger = logging.getLogger(__name__)
 
