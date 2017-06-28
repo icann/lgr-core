@@ -138,6 +138,17 @@ Given 2 LGR and a label list, the tool will:
 * Generate the index for all labels in the list against the second LGR (same method as collision).
 * Compare the generated labels (and variants) for the 2 LGRs.
 
-As generating the labels' variants is a very expensive process, the tool is asynchronous: a notification will be sent by email when the processing is done 
+As generating the labels' variants is a very expensive process, the tool is asynchronous: a notification will be sent by email when the processing is done
+
+Cross-script variants
+---------------------
+
+Given an LGR set and a label list, the tool will iterate through the label list and for each label:
+
+* Check that the label is eligible in the merged LGR.
+* Iterate through the element LGR composing the set:
+    * Generate the variants of the label
+
+As generating the labels' variants is a very expensive process, the tool is asynchronous: a notification will be sent by email when the processing is done
 
 .. _`section 8.5 of RFC 7940`: https://tools.ietf.org/html/rfc7940#section-8.5
