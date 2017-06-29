@@ -747,9 +747,10 @@ class Repertoire(object):
                 # XXX: Convert to tuple here so it is hashable
                 variant_set = tuple(sorted(dfs(char)))
                 if len(variant_set) > 1:
-                    variant_sets.add(variant_set)
+                    lowest = min(variant_set)
+                    variant_sets.add((lowest, variant_set))
 
-        return variant_sets
+        return [variants for _, variants in sorted(variant_sets)]
 
     def del_reference(self, ref_id):
         """
