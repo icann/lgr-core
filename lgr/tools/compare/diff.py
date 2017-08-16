@@ -123,15 +123,19 @@ def diff_description(first, second):
     return output
 
 
-def diff_metadata(first, second):
+def diff_metadata(first, second, is_set=False):
     """
     Diff two metadata objects.
 
     :param first: The first metadata object.
     :param second: The other metadata object.
+    :param is_set: Whether the metadata are compared for LGR sets
     :return: Text comparison.
     """
-    output = "** Compare Metadata **\n\n"
+    if not is_set:
+        output = "** Compare Metadata **\n\n"
+    else:
+        output = "** Compare Metadata on merged LGRs **\n\n"
 
     output += diff_version(first.version, second.version)
     output += diff_description(first.description, second.description)
@@ -236,7 +240,7 @@ def diff_lgrs(lgr1, lgr2):
     """
     Compare 2 LGRs.
 
-    Returns a text containing results of comparaison
+    Returns a text containing results of comparison
 
     :param lgr1: First LGR.
     :param lgr2: Second LGR.
@@ -288,5 +292,73 @@ Compare code point {}""".format(format_cp(cp))
     output += diff_actions(lgr1, lgr2)
     output += diff_rules(lgr1, lgr2)
     output += diff_classes(lgr1, lgr2)
+
+    return output
+
+
+def diff_lgr_sets(lgr1, lgr2, lgr_set_1, lgr_set_2):
+    """
+    Compare 2 LGR sets.
+
+    Returns a text containing results of comparison
+
+    :param lgr1: First LGR set.
+    :param lgr2: Second LGR set.
+    :param lgr_set_1: LGR included in the first LGR set.
+    :param lgr_set_2: LGR included in the second LGR set.
+    :return: Text comparison.
+    """
+    output = ""
+
+    def get_scripts(lgr_set, lgr_set_name):
+        out = ''
+        lgr_scripts = {}
+        for lgr in lgr_set:
+            try:
+                script = lgr.metadata.languages[0]
+                if script in lgr_scripts:
+                    out += "More than one LGR in set '{set}' match script '{script}'".format(set=lgr_set_name,
+                                                                                             script=script)
+                lgr_scripts.setdefault(script, []).append(lgr)
+            except (AttributeError, IndexError):
+                pass
+
+        return lgr_scripts, out
+
+    lgr_scripts_1, out = get_scripts(lgr_set_1, lgr1.name)
+    output += out
+    lgr_scripts_2, out = get_scripts(lgr_set_2, lgr2.name)
+    output += out
+
+    common_script = set(lgr_scripts_1.keys()) & set(lgr_scripts_2.keys())
+    for script in set(lgr_scripts_1.keys()) - set(lgr_scripts_2.keys()):
+        output += """
+Script '{script}' is available in LGR set '{set1}' with LGR '{lgrs}' but not in LGR set '{set2}'.
+
+    """.format(script=script, set1=lgr1.name, set2=lgr2.name,
+               lgrs="', '".join([lgr.name for lgr in lgr_scripts_1[script]]))
+
+    for script in set(lgr_scripts_2.keys()) - set(lgr_scripts_1.keys()):
+        output += """
+Script '{script}' is available in LGR set '{set2}' with LGR '{lgrs}' but not in LGR set '{set1}'.
+
+    """.format(script=script, set1=lgr1.name, set2=lgr2.name,
+               lgrs="', '".join([lgr.name for lgr in lgr_scripts_2[script]]))
+
+    # As metadata can be edited, compare them on merged LGR
+    output += diff_metadata(lgr1.metadata, lgr2.metadata, is_set=True)
+
+    # compare LGR having the same script from each set
+    for script in common_script:
+        for l1 in lgr_scripts_1[script]:
+            for l2 in lgr_scripts_2[script]:
+                # for each script, compare LGRs
+                output += """
+
+
+### Compare LGRs for script {script}: {lgr1} - {lgr2} ###
+
+""".format(script=script, lgr1=l1.name, lgr2=l2.name)
+                output += diff_lgrs(l1, l2)
 
     return output

@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="lgr-core",
-    version='1.6',
+    version='1.7',
     author='Viagénie and Wil Tan',
     author_email='support@viagenie.ca',
     description="API for manipulating Label Generation Rules",
@@ -19,7 +19,12 @@ setup(
              'tools/rfc3743_dump.py',
              'tools/xml_dump.py',
              'tools/make_idna_repertoire.py',
-             'tools/lgr_diff_collisions.py'
+             'tools/lgr_annotate.py',
+             'tools/lgr_collision.py',
+             'tools/lgr_compare.py',
+             'tools/lgr_diff_collisions.py',
+             'tools/lgr_merge_set.py',
+             'tools/lgr_cross_script_variants.py'
     ],
     tests_require=['nose', 'coverage'],
     test_suite='tests.unit',

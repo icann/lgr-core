@@ -6,16 +6,22 @@ from __future__ import unicode_literals
 
 import logging
 
+from lgr.parser.xml_parser import XMLParser
+
+from lgr.tools.merge_set import merge_lgr_set
+
 logger = logging.getLogger(__name__)
 
 
-def read_labels(input, unidb):
+def read_labels(input, unidb, do_raise=False, keep_commented=False):
     """
     Read a label file and format lines to get a list of correct labels
 
-    :param input: The name of the file containing the labels
+    :param input: The name of the file containing the labels, as an iterator of Unicode strings.
     :param unidb: The UnicodeDatabase
-    :return: The list of labels
+    :param do_raise: Whether the label parsing exceptions are raised or not
+    :param keep_commented: Whether commented labels are returned (still commented) or not
+    :return: [(label, valid, error)]
     """
     # Compute index label
     labels = map(lambda x: x.strip(), input)
@@ -25,17 +31,24 @@ def read_labels(input, unidb):
         if '#' in label:
             pos = label.find('#')
             if pos == 0:
+                if keep_commented:
+                    yield label, True, ''
                 continue
             label = label[:pos].strip()
         if len(label) == 0:
             continue
 
+        error = ''
+        valid = True
         # transform U-label and A-label in unicode strings
         try:
             label = parse_label_input(label, unidb.idna_decode_label, False)
         except BaseException as ex:
-            label = "{}: {}".format(label, unicode(ex))
-        yield label
+            if do_raise:
+                raise
+            valid = False
+            error = unicode(ex)
+        yield label, valid, error
 
 
 def parse_single_cp_input(s):
@@ -169,3 +182,48 @@ def parse_label_input(s, idna_decoder=lambda x: x.decode('idna'), as_cp=True):
             return [ord(c) for c in s]
         else:
             return s
+
+
+def write_output(s, test=True):
+    if test:
+        print(s.encode('utf-8'))
+
+
+def merge_lgrs(input_lgrs, name=None, rng=None, unidb=None):
+    """
+    Merge LGRs to create a LGR set
+
+    :param input_lgrs: The LGRs belonging to the set
+    :param name: The merged LGR name
+    :param rng: The RNG file to validate input LGRs
+    :param unidb: The unicode database
+    :return: The merged LGR and the LGRs in the set.
+    """
+    lgr_set = []
+    for lgr_file in input_lgrs:
+        lgr_parser = XMLParser(lgr_file)
+        if unidb:
+            lgr_parser.unicode_database = unidb
+
+        if rng:
+            validation_result = lgr_parser.validate_document(rng)
+            if validation_result is not None:
+                logger.error('Errors for RNG validation of LGR %s: %s',
+                             lgr_file, validation_result)
+
+        lgr = lgr_parser.parse_document()
+        if lgr is None:
+            logger.error("Error while parsing LGR file %s." % lgr_file)
+            logger.error("Please check compliance with RNG.")
+            return
+
+        lgr_set.append(lgr)
+
+    if not name:
+        name = 'merged-lgr-set'
+
+    merged_lgr = merge_lgr_set(lgr_set, name)
+    if unidb:
+        merged_lgr.unicode_database = unidb
+
+    return merged_lgr, lgr_set

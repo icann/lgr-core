@@ -17,13 +17,9 @@ from munidata import UnicodeDataVersionManager
 from lgr.parser.xml_parser import XMLParser
 
 from lgr.tools.diff_collisions import diff, collision
+from lgr.tools.utils import write_output
 
 logger = logging.getLogger("lgr_diff_collision")
-
-
-
-def write_output(s):
-    print(s.encode('utf-8'))
 
 
 def main():
@@ -89,7 +85,7 @@ def main():
             logger.error("Please check compliance with RNG.")
             return
 
-    write_output('Please wait, this can take some time...\n')
+    logger.warning('Please wait, this can take some time...\n')
 
     with io.open(args.set, 'r', encoding='utf-8') as label_input:
         if args.second is not None:

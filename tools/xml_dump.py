@@ -10,7 +10,6 @@ import logging
 import os
 import io
 
-from lxml import etree
 
 def main():
     from lgr.parser.xml_parser import XMLParser

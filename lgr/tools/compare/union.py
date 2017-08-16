@@ -133,7 +133,7 @@ def union_char(lgr, first, second):
 
     tags = set.union(set(first.tags), set(second.tags))
 
-    lgr.add_cp(first.cp,comment=comment, tag=tags)
+    lgr.add_cp(first.cp, comment=comment, tag=tags)
 
     for v in set.union(set(first.get_variants()), set(second.get_variants())):
         lgr.add_variant(first.cp, v.cp, variant_type=v.type,
@@ -318,11 +318,11 @@ def union_lgrs(lgr1, lgr2):
     lgr.actions_xml = actions_xml
 
     (rules, rules_xml) = union_rules(lgr1, lgr2)
-    lgr.rules = copy.deepcopy(rules)
+    lgr.rules = rules
     lgr.rules_xml = rules_xml
 
     (classes, classes_xml) = union_classes(lgr1, lgr2)
-    lgr.classes = copy.deepcopy(classes)
+    lgr.classes = classes
     lgr.classes_xml = classes_xml
 
     return lgr

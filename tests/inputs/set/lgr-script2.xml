@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lgr xmlns="urn:ietf:params:xml:ns:lgr-1.0">
+    <meta>
+        <version comment="LGR 2 for khmer script">2</version>
+        <date>2015-06-05</date>
+        <language>und-Khmer</language>
+        <scope type="domain">.</scope>
+        <validity-end>2020-06-01</validity-end>
+        <unicode-version>6.3.0</unicode-version>
+        <description type="text/html">Description LGR 2</description>
+        <references>
+            <reference id="0" comment="Clashing reference">Name and Id clashing reference</reference>
+            <reference id="1" comment="First reference">My first reference</reference>
+            <reference id="2" comment="Clashing reference">Name clashing reference</reference>
+        </references>
+    </meta>
+    <data>
+
+        <char cp="0061" comment="Overlap char with first LGR">
+            <var cp="1782" type="allocated" ref="0"/>
+        </char>
+        <char cp="0063" tag="second-tag"/>
+
+        <char cp="1780" tag="consonant" ref="0"/>
+        <char cp="1781" tag="consonant"/>
+        <char cp="1782" tag="consonant">
+            <var cp="0061" type="allocatable"/>
+        </char>
+        <char cp="1783" tag="consonant" ref="1 2" />
+
+        <char cp="17A1" tag="base-only consonant"/>
+
+        <char cp="17D2 178A" when="follows-consonant">
+            <var cp="17D2 178F" type="blocked" when="follows-consonant"/>
+        </char>
+        <char cp="17D2 178F" not-when="follows-consonant">
+            <var cp="17D2 178A" type="blocked" not-when="follows-consonant"/>
+        </char>
+    </data>
+
+    <rules>
+        <class name="consonant" from-tag="consonant" comment="Any consonant" />
+        <difference name="consonant-but-not-base-only" comment="Any consonant that is not base-only">
+            <class by-ref="consonant" />
+            <class from-tag="base-only" />
+        </difference>
+
+        <rule name="follows-consonant">
+            <look-behind>
+                <class by-ref="consonant" />
+            </look-behind>
+            <anchor />
+        </rule>
+        <rule name="subscript-consonant" comment="WLE Rule 2: allowable subscript consonant sequence">
+            <char cp="17D2" />
+            <class by-ref="consonant-but-not-base-only" />
+        </rule>
+
+        <action disp="invalid" match="subscript-consonant-limit" comment="any label with more than two subscript consonants in a row is invalid" />
+    </rules>
+</lgr>

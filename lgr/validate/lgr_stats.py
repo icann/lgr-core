@@ -12,14 +12,13 @@ from lgr.utils import format_cp
 logger = logging.getLogger(__name__)
 
 
-def compute_stats(lgr, options):
+def generate_stats(lgr):
     """
-    Compute statistics for an LGR.
+    Given an LGR, generate the stats.
 
     :param lgr: The LGR to use.
-    :param options: Not used.
+    :return: Dictionnary containing various stats.
     """
-
     stats = {
         'codepoint_number': 0,
 
@@ -34,6 +33,7 @@ def compute_stats(lgr, options):
         'codepoints_with_variants': 0,
         'variant_number': 0,
         'variants_by_type': {},
+        'largest_variant_set': 0,
 
         'average_variants': 0,
 
@@ -72,6 +72,7 @@ def compute_stats(lgr, options):
         variants = list(char.get_variants())
         variants_len = len(variants)
         stats['variant_number'] += variants_len
+        stats['largest_variant_set'] = max(stats['largest_variant_set'], variants_len)
         if variants_len > 0:
             stats['codepoints_with_variants'] += 1
 
@@ -84,6 +85,18 @@ def compute_stats(lgr, options):
     if stats['codepoints_with_variants'] != 0:
         stats['average_variants'] = \
             stats['variant_number'] / stats['codepoints_with_variants']
+
+    return stats
+
+
+def compute_stats(lgr, options):
+    """
+    Compute statistics for an LGR.
+
+    :param lgr: The LGR to use.
+    :param options: Not used.
+    """
+    stats = generate_stats(lgr)
 
     # General summary
     output = """
@@ -102,6 +115,7 @@ General summary:
 Variants:
 \tTotal number of variants: {variant_number}.
 \tAverage number of variants per code point: {average_variants}.
+\tLargest variant set: {largest_variant_set}.
 
 """.format(**stats)
 

@@ -1,4 +1,0 @@
-lxml
-language-tags
-munidata
-picu

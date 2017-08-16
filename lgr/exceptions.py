@@ -238,3 +238,21 @@ class RuleError(LGRException):
 
     def __unicode__(self):
         return '<rule %s>: %s' % (self.rule_name, self.message)
+
+
+class LGRInvalidLabelException(LGRException):
+    """
+    Raised when a label is invalid in an LGR
+    """
+    def __init__(self, label, message):
+        super(LGRInvalidLabelException, self).__init__()
+        self.label = label
+        self.message = message
+
+
+class LGRLabelCollisionException(LGRException):
+    """
+    Raised when a label collide in an LGR set
+    """
+    def __init__(self):
+        super(LGRLabelCollisionException, self).__init__()

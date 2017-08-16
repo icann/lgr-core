@@ -713,6 +713,45 @@ class Repertoire(object):
         char = self.get_char(cp_or_sequence)
         return char.get_variants()
 
+    def get_variant_sets(self):
+        """
+        Return the list of variants set contained in the repertoire.
+
+        This function assumes the repertoire is symmetric and transitive.
+
+        Note: This function is very stupid and NOT optimised in complexity
+        nor memory consumption.
+
+        :returns: List of variant set, with a variant set being
+                  a list of code points included in the set.
+        """
+        def dfs(char, visited=None):
+            """ Utility function to iterate in a char/variants (Depth-First Search)."""
+            if visited is None:
+                visited = set()
+            visited.add(char.cp)
+            for variant in char.get_variants():
+                if variant.cp in visited:
+                    continue
+                try:
+                    reverse_char = self.get_char(variant.cp)
+                except NotInLGR:
+                    # Ignore invalid LGR
+                    continue
+                dfs(reverse_char, visited)
+            return visited
+
+        variant_sets = set()
+        for index in sorted(self._chardict.keys()):
+            for char in self._chardict[index]:
+                # XXX: Convert to tuple here so it is hashable
+                variant_set = tuple(sorted(dfs(char)))
+                if len(variant_set) > 1:
+                    lowest = min(variant_set)
+                    variant_sets.add((lowest, variant_set))
+
+        return [variants for _, variants in sorted(variant_sets)]
+
     def del_reference(self, ref_id):
         """
         Iterate through the repertoire to remove the reference ref_id
