@@ -528,7 +528,7 @@ class TestRepertoire(unittest.TestCase):
         self.cd.add_variant([0x002B], [0x002E])
         self.cd.add_variant([0x002E], [0x002B])
 
-        variant_sets = self.cd.get_variant_sets()
+        variant_sets = frozenset(self.cd.get_variant_sets())
         self.assertEqual(len(variant_sets), 2)
 
         self.assertSetEqual(variant_sets,
