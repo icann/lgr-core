@@ -2,6 +2,7 @@
 """
 xml_serializer.py - Create an LGR XML compliant with draft-davies-idntables
 """
+from __future__ import unicode_literals
 
 import logging
 from lxml import etree
@@ -72,14 +73,14 @@ def _serialize_meta(lgr, meta):
         version_node = etree.SubElement(meta, 'version',
                                         version_attributes)
         if metadata.version.value is not None:
-            version_node.text = str(metadata.version.value)
+            version_node.text = "{}".format(metadata.version.value)
 
     for elem in ['date', 'validity_start', 'validity_end', 'unicode_version']:
         value = getattr(metadata, elem, None)
         if value is not None:
             # Python prevents using '-' in attribute names
             node = etree.SubElement(meta, elem.replace('_', '-'))
-            node.text = str(value)
+            node.text = "{}".format(value)
 
     for language in metadata.languages:
         etree.SubElement(meta, 'language').text = language
