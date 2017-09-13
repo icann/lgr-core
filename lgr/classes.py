@@ -159,7 +159,7 @@ class Class(object):
         logger.debug('Validate %s', self)
         if self.by_ref is not None:
             if self.by_ref not in classes_lookup:
-                # From draft-davies-idntables-09, section 5.2.1. Declaring and Invoking Named Classes
+                # From RFC7940, section 6.2.1. Declaring and Invoking Named Classes
                 # It is an error to reference a named class for which the
                 # definition has not been seen.
                 logger.error("Class cannot reference inexisting class '%s'",
@@ -169,8 +169,8 @@ class Class(object):
         is_top_level = len(parents) == 0
         if (is_top_level and self.name is None) or \
             (not is_top_level and self.name is not None):
-            # From draft-davies-idntables-09, section 5.2.1. Declaring and Invoking Named Classes
-            # The "name" attribute MUST be present, if and only if the class
+            # From RFC7940, section 6.2.1. Declaring and Invoking Named Classes
+            # The "name" attribute MUST be present if and only if the class
             # is a direct child element of the "rules" element.
             logger.error("'name' attribute MUST be present only and only if "
                          "class is a direct child of the 'rules' element")

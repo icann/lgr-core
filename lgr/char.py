@@ -290,14 +290,14 @@ class RangeChar(Char):
         self.last_cp = last_cp
 
     def add_variant(self, *args, **kwargs):
-        # From draft-davies-idntables-09, section 4. Code Points and Variants
+        # From RFC7940, section 5. Code Points and Variants
         # A "range" element has no child elements.
         logger.error("%r: Range has no variant", self)
         raise LGRFormatException(LGRFormatException.
                                  LGRFormatReason.RANGE_NO_CHILD)
 
     def del_variant(self, *args, **kwargs):
-        # From draft-davies-idntables-09, section 4. Code Points and Variants
+        # From RFC7940, section 5. Code Points and Variants
         # A "range" element has no child elements.
         logger.error("%r: Range has no variant", self)
         raise LGRFormatException(LGRFormatException.

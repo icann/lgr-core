@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-xml_serializer.py - Create an LGR XML compliant with draft-davies-idntables
+xml_serializer.py - Create an LGR XML compliant with RFC7940.
 """
 from __future__ import unicode_literals
 

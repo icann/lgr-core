@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-xml_parser.py - Parse a XML document, as described by draft-davies-idntables
+xml_parser.py - Parse a XML document, as described by RFC7940.
 
 Note:
     - Validation of input XML and actual parsing have been split into two

@@ -320,7 +320,7 @@ class LGR(object):
         # Tag handling
         tags = tag if tag is not None else []
         if len(cp_or_sequence) > 1 and len(tags) > 0:
-            # draft-davies-idntables-09, section 4.4.  Code Point Tagging:
+            # From RFC7940, section 5.5.  Code Point Tagging
             # a "tag" attribute MUST NOT be present in a "char" element
             # defining a code point sequence.
             logger.warning("Code point sequence '%s' has invalid tag defined",
@@ -329,7 +329,7 @@ class LGR(object):
                 raise LGRFormatException(LGRFormatException.
                                          LGRFormatReason.SEQUENCE_NO_TAG)
 
-        # draft-davies-idntables-09, section 4.4.  Code Point Tagging:
+        # RFC7940, section 5.5.  Code Point Tagging
         # It is an error to duplicate a value within the same "tag" attribute.
         duplicates = [t for t, count
                       in collections.Counter(tags).items() if count > 1]
@@ -511,7 +511,7 @@ class LGR(object):
 
         # Tag handling
         tags = tag if tag is not None else []
-        # draft-davies-idntables-09, section 4.4.  Code Point Tagging:
+        # From RFC7940, section 5.5.  Code Point Tagging
         # It is an error to duplicate a value within the same "tag" attribute.
         duplicates = [t for t, count
                       in collections.Counter(tags).items() if count > 1]
@@ -1174,7 +1174,7 @@ class LGR(object):
         It associates to a code point an index of the set formed by
         the code point and its variants.
 
-        For more details, see Section 7.5 of draft-ietf-lager-specification-03.
+        For more details, see Section 8.5 of RFC7940.
 
         Pre-requires: Symmetric and transitive LGR.
 
@@ -1510,8 +1510,7 @@ class LGR(object):
             # ONLY if the character has no defined reflexive mapping.
             # Otherwise, it is already part of the list,
             # with appropriate type:
-            # From draft-davies-idntables-09:
-            # 4.2.4.  Variants with Reflexive Mapping
+            # From RFC7940, section 5.3.4.  Variants with Reflexive Mapping
             # In permuting the label to generate all possible variants,
             # the type associated with a reflexive variant mapping
             # is applied to any of the permuted labels containing

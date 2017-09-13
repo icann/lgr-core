@@ -46,9 +46,8 @@ class Action(object):
         self.only_variants = frozenset(only_variants) if only_variants else None
 
         if match is not None and not_match is not None:
-            # From draft-davies-idntables-09, section 6.1. The match and not-match Attributes
-            # An action may contain a "match" or a "not-match" attribute,
-            # but not both.
+            # From RFC7940, section 7.1. The "match" and "not-match" Attributes
+            # An action MUST NOT contain both a "match" and a "not-match" attribute
             logger.error("Action contains both 'match' and 'not-match' "
                          "attributes")
             raise LGRFormatException(LGRFormatException.LGRFormatReason.MATCH_NOT_MATCH)
@@ -71,15 +70,11 @@ class Action(object):
         :raises RuleError: If rule is invalid.
         """
 
-        # 7.3.  Determining a Disposition for a Label or Variant Label, step 1
+        # RFC7940, section 8.3.  Determining a Disposition for a Label or Variant Label
+        # Step 2
         rule_logger.debug("Applying action %s on label '%s' "
-                         "with disposition set '%s'",
-                         self, format_cp(label), disp_set)
-
-        # Note AS: Draft says:
-        # An action is triggered, if any of the following is true
-        # but I think it should not be "any" but "all" (cf Section 6.2.1)
-        # and https://mailarchive.ietf.org/arch/msg/lager/ao__3lmDHp7p0BcKl7XGphrowU0
+                          "with disposition set '%s'",
+                          self, format_cp(label), disp_set)
 
         # First bullet
         rule_matched = True
@@ -90,6 +85,7 @@ class Action(object):
                                         unicode_database)
             rule_logger.info('Action %s: when rule matched: %s',
                              self, rule_matched)
+        # Second bullet
         elif self.not_match is not None:
             rule = rules_lookup[self.not_match]
             rule_matched = not rule.matches(label,
@@ -98,7 +94,7 @@ class Action(object):
             rule_logger.info('Action %s: not-when rule matched: %s',
                              self, rule_matched)
 
-        # Second bullet
+        # Third bullet
         variant_matched = True
         if self.any_variant is not None:
             # Any single match may trigger an action that contains
@@ -106,6 +102,7 @@ class Action(object):
             variant_matched = len(self.any_variant & disp_set) > 0
             rule_logger.info('Action %s: any-variant matched: %s',
                              self, variant_matched)
+        # Fourth bullet
         elif self.all_variants is not None:
             # For an "all-variants" attribute,
             # the variant type for all variant code points must match one or
@@ -114,6 +111,7 @@ class Action(object):
                                and disp_set.issubset(self.all_variants))
             rule_logger.info('Action %s: all-variants matched: %s',
                              self, variant_matched)
+        # Fifth bullet
         elif self.only_variants is not None:
             # For an "only-variants" attribute,
             # the variant type for all variant code points must match one or

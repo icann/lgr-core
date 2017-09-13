@@ -311,10 +311,9 @@ class ReferenceManager(dict):
     Store and delete references.
     References are indexed by their id, which is stored as a string.
 
-    draft-davies-idntables-09 section 3.3.8. specifies that:
+    RFC7940 section 4.3.8.  The "references" Element specifies that:
 
-        It is RECOMMENDED that the "id" attribute be an zero-
-        based integer.
+        It is RECOMMENDED that the "id" attribute be a zero-based integer.
 
     so if no ref_id is given, generate one int-based id, converted to string.
     """
