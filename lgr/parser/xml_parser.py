@@ -319,6 +319,7 @@ class XMLParser(LGRParser):
         """
         rule = Rule(name=elem.get('name', None),
                     comment=elem.get('comment', None),
+                    ref=string_to_list(elem.get('ref', '')),
                     by_ref=elem.get('by-ref', None))
 
         for child in elem:

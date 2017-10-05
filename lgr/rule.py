@@ -23,17 +23,19 @@ class Rule(object):
     Defined in
     5.3.1.  The rule Element
     """
-    def __init__(self, name=None, comment=None, by_ref=None):
+    def __init__(self, name=None, comment=None, ref=None, by_ref=None):
         """
         Create a new rule.
 
         :param name: Name of the rule.
         :param comment: Optional comment.
+        :param ref: Optional list of references.
         :param by_ref: Name of the referenced rule.
         :raises LGRFormatException: If the rule has conflictual parameters.
         """
         self.name = name
         self.comment = comment
+        self.references = ref or []
         self.by_ref = by_ref
         self.children = []
 
