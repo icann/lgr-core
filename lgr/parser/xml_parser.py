@@ -393,7 +393,7 @@ class XMLParser(LGRParser):
         all_variants = string_to_list(elem.get('all-variants', ''))
         only_variants = string_to_list(elem.get('only-variants', ''))
 
-        return Action(disp, comment=comment,
+        return Action(disp, comment=comment, ref=string_to_list(elem.get('ref', '')),
                       match=match, not_match=not_match,
                       any_variant=any_variant,
                       all_variants=all_variants,

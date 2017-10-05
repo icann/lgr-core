@@ -21,6 +21,7 @@ class Action(object):
     """
     def __init__(self, disp,
                  comment=None,
+                 ref=None,
                  match=None,
                  not_match=None,
                  any_variant=None,
@@ -31,6 +32,7 @@ class Action(object):
 
         :param disp: Disposition of the action.
         :param comment: Optional comment.
+        :param ref: Optional list of references.
         :param match: Name of a rule that must be matched.
         :param not_match: Name of a rule that must not be matched.
         :param any_variant: Sequence of disposition to match to trigger action.
@@ -39,6 +41,7 @@ class Action(object):
         """
         self.disp = disp
         self.comment = comment
+        self.references = ref or []
         self.match = match
         self.not_match = not_match
         self.any_variant = frozenset(any_variant) if any_variant else None
