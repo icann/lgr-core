@@ -205,3 +205,9 @@ class Rule(object):
             return '<Anonymous rule>'
         else:
             return '<Rule: %s>' % self.name
+
+    def __str__(self):
+        if self.by_ref is not None:
+            return '(:rule-ref-{}:)'.format(self.by_ref)
+
+        return ' '.join('{}'.format(m) for m in self.children)

@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import logging
 
 from lgr.exceptions import (LGRFormatException, RuleError)
+from lgr.utils import format_cp_collapsed
 
 logger = logging.getLogger(__name__)
 
@@ -182,6 +183,19 @@ class Class(object):
                 logger.warning("Undefined tag '%s' in current LGR",
                                self.from_tag)
 
+    def __str__(self):
+        if self.by_ref is not None:
+            return '[:class-ref-{}:]'.format(self.by_ref)
+
+        if self.from_tag is not None:
+            return '[:class tag={}:]'.format(self.from_tag)
+
+        if self.unicode_property is not None:
+            name, value = self.unicode_property.split(':')
+            return '[:class property:{}={}:]'.format(name, value)
+
+        return format_cp_collapsed(self.codepoints)
+
     def __repr__(self):
         return '<Class %s>' % (self.name or self.from_tag or self.by_ref)
 
@@ -196,6 +210,7 @@ class CombinatorClass(Class):
     def __init__(self, name=None, comment=None):
         super(CombinatorClass, self).__init__(name=name, comment=comment)
         self._children = []
+        self.symbol = None
 
     def add_child(self, cls):
         if self.MAX_CHILDREN > 0 and len(self._children) >= self.MAX_CHILDREN:
@@ -211,6 +226,12 @@ class CombinatorClass(Class):
             child.validate(parents + [self], rules_lookup, classes_lookup)
         logger.debug('%s is valid', self)
 
+    def __str__(self):
+        if not self._children:
+            return 'Ø'
+
+        return '({})'.format(self.symbol.join(['{}'.format(m) for m in self._children]))
+
     def __repr__(self):
         return '<Combinator>'
 
@@ -221,6 +242,9 @@ class ComplementClass(CombinatorClass):
     """
 
     MAX_CHILDREN = 1
+
+    def __init__(self, *args, **kwargs):
+        super(ComplementClass, self).__init__(*args, **kwargs)
 
     def get_pattern(self, rules_lookup, classes_lookup, unicode_database,
                     is_look_behind=False, as_set=False):
@@ -243,6 +267,9 @@ class ComplementClass(CombinatorClass):
 
         logger.debug('%s is valid', self)
 
+    def __str__(self):
+        return '^{{{}}}'.format(self._children[0])
+
     def __repr__(self):
         return '<ComplementClass %s: %s>' % (self.name, self._children)
 
@@ -251,6 +278,10 @@ class UnionClass(CombinatorClass):
     """
     Define the union of multiple classes.
     """
+
+    def __init__(self, *args, **kwargs):
+        super(UnionClass, self).__init__(*args, **kwargs)
+        self.symbol = '∪'
 
     def get_pattern(self, rules_lookup, classes_lookup, unicode_database,
                     is_look_behind=False, as_set=False):
@@ -282,6 +313,10 @@ class IntersectionClass(CombinatorClass):
     """
 
     MAX_CHILDREN = 2
+
+    def __init__(self, *args, **kwargs):
+        super(IntersectionClass, self).__init__(*args, **kwargs)
+        self.symbol = '∩'
 
     def get_pattern(self, rules_lookup, classes_lookup, unicode_database,
                     is_look_behind=False, as_set=False):
@@ -318,6 +353,10 @@ class DifferenceClass(CombinatorClass):
 
     MAX_CHILDREN = 2
 
+    def __init__(self, *args, **kwargs):
+        super(DifferenceClass, self).__init__(*args, **kwargs)
+        self.symbol = '\\'
+
     def get_pattern(self, rules_lookup, classes_lookup, unicode_database,
                     is_look_behind=False, as_set=False):
         set_1 = self._children[0].get_pattern(rules_lookup, classes_lookup,
@@ -351,6 +390,10 @@ class SymmetricDifferenceClass(CombinatorClass):
     """
 
     MAX_CHILDREN = 2
+
+    def __init__(self, *args, **kwargs):
+        super(SymmetricDifferenceClass, self).__init__(*args, **kwargs)
+        self.symbol = '△'
 
     def get_pattern(self, rules_lookup, classes_lookup, unicode_database,
                     is_look_behind=False, as_set=False):

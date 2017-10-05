@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import logging
 
 from lgr.exceptions import LGRFormatException
+from lgr.utils import format_cp_collapsed
 from lgr.core import PROTOCOL_LABEL_MAX_LENGTH
 
 logger = logging.getLogger(__name__)
@@ -112,6 +113,9 @@ class StartMatcher(Matcher):
                     is_look_behind=False):
         return '^'
 
+    def __str__(self):
+        return '(start)'
+
     def __repr__(self):
         return '<StartMatcher>'
 
@@ -129,6 +133,9 @@ class EndMatcher(Matcher):
     def get_pattern(self, rules_lookup, classes_lookup, unicode_database,
                     is_look_behind=False):
         return '$'
+
+    def __str__(self):
+        return '(end)'
 
     def __repr__(self):
         return '<EndMatcher>'
@@ -152,6 +159,9 @@ class AnchorMatcher(Matcher):
         # TODO: Cannot use new-style string formatting here
         # because \x{AAAA} is used for CharMatcher
         return '%(anchor)s'
+
+    def __str__(self):
+        return '⚓'
 
     def __repr__(self):
         return '<AnchorMatcher>'
@@ -188,6 +198,9 @@ class LookAheadMatcher(LookAroundMatcher):
                              for m in self._children])
         return '(?=%s)' % sub_regex
 
+    def __str__(self):
+        return '→({})'.format(''.join('{}'.format(m) for m in self._children))
+
     def __repr__(self):
         return '<LookAheadMatcher>'
 
@@ -213,6 +226,9 @@ class LookBehindMatcher(LookAroundMatcher):
                                            True)
                              for m in self._children])
         return '(?<=%s)' % sub_regex
+
+    def __str__(self):
+        return '({})←'.format(''.join('{}'.format(m) for m in self._children))
 
     def __repr__(self):
         return '<LookBehindMatcher>'
@@ -284,6 +300,10 @@ class ChoiceMatcher(CountMatcher, CompoundMatcher):
         else:
             return choice
 
+    def __str__(self):
+        count = CountMatcher.get_pattern(self)
+        return '({}){}'.format('|'.join('{}'.format(m) for m in self._children), count)
+
     def __repr__(self):
         count = super(ChoiceMatcher, self).get_pattern()
         return '<ChoiceMatcher %s>' % count
@@ -303,6 +323,10 @@ class AnyMatcher(CountMatcher):
                     is_look_behind=False):
         count = super(AnyMatcher, self).get_pattern(is_look_behind=is_look_behind)
         return '.%s' % count
+
+    def __str__(self):
+        count = CountMatcher.get_pattern(self)
+        return '(any){}'.format(count)
 
     def __repr__(self):
         count = super(AnyMatcher, self).get_pattern()
@@ -343,6 +367,13 @@ class CharMatcher(CountMatcher):
         else:
             return regex
 
+    def __str__(self):
+        count = CountMatcher.get_pattern(self)
+        if len(count) > 1:
+            return '({}){}'.format(format_cp_collapsed(self.cp_or_sequence), count)
+
+        return format_cp_collapsed(self.cp_or_sequence)
+
     def __repr__(self):
         count = super(CharMatcher, self).get_pattern()
         return '<CharMatcher: %s%s>' % (self.cp_or_sequence, count)
@@ -377,6 +408,13 @@ class RuleMatcher(CountMatcher):
         super(RuleMatcher, self).validate(parents,
                                           rules_lookup, classes_lookup)
         self._rule.validate(parents + [self], rules_lookup, classes_lookup)
+
+    def __str__(self):
+        count = CountMatcher.get_pattern(self)
+        if len(count) > 1:
+            return '({}){}'.format(self._rule, count)
+
+        return '{}'.format(self._rule)
 
     def __repr__(self):
         count = super(RuleMatcher, self).get_pattern()
@@ -425,6 +463,13 @@ class ClassMatcher(CountMatcher):
         super(ClassMatcher, self).validate(parents,
                                            rules_lookup, classes_lookup)
         self._cls.validate(parents + [self], rules_lookup, classes_lookup)
+
+    def __str__(self):
+        count = CountMatcher.get_pattern(self)
+        if len(count) > 1:
+            return '({}){}'.format(self._cls, count)
+
+        return '{}'.format(self._cls)
 
     def __repr__(self):
         count = super(ClassMatcher, self).get_pattern()

@@ -39,6 +39,45 @@ def format_cp(cp_or_sequence):
     return ' '.join(['U+{0}'.format(cp_to_str(c)) for c in cp_or_sequence])
 
 
+def format_cp_collapsed(cp_or_sequence):
+    """
+    Convert a code point or code point sequence to a string.
+
+    :param cp_or_sequence: Code point/Code point sequence to format.
+    :returns: Formatted code point or code point sequence as a string.
+
+    >>> format_cp_collapsed(1)
+    u'U+0001'
+    >>> format_cp_collapsed([1])
+    u'U+0001'
+    >>> format_cp_collapsed([1,3])
+    u'U+0001 U+0003'
+    >>> format_cp_collapsed([1,2,3])
+    u'U+0001-U+0003'
+    >>> format_cp(None)
+    u'None'
+    >>> format_cp_collapsed([1,2,3,5,6,10,12,13,14,15])
+    u'U+0001-U+0003 U+0005 U+0006 U+000A U+000C-U+000F'
+    """
+    if cp_or_sequence is None:
+        return 'None'
+
+    if isinstance(cp_or_sequence, int):
+        cp_or_sequence = [cp_or_sequence]
+
+    collapsed = collapse_codepoints(cp_or_sequence)
+    formatted = []
+    for start, end in collapsed:
+        if start == end:
+            formatted.append('U+{0}'.format(cp_to_str(start)))
+        elif end == start + 1:
+            formatted.extend(['U+{0}'.format(cp_to_str(start)), 'U+{0}'.format(cp_to_str(end))])
+        else:
+            formatted.append('-'.join(['U+{0}'.format(cp_to_str(start)), 'U+{0}'.format(cp_to_str(end))]))
+
+    return ' '.join(formatted)
+
+
 def collapse_codepoints(codepoints):
     """
     Convert a list of code points in a list of ranges.
