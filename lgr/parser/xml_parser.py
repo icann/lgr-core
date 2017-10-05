@@ -412,6 +412,7 @@ class XMLParser(LGRParser):
         if tag == CLASS_TAG:
             cls = Class(name=name,
                         comment=comment,
+                        ref=string_to_list(elem.get('ref', '')),
                         from_tag=elem.get('from-tag', None),
                         unicode_property=elem.get('property', None),
                         by_ref=elem.get('by-ref', None))
