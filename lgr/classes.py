@@ -63,7 +63,7 @@ class Class(object):
         """
         self.name = name
         self.comment = comment
-        self.ref = ref or []
+        self.references = ref or []
         self.from_tag = from_tag
         self.unicode_property = unicode_property
         self.codepoints = set(codepoints or [])
@@ -82,7 +82,7 @@ class Class(object):
                 logger.error("Cannot create a class with "
                              "both a 'by-ref' and a 'property'")
                 raise LGRFormatException(LGRFormatException.LGRFormatReason.BY_REF_AND_OTHER)
-            elif ref is not None:
+            elif ref:
                 logger.error("Cannot create a class with "
                              "both a 'by-ref' and a 'ref'")
                 raise LGRFormatException(LGRFormatException.LGRFormatReason.BY_REF_AND_OTHER)
