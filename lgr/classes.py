@@ -95,7 +95,7 @@ class Class(object):
         """
         if self.by_ref is not None:
             logger.error("Cannot add code point to a 'by-ref' class")
-            raise LGRFormatException(LGRFormatException.LGRFormatReason.NAME_AND_BY_REF)
+            raise LGRFormatException(LGRFormatException.LGRFormatReason.BY_REF_AND_OTHER)
 
         if isinstance(cp, int):
             cp = [cp]
