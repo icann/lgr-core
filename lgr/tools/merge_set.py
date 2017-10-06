@@ -16,6 +16,8 @@ import logging
 import re
 from datetime import date
 from cStringIO import StringIO
+# OrderedDict is used in replacement for set in order to get OrderedSets
+from collections import OrderedDict
 
 from lgr.exceptions import LGRFormatException
 from lgr.core import LGR, DEFAULT_ACTIONS
@@ -45,17 +47,17 @@ def merge_version(lgr_set):
     :param lgr_set: The LGRs in the set
     :return: The merged version object
     """
-    values = set()
-    comments = set()
-    for version in map(lambda x: x.metadata.version, lgr_set):
+    values = OrderedDict()
+    comments = OrderedDict()
+    for version in [lgr.metadata.version for lgr in lgr_set]:
         if not version:
             continue
         if version.value:
-            values.add(version.value)
+            values.update(OrderedDict.fromkeys([version.value]))
         if version.comment:
-            comments.add(version.comment)
+            comments.update(OrderedDict.fromkeys([version.comment]))
 
-    return Version('|'.join(values), '|'.join(comments))
+    return Version('|'.join(values.keys()), '|'.join(comments.keys()))
 
 
 def merge_description(lgr_set):
@@ -66,7 +68,7 @@ def merge_description(lgr_set):
     :return: The merged description object
     """
     # Check that none of the object is None before processing
-    description_type = 'text/enriched'
+    description_type = 'text/plain'
     values = []
     for lgr in lgr_set:
         description = lgr.metadata.description
@@ -95,11 +97,11 @@ def merge_metadata(lgr_set):
     output.version = merge_version(lgr_set)
     output.description = merge_description(lgr_set)
 
-    scopes = set()
-    languages = set()
-    for metadata in map(lambda x: x.metadata, lgr_set):
-        scopes.update(set(metadata.scopes))
-        languages.update(set(metadata.languages))
+    scopes = OrderedDict()
+    languages = OrderedDict()
+    for metadata in [lgr.metadata for lgr in lgr_set]:
+        scopes.update(OrderedDict.fromkeys(metadata.scopes))
+        languages.update(OrderedDict.fromkeys(metadata.languages))
         output.validity_start = compare_objects(output.validity_start,
                                                 metadata.validity_start,
                                                 max)
@@ -111,8 +113,8 @@ def merge_metadata(lgr_set):
                                                  metadata.unicode_version,
                                                  max)
 
-    output.scopes = list(scopes)
-    output.languages = list(languages)
+    output.scopes = list(scopes.keys())
+    output.languages = list(languages.keys())
 
     output.date = date.today().isoformat()
 
@@ -398,12 +400,13 @@ def merge_lgr_set(lgr_set, name):
     """
     logger.debug("Merge %s", name)
 
+    # order LGRs
+    lgr_set.sort(key=lambda x: get_script(x).replace('und-', 'zzz'))
+
     # Ensure all unicode version are correct
-    unicode_version = set()
-    for lgr in lgr_set:
-        unicode_version.add(lgr.metadata.unicode_version)
+    unicode_version = OrderedDict().fromkeys(lgr.metadata.unicode_version for lgr in lgr_set)
     if len(unicode_version) > 1:
-        logger.warning("Different unicode version in set: %s", unicode_version)
+        logger.warning("Different unicode version in set: %s", unicode_version.keys())
 
     ref_mapping = {}
     metadata = copy.deepcopy(merge_metadata(lgr_set))
