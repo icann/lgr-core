@@ -47,7 +47,7 @@ THE POSSIBILITY OF SUCH DAMAGE.
 * [LXML](http://lxml.de/) for XML parsing/serializing [BSD License]
 * [language-tags](https://github.com/OnroerendErfgoed/language-tags) [MIT License]
 * [picu](https://pypi.python.org/pypi/picu) [MIT/X license]
-* munidata for Unicode-related properties access [TBD]
+* [munidata](https://github.com/icann/munidata) for Unicode-related properties access [BSD License]
 
 For testing:
 
@@ -91,7 +91,7 @@ The `tools` directory contains some tools to exercise the library.
 * `lgr_cli.py` parsed an XML LGR file, and validate it against configured MSR
   and Unicode version.
 * `rfcXXXX_dump.py` parses inputs in RFC XXXX format, and generate an XML LGR.
-* `one_per)line_dump.py` parses input in the "one per line" format, and generate an XML LGR.
+* `one_per_line_dump.py` parses input in the "one per line" format, and generate an XML LGR.
 
 Other tools are available to manipulate LGR files and labels:
 * `lgr_annotate.py` takes an LGR and a list of labels and output
@@ -102,28 +102,6 @@ Other tools are available to manipulate LGR files and labels:
 * `lgr_diff_collision.py` takes 2 LGR and one set of labels,
   and test for collisions between labels and generated variants from the 2 LGR.
 * `lgr_merge_set.py` takes some LGRs and create a merged LGR from the provided set.
-
-### LGR Diff and Collision
-
-The `lgr_diff_collision.py` tool output makes use of terms like `Primary` or `Variant`.
-
-A `Primary` label is a label which is present in the input label list.
-A `Variant` label is a variant of a label present in the input label list.
-
-For example, given a repertoire of `[a-z], oe, œ` with the variant set `oe, œ, x, y`
-and the input list of labels `oeuf œuf oeil`, the tool will detect collisions
-for `oeuf` and `œuf` and classify them as follows:
-
-    Primary-Primary:
-        oeuf-œuf
-    Primary-Variant:
-        oeuf-xuf
-        oeuf-yuf
-        œuf-xuf
-        œuf-yuf
-    Variant-Variant
-        xuf-yuf
-
 
 ## Testing and coverage
 
