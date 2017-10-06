@@ -107,7 +107,7 @@ def _serialize_meta(lgr, meta):
     references = lgr.reference_manager
     if len(references) > 0:
         references_node = etree.SubElement(meta, 'references')
-        for ref_id in sorted(references):
+        for ref_id in references:
             ref = references[ref_id]
             ref_attributes = {
                 'id': str(ref_id)

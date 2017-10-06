@@ -130,7 +130,7 @@ def merge_references(lgr, script, merged_lgr, ref_mapping):
     :param merged_lgr: The merged LGR
     :param ref_mapping: The reference id mapping from base LGR to LGR set
     """
-    ref_mapping.setdefault(script, {})
+    ref_mapping.setdefault(script, OrderedDict())
     if lgr.reference_manager:
         inserted_references = {x['value']: ref_id for ref_id, x in merged_lgr.reference_manager.items()}
         for ref_id, ref_dict in lgr.reference_manager.items():

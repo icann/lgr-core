@@ -9,6 +9,7 @@ import mimetypes
 import datetime
 from language_tags import tags as rfc5646
 import logging
+from collections import OrderedDict
 
 from lgr.exceptions import (LGRFormatException,
                             ReferenceAlreadyExists,
@@ -304,7 +305,7 @@ class Metadata(object):
         self.unicode_version = unicode_version
 
 
-class ReferenceManager(dict):
+class ReferenceManager(OrderedDict):
     """
     LGR references manager.
 
