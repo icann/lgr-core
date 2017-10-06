@@ -146,8 +146,10 @@ Cross-script variants
 Given an LGR set and a label list, the tool will iterate through the label list and for each label:
 
 * Check that the label is eligible in the merged LGR.
-* Iterate through the element LGR composing the set:
-    * Generate the variants of the label
+* Generate all the variants in the merged LGR.
+* For each of the variant:
+  * Retrieve the Element LGR(s) for each of their code points.
+  * If the variants is composed of code points from more than one Element LGR, then it is a cross-script variant.
 
 As generating the labels' variants is a very expensive process, the tool is asynchronous: a notification will be sent by email when the processing is done
 
