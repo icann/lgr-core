@@ -78,7 +78,7 @@ class TestLGRSet(unittest.TestCase):
         lgr.add_action(Action(match='rule-name', disp='invalid'))
         lgr.actions_xml.append("""<action disp="invalid" match="rule-name"/>""")
 
-        merge_actions(lgr, 'fr', merged_lgr)
+        merge_actions(lgr, 'fr', merged_lgr, {})
 
         self.assertEqual(len(merged_lgr.actions), 1)
         self.assertEqual(len(merged_lgr.actions_xml), 1)
@@ -89,7 +89,7 @@ class TestLGRSet(unittest.TestCase):
         lgr.add_action(Action(disp='invalid', comment="Default action for invalid", any_variant=['invalid']))
         lgr.actions_xml.append("""<action disp="invalid" match="rule-name"/>""")
 
-        merge_actions(lgr, 'fr', merged_lgr)
+        merge_actions(lgr, 'fr', merged_lgr, {})
 
         self.assertEqual(len(merged_lgr.actions), 1)
         self.assertEqual(len(merged_lgr.actions_xml), 1)
@@ -167,20 +167,20 @@ class TestLGRSet(unittest.TestCase):
         lgr.add_rule(rule)
         lgr.rules_xml.append(rule_xml)
 
-        merge_rules(lgr, 'fr', merged_lgr)
+        merge_rules(lgr, 'fr', merged_lgr, {})
 
         self.assertEqual(len(merged_lgr.rules), 1)
         self.assertEqual(len(merged_lgr.rules_xml), 1)
         self.assertEqual(merged_lgr.rules[0], 'fr-rule-name')
 
         # Merging is idempotent
-        merge_rules(lgr, 'fr', merged_lgr)
+        merge_rules(lgr, 'fr', merged_lgr, {})
         self.assertEqual(len(merged_lgr.rules), 1)
         self.assertEqual(len(merged_lgr.rules_xml), 1)
         self.assertEqual(merged_lgr.rules[0], 'fr-rule-name')
 
         # Not with different script
-        merge_rules(lgr, 'en', merged_lgr)
+        merge_rules(lgr, 'en', merged_lgr, {})
         self.assertEqual(len(merged_lgr.rules), 2)
         self.assertEqual(len(merged_lgr.rules_xml), 2)
         self.assertEqual(merged_lgr.rules[1], 'en-rule-name')
@@ -203,12 +203,12 @@ class TestLGRSet(unittest.TestCase):
 </rule>
 """)
 
-        merge_rules(lgr, 'fr', merged_lgr)
+        merge_rules(lgr, 'fr', merged_lgr, {})
         self.assertEqual(len(merged_lgr.rules), 3)
         self.assertEqual(len(merged_lgr.rules_xml), 3)
         self.assertEqual(merged_lgr.rules[2], 'Common-leading-combining-mark')
 
-        merge_rules(lgr, 'fr', merged_lgr)
+        merge_rules(lgr, 'fr', merged_lgr, {})
         self.assertEqual(len(merged_lgr.rules), 3)
         self.assertEqual(len(merged_lgr.rules_xml), 3)
         self.assertEqual(merged_lgr.rules[2], 'Common-leading-combining-mark')
@@ -382,6 +382,7 @@ Script: '{script}' - MIME-type: '{type}':
         self.assertEqual(metadata.validity_end, '2020-06-01')
         self.assertEqual(metadata.unicode_version, '6.3.0')
         self.assertEqual(metadata.date, date.today().isoformat())
+
 
 if __name__ == '__main__':
     import logging

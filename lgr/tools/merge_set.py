@@ -174,13 +174,14 @@ def rename_action(action, action_xml, script):
     return new_action, action_xml
 
 
-def merge_actions(lgr, script, merged_lgr):
+def merge_actions(lgr, script, merged_lgr, ref_mapping):
     """
     Merge actions from LGR set.
 
     :param lgr: A LGR from the set
     :param script: The LGR script
     :param merged_lgr: The merged LGR
+    :param ref_mapping: The reference mapping from base LGR to new LGR
     """
     logger.debug("Merge actions")
 
@@ -189,20 +190,25 @@ def merge_actions(lgr, script, merged_lgr):
         action_xml = lgr.actions_xml[idx]
         if action in DEFAULT_ACTIONS:
             continue
-        action, action_xml = rename_action(action, action_xml, script)
+        merged_action, merged_action_xml = rename_action(action, action_xml, script)
 
-        merged_lgr.actions.append(action)
-        merged_lgr.actions_xml.append(action_xml)
+        # Replace references in python object and XML
+        new_ref = [ref_mapping[script].get(x, x) for x in action.references]
+        merged_action.references = new_ref
+        merged_action_xml = re.sub(r'(?<!by-)ref="([^"]+)"', r'ref="{}"'.format(" ".join(new_ref)), merged_action_xml)
+
+        merged_lgr.actions.append(merged_action)
+        merged_lgr.actions_xml.append(merged_action_xml)
 
 
 def rename_rule(rule, rule_xml, script):
     """
     Prefix rule name or reference with script
 
-    :param rule: The rule 
+    :param rule: The rule
     :param rule_xml: The rule XML
     :param script:  The LGR script
-    :return: Updated rule, updated rule XML
+    :return: Updated rule name, updated rule XML
     """
     if rule.name not in MSR_2_RULES:
         new_rule_name = script + '-' + rule.name
@@ -223,25 +229,31 @@ def rename_rule(rule, rule_xml, script):
     return new_rule_name, rule_xml
 
 
-def merge_rules(lgr, script, merged_lgr):
+def merge_rules(lgr, script, merged_lgr, ref_mapping):
     """
     Merge rules from LGR set.
 
     :param lgr: A LGR from the set
     :param script: The LGR script
     :param merged_lgr: The merged LGR
+    :param ref_mapping: The reference mapping from base LGR to new LGR
     :return: (list of rules name, list of XML rules)
     """
     logger.debug("Merge rules")
 
     for rule in lgr.rules_lookup.values():
         rule_xml = lgr.rules_xml[lgr.rules.index(rule.name)]
-        rule_name, rule_xml = rename_rule(rule, rule_xml, script)
-        if rule_name in merged_lgr.rules:
+        merged_rule_name, merged_rule_xml = rename_rule(rule, rule_xml, script)
+        if merged_rule_name in merged_lgr.rules:
             # MSR-2
             continue
-        merged_lgr.rules.append(rule_name)
-        merged_lgr.rules_xml.append(rule_xml)
+
+        # Replace references in python object and XML
+        new_ref = [ref_mapping[script].get(x, x) for x in rule.references]
+        merged_rule_xml = re.sub(r'(?<!by-)ref="([^"]+)"', r'ref="{}"'.format(" ".join(new_ref)), merged_rule_xml)
+
+        merged_lgr.rules.append(merged_rule_name)
+        merged_lgr.rules_xml.append(merged_rule_xml)
 
 
 def rename_class(classe, class_xml, script):
@@ -251,7 +263,7 @@ def rename_class(classe, class_xml, script):
     :param classe: The class 
     :param class_xml: The class XML
     :param script:  The LGR script
-    :return: Updated class, updated class XML
+    :return: Updated class name, updated class XML
     """
     new_class_name = script + '-' + classe.name
 
@@ -263,14 +275,14 @@ def rename_class(classe, class_xml, script):
     return new_class_name, class_xml
 
 
-def merge_classes(lgr, script, merged_lgr):
+def merge_classes(lgr, script, merged_lgr, ref_mapping):
     """
     Merge classes from LGR set.
 
     :param lgr: A LGR from the set
     :param script: The LGR script
     :param merged_lgr: The merged LGR
-    :return: (list of classes name, list of XML classes)
+    :param ref_mapping: The reference mapping from base LGR to new LGR
     """
     logger.debug("Merge classes")
 
@@ -279,9 +291,14 @@ def merge_classes(lgr, script, merged_lgr):
             # fake classes from tags
             continue
         class_xml = lgr.classes_xml[lgr.classes.index(classe.name)]
-        class_name, class_xml = rename_class(classe, class_xml, script)
-        merged_lgr.classes.append(class_name)
-        merged_lgr.classes_xml.append(class_xml)
+        merged_class_name, merged_class_xml = rename_class(classe, class_xml, script)
+
+        # Replace references in python object and XML
+        new_ref = [ref_mapping[script].get(x, x) for x in classe.references]
+        merged_class_xml = re.sub(r'(?<!by-)ref="([^"]+)"', r'ref="{}"'.format(" ".join(new_ref)), merged_class_xml)
+
+        merged_lgr.classes.append(merged_class_name)
+        merged_lgr.classes_xml.append(merged_class_xml)
 
 
 def merge_chars(lgr, script, merged_lgr, ref_mapping):
@@ -417,9 +434,9 @@ def merge_lgr_set(lgr_set, name):
 
         merge_references(lgr, script, merged_lgr, ref_mapping)
         merge_chars(lgr, script, merged_lgr, ref_mapping)
-        merge_actions(lgr, script, merged_lgr)
-        merge_rules(lgr, script, merged_lgr)
-        merge_classes(lgr, script, merged_lgr)
+        merge_actions(lgr, script, merged_lgr, ref_mapping)
+        merge_rules(lgr, script, merged_lgr, ref_mapping)
+        merge_classes(lgr, script, merged_lgr, ref_mapping)
 
     # XXX As the created merged_lgr is not a valid Python LGR object,
     # we have to serialize it/parse it to get a valid object.
