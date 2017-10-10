@@ -249,7 +249,7 @@ Script: '{script}' - MIME-type: '{type}':
                           merged_description_placeholder.format(script='und-Khmer',
                                                                 type='text/html',
                                                                 value=self.lgr_2.metadata.description.value)})
-        self.assertEqual(description.description_type, 'text/enriched')
+        self.assertEqual(description.description_type, 'text/plain')
 
     def test_merge_metadata(self):
         metadata = merge_metadata(self.lgr_set)
@@ -282,7 +282,7 @@ Script: '{script}' - MIME-type: '{type}':
         merge_references(self.lgr_1, 'fr', merged_lgr, reference_mapping)
         merge_references(self.lgr_2, 'und-Khmer', merged_lgr, reference_mapping)
 
-        merge_chars(self.lgr_1, 'fr', merged_lgr, reference_mapping)
+        merge_chars(self.lgr_1, 'fr', merged_lgr, reference_mapping, [])
 
         # Simple variant changed to blocked
         cp = merged_lgr.get_char(0x0041)
@@ -295,7 +295,7 @@ Script: '{script}' - MIME-type: '{type}':
         self.assertEqual(var.type, 'blocked')
 
         # Complete merge
-        merge_chars(self.lgr_2, 'und-Khmer', merged_lgr, reference_mapping)
+        merge_chars(self.lgr_2, 'und-Khmer', merged_lgr, reference_mapping, [])
 
         self._test_merged_chars(merged_lgr)
 
