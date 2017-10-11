@@ -13,6 +13,7 @@ from lgr.action import Action
 from lgr.rule import Rule
 from lgr.matcher import RuleMatcher, ClassMatcher, StartMatcher
 from lgr.classes import Class, UnionClass
+from lgr.exceptions import CharAlreadyExists
 from lgr.core import LGR
 
 from lgr.parser.xml_parser import XMLParser
@@ -32,13 +33,16 @@ from lgr.tools.merge_set import (rename_action,
 RESOURCE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'inputs', 'set')
 
 
+def parse_lgr(filename):
+    parser = XMLParser(os.path.join(RESOURCE_DIR, filename))
+    return parser.parse_document()
+
+
 class TestLGRSet(unittest.TestCase):
 
     def setUp(self):
-        parser = XMLParser(os.path.join(RESOURCE_DIR, 'lgr-script1.xml'))
-        self.lgr_1 = parser.parse_document()
-        parser = XMLParser(os.path.join(RESOURCE_DIR, 'lgr-script2.xml'))
-        self.lgr_2 = parser.parse_document()
+        self.lgr_1 = parse_lgr('lgr-script1.xml')
+        self.lgr_2 = parse_lgr('lgr-script2.xml')
         self.lgr_set = [self.lgr_1, self.lgr_2]
 
     def test_rename_action_not_msr2(self):
@@ -382,6 +386,29 @@ Script: '{script}' - MIME-type: '{type}':
         self.assertEqual(metadata.validity_end, '2020-06-01')
         self.assertEqual(metadata.unicode_version, '6.3.0')
         self.assertEqual(metadata.date, date.today().isoformat())
+
+
+class TestLgrCollidingCP(unittest.TestCase):
+
+    def test_merge_colliding_same_rule(self):
+        lgr1 = parse_lgr('lgr-same-rule-1.xml')
+        lgr2 = parse_lgr('lgr-same-rule-2.xml')
+        merged_lgr = merge_lgr_set([lgr1, lgr2], 'LGR Set')
+
+        hyphen = merged_lgr.get_char(0x002D)
+        # TODO: Order for prefix for multiple scripts
+        self.assertEqual(hyphen.not_when, 'fr-en-hyphen-minus-disallowed')
+
+        # TODO: Order for prefix for multiple scripts
+        for prefix in ['fr', 'en', 'fr-en']:
+            self.assertIn("{}-hyphen-minus-disallowed".format(prefix), merged_lgr.rules_lookup)
+            self.assertIn("{}-hyphen-minus-disallowed".format(prefix), merged_lgr.rules)
+
+    def test_merge_colliding_different_rule(self):
+        lgr1 = parse_lgr('lgr-different-rule-1.xml')
+        lgr2 = parse_lgr('lgr-different-rule-2.xml')
+        with self.assertRaises(CharAlreadyExists):
+            merge_lgr_set([lgr1, lgr2], 'LGR Set')
 
 
 if __name__ == '__main__':
