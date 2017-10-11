@@ -319,8 +319,8 @@ class ReferenceManager(OrderedDict):
     so if no ref_id is given, generate one int-based id, converted to string.
     """
 
-    def __init__(self):
-        super(ReferenceManager, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(ReferenceManager, self).__init__(*args, **kwargs)
         # Keep track of the next id to generate
         self.next_id = 0
 
