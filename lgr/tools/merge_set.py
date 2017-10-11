@@ -372,6 +372,8 @@ def merge_chars(lgr, script, merged_lgr, ref_mapping, previous_scripts):
                 # existing variants comment or references are not updated as it is not really important
 
             # if when or not-when:
+            #  - if existing cp has no concurrent rule or conversely, keep the rule as is (i.e. if existing cp has
+            #    no rule but cp has one, keep the cp rule with prefixed with the current script)
             #  - if existing cp has the same when/not-when rules (same name, content is not checked), update cp WLE with
             #    the prefix from this script
             #  - if existing cp has a different rule (not the same name), raise an exception
@@ -384,17 +386,27 @@ def merge_chars(lgr, script, merged_lgr, ref_mapping, previous_scripts):
                 if existing_cp.not_when:
                     existing_not_when = re.sub(r'^{}-'.format(other_script), '', existing_cp.not_when)
 
-            if existing_when == cp.when and existing_not_when == cp.not_when:
-                if existing_when:
+            if cp.when:
+                if not existing_when:
+                    existing_cp.when = script + '-' + cp.when
+                elif existing_when == cp.when:
                     existing_cp.when = script + '-' + existing_cp.when
                     # add a merged rule
                     matching_script = re.sub(r'-{}$'.format(existing_when), '', existing_cp.when)
                     merge_rules(lgr, matching_script, merged_lgr, ref_mapping, specific=existing_when)
-                if existing_not_when:
+                else:
+                    raise CharAlreadyExists(cp.cp)
+
+            if cp.not_when:
+                if not existing_not_when:
+                    existing_cp.not_when = script + '-' + cp.not_when
+                elif existing_not_when == cp.not_when:
                     existing_cp.not_when = script + '-' + existing_cp.not_when
                     # add a merged rule
                     matching_script = re.sub(r'-{}$'.format(existing_not_when), '', existing_cp.not_when)
                     merge_rules(lgr, matching_script, merged_lgr, ref_mapping, specific=existing_not_when)
+                else:
+                    raise CharAlreadyExists(cp.cp)
 
             continue
 
