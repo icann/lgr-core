@@ -1,6 +1,17 @@
 Algorithms used in LGR tools
 ============================
 
+Label validation for LGR set
+----------------------------
+
+The following steps are done to process a label in a LGR set context:
+
+* First, verify that a proposed label is valid by processing it with the Element LGR corresponding to the script that was selected for the label in the application.
+If the label has 'invalid' disposition then processing is stopped.
+* Second, process the now validated label against the common LGR to verify it does not collide with any existing delegated labels (and any of their variants, whether blocked or allocatable).
+If a collision is found then processing is stopped.
+* Third, now that the label is known to be valid, and not in collision, use the appropriate element LGR to generate all allocatable variants.
+
 Comparison tools
 ----------------
 
