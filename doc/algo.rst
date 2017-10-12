@@ -165,3 +165,58 @@ Given an LGR set and a label list, the tool will iterate through the label list 
 As generating the labels' variants is a very expensive process, the tool is asynchronous: a notification will be sent by email when the processing is done
 
 .. _`section 8.5 of RFC 7940`: https://tools.ietf.org/html/rfc7940#section-8.5
+
+Merge Element LGRs
+------------------
+
+Given a list of Element LGR, the tool will create a merged LGR.
+
+The merged LGR will contain all the repertoire from the Element LGRs and all the individual Whole Label Evaluation (WLE)
+rules from the Element LGRs.
+
+The following modifications are applied while merging the Element LGR:
+ - the variant mapping is be the union of the variant mappings from the Element LGRs,
+ - all variant allocations are marked as blocked as variants disposition is specific for each script,
+ - the default rules and actions defined in MSR-2 are annotated in the merged LGR with the prefix "Common-",
+ - the rules, tags and character classes defined by an Element LGR are prefixed with the script code for this LGR separated
+   by "-",
+ - all repertoire code points are tagged with their script extensions values,
+ - actions are merged, preserving their order of precedence.
+
+In case of a code point present in more than one LGR, the following rules are applied:
+ - merged code point gets an union of tags, references and variants and a concatenated comment,
+ - transitivity with variants
+   (i.e. if b is variant of a in LGR 1, c is variant of a in LGR 2: set b as c variant and conversely),
+ - if the code point is affected by a when rule in one Element LGR:
+
+   - if the code point has no when rule of the same type in the other LGR, keep the when rule on the code point
+     (if the when / not-when rules are complementary between the LGRs an error will be raised as a code point cannot get
+     both when and not-when rules),
+
+     .. code-block:: xml
+
+       <char cp="0061" when="rule1" /> <!-- script sc1 -->
+       <char cp="0061" />
+
+     will be merged as:
+
+     .. code-block:: xml
+
+       <char cp="0061" when="sc1-rule1" />
+
+   - if the code point has the "same" when rule ("same" means with the same name and same kind (when or not-when),
+     the content of the rule is not  actually analyzed), prefix the when rule with the script code for both LGR,
+
+     .. code-block:: xml
+
+       <char cp="0061" when="rule1" /> <!-- script sc1 -->
+       <char cp="0061" when="rule1" /> <!-- script sc2 -->
+
+     will be merged as:
+
+     .. code-block:: xml
+
+       <char cp="0061" when="sc2-sc1-rule1" />
+
+   - if the code point has a "different" when rule of the same kind ("different" means with a different name), return a
+     duplicated code point exception.
