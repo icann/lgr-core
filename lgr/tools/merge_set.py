@@ -377,14 +377,14 @@ def merge_chars(lgr, script, merged_lgr, ref_mapping, previous_scripts):
             #  - if existing cp has the same when/not-when rules (same name, content is not checked), update cp WLE with
             #    the prefix from this script
             #  - if existing cp has a different rule (not the same name), raise an exception
-            existing_when = None
-            existing_not_when = None
+            existing_when = existing_cp.when
+            existing_not_when = existing_cp.not_when
             # retrieve WLE names
-            for other_script in previous_scripts:
+            for other_script in reversed(previous_scripts):
                 if existing_cp.when:
-                    existing_when = re.sub(r'^{}-'.format(other_script), '', existing_cp.when)
+                    existing_when = re.sub(r'^{}-'.format(other_script), '', existing_when)
                 if existing_cp.not_when:
-                    existing_not_when = re.sub(r'^{}-'.format(other_script), '', existing_cp.not_when)
+                    existing_not_when = re.sub(r'^{}-'.format(other_script), '', existing_not_when)
 
             if cp.when:
                 if not existing_when:
@@ -466,7 +466,7 @@ def merge_lgr_set(lgr_set, name):
     ref_mapping = {}
     metadata = copy.deepcopy(merge_metadata(lgr_set))
     merged_lgr = LGR(name=name, metadata=metadata)
-    previous_scripts = set()
+    previous_scripts = []
     for lgr in lgr_set:
         script = get_script(lgr)
         lgr.expand_ranges()
@@ -476,7 +476,7 @@ def merge_lgr_set(lgr_set, name):
         merge_actions(lgr, script, merged_lgr, ref_mapping)
         merge_rules(lgr, script, merged_lgr, ref_mapping)
         merge_classes(lgr, script, merged_lgr, ref_mapping)
-        previous_scripts.add(script)
+        previous_scripts.append(script)
 
     # XXX As the created merged_lgr is not a valid Python LGR object,
     # we have to serialize it/parse it to get a valid object.

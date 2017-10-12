@@ -391,16 +391,16 @@ Script: '{script}' - MIME-type: '{type}':
 class TestLgrCollidingCP(unittest.TestCase):
 
     def test_merge_colliding_same_rule(self):
-        lgr1 = parse_lgr('lgr-same-rule-1.xml')
-        lgr2 = parse_lgr('lgr-same-rule-2.xml')
-        merged_lgr = merge_lgr_set([lgr1, lgr2], 'LGR Set')
+        lgr1 = parse_lgr('lgr-same-rule-fr.xml')
+        lgr2 = parse_lgr('lgr-same-rule-en.xml')
+        lgr3 = parse_lgr('lgr-same-rule-es.xml')
+        merged_lgr = merge_lgr_set([lgr1, lgr2, lgr3], 'LGR Set')
 
         hyphen = merged_lgr.get_char(0x002D)
-        # TODO: Order for prefix for multiple scripts
-        self.assertEqual(hyphen.not_when, 'fr-en-hyphen-minus-disallowed')
+        # Prefix order is in merge order ~ script sorted alphabetically
+        self.assertEqual(hyphen.not_when, 'fr-es-en-hyphen-minus-disallowed')
 
-        # TODO: Order for prefix for multiple scripts
-        for prefix in ['fr', 'en', 'fr-en']:
+        for prefix in ['fr', 'en', 'es', 'fr-es-en']:
             self.assertIn("{}-hyphen-minus-disallowed".format(prefix), merged_lgr.rules_lookup)
             self.assertIn("{}-hyphen-minus-disallowed".format(prefix), merged_lgr.rules)
 
@@ -409,6 +409,32 @@ class TestLgrCollidingCP(unittest.TestCase):
         lgr2 = parse_lgr('lgr-different-rule-2.xml')
         with self.assertRaises(CharAlreadyExists):
             merge_lgr_set([lgr1, lgr2], 'LGR Set')
+
+    def test_one_rule_twice_no_rule(self):
+        lgr1 = parse_lgr('lgr-same-rule-fr.xml')
+        lgr2 = parse_lgr('lgr-no-rule-en.xml')
+        lgr3 = parse_lgr('lgr-no-rule-es.xml')
+        merged_lgr = merge_lgr_set([lgr1, lgr2, lgr3], 'LGR Set')
+
+        hyphen = merged_lgr.get_char(0x002D)
+        self.assertEqual(hyphen.not_when, 'fr-hyphen-minus-disallowed')
+
+        self.assertIn("fr-hyphen-minus-disallowed", merged_lgr.rules_lookup)
+        self.assertIn("fr-hyphen-minus-disallowed", merged_lgr.rules)
+
+    def test_twice_same_rule_one_no_rule(self):
+        lgr1 = parse_lgr('lgr-same-rule-fr.xml')
+        lgr2 = parse_lgr('lgr-same-rule-en.xml')
+        lgr3 = parse_lgr('lgr-no-rule-es.xml')
+        merged_lgr = merge_lgr_set([lgr1, lgr2, lgr3], 'LGR Set')
+
+        hyphen = merged_lgr.get_char(0x002D)
+        # Prefix order is in merge order ~ script sorted alphabetically
+        self.assertEqual(hyphen.not_when, 'fr-en-hyphen-minus-disallowed')
+
+        for prefix in ['fr', 'en', 'fr-en']:
+            self.assertIn("{}-hyphen-minus-disallowed".format(prefix), merged_lgr.rules_lookup)
+            self.assertIn("{}-hyphen-minus-disallowed".format(prefix), merged_lgr.rules)
 
 
 if __name__ == '__main__':
