@@ -68,19 +68,32 @@ def merge_description(lgr_set):
     :return: The merged description object
     """
     # Check that none of the object is None before processing
-    description_type = 'text/plain'
     values = []
+    all_html = True
     for lgr in lgr_set:
         description = lgr.metadata.description
         script = get_script(lgr)
         if description:
-            value = """
+            values.append((script, description))
+            all_html &= description.description_type == 'text/html'
+
+    description_type = 'text/plain'
+    if all_html:
+        template = """
+<pre>Script: '{script}' - MIME-type: '{type}'</pre>
+{value}"""
+        join_prefix = ''
+        description_type = 'text/html'
+    else:
+        template = """
 Script: '{script}' - MIME-type: '{type}':
 {value}
-""".format(script=script, type=description.description_type, value=description.value)
-            values.append(value)
+"""
+        join_prefix = '----\n'
 
-    return Description('----\n'.join(values), description_type)
+    merged_description = join_prefix.join([template.format(script=d[0], type=d[1].description_type, value=d[1].value) for d in values])
+
+    return Description(merged_description, description_type)
 
 
 def merge_metadata(lgr_set):
