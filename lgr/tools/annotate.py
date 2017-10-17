@@ -57,16 +57,21 @@ def lgr_set_annotate(lgr, script_lgr, set_labels_input, labels_input):
             out = error
         else:
             label_cp = tuple([ord(c) for c in label])
+            # First, verify that a proposed label is valid by processing it with the Element LGR
+            # corresponding to the script that was selected for the label in the application.
             (eligible, _, _, disp, _, _) = script_lgr.test_label_eligible(label_cp, collect_log=False)
             collision = ''
             if eligible:
+                # Second, process the now validated label against the common LGR to verify it does not collide
+                # with any existing delegated labels (and any of their variants, whether blocked or allocatable).
                 if label in filtered_set:
                     collision = 'Label is in the LGR set labels'
-                # check for collisions
                 indexes = get_collisions(lgr, filtered_set + [label], quiet=False)
                 if len(indexes) > 0:
                     collision = 'Label collides with the LGR set labels'
 
+            # Third, now that the label is known to be valid, and not in collision, use the appropriate element LGR to
+            # generate all allocatable variants.
             out = disp
             if collision:
                 # TODO do we need to change disp to invalid???

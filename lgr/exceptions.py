@@ -39,45 +39,46 @@ class LGRFormatException(LGRException):
         """
         List of reasons which can trigger the exception.
         """
-        # From draft-davies-idntables-09, section 4. Code Points and Variants
+        # From RFC7940, section 5. Code Points and Variants
         # A "range" element has no child elements.
         RANGE_NO_CHILD = 0
-        # From draft-davies-idntables-09, section 4.4. Code Point Tagging:
+        # From RFC7940, section 5.5. Code Point Tagging:
         # It is an error to duplicate a value within the same "tag" attribute.
         DUPLICATE_TAG = 1
-        # From draft-davies-idntables-09, section 4.4. Code Point Tagging:
+        # From RFC7940, section 5.5. Code Point Tagging:
         # a "tag" attribute MUST NOT be present in a "char" element
         # defining a code point sequence.
         SEQUENCE_NO_TAG = 2
-        # From draft-davies-idntables-09, section 3.3.3. The language Element:
+        # From RFC7940, section 4.3.3. The "language" Element:
         # The value of the "language" element MUST be a valid language tag
         # as described in [RFC5646].
         INVALID_LANGUAGE_TAG = 3
-        # From draft-davies-idntables-09, section 3.3.2. The date Element:
+        # From RFC7940, section 4.3.2. The "date" Element:
         # The contents of this element MUST be a valid ISO 8601 "full-
         # date" string as described in [RFC3339]
         INVALID_DATE_TAG = 4
-        # From draft-davies-idntables-09, section 3.3.7. The unicode-version Element:
+        # From RFC7940, section 3.3.7. The "unicode-version" Element:
         # the version number used in creating the LGR
         # MUST be listed in the form x.y.z, where x, y, and z are positive,
         # decimal integers (see [Unicode-Versions]).
         INVALID_UNICODE_VERSION_TAG = 5
-        # From draft-davies-idntables-09, section 5.2.1. Declaring and Invoking Named Classes
-        # The "by-ref" attribute cannot be used in the same "class" element
-        # with any of these attributes: "name", "from-tag", "property" or "ref"
-        # From draft-davies-idntables-09, section 5.3.4. The name and by-ref Attributes
-        # The "by-ref" attribute cannot appear in the same element as the
-        # "name" attribute, or in an element that has any child elements.
+        # From RFC7940, section 6.2.1. Declaring and Invoking Named Classes
+        # The "by-ref" attribute MUST NOT be used in
+        # the same "class" element with any of these attributes: "name",
+        # "from-tag", "property", or "ref".
+        # From RFC7940, section 6.3.4. The "name" and "by-ref" Attributes
+        # The "by-ref" attribute MUST NOT appear in the same element as the
+        # "name" attribute or in an element that has any child elements.
         BY_REF_AND_OTHER = 6
-        # From draft-davies-idntables-09, section 5.2.1. Declaring and Invoking Named Classes
+        # From RFC7940, section 6.2.1. Declaring and Invoking Named Classes
         # It is an error to reference a named class for which the definition has
         # not been seen.
         INVALID_BY_REF = 7
-        # From draft-davies-idntables-09, section 5.2.1. Declaring and Invoking Named Classes
-        # The "name" attribute MUST be present, if and only if the class
+        # From RFC7940, section 6.2.1. Declaring and Invoking Named Classes
+        # The "name" attribute MUST be present if and only if the class
         # is a direct child element of the "rules" element.
         INVALID_TOP_LEVEL_NAME = 8
-        # From draft-davies-idntables-09, section 5.2.5. Combined Classes
+        # From RFC7940, section 6.2.5. Combined Classes
         # The elements from this table may be arbitrarily nested inside each
         # other, subject to the following restriction: a "complement" element
         # MUST contain precisely one "class" or one of the operator elements,
@@ -85,9 +86,9 @@ class LGRFormatException(LGRException):
         # element MUST contain precisely two, and a "union" element MUST
         # contain two or more of these elements.
         INVALID_CHILDREN_NUMBER = 9
-        # From draft-davies-idntables-09, section 6.1. The match and not-match Attributes
-        # An action may contain a "match" or a "not-match" attribute,
-        # but not both.
+        # From RFC7940, section 7.1. The "match" and "not-match" Attributes
+        # An action MUST NOT contain both a "match" and a "not-match"
+        # attribute
         MATCH_NOT_MATCH = 10
 
     def __init__(self, reason):

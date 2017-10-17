@@ -23,17 +23,19 @@ class Rule(object):
     Defined in
     5.3.1.  The rule Element
     """
-    def __init__(self, name=None, comment=None, by_ref=None):
+    def __init__(self, name=None, comment=None, ref=None, by_ref=None):
         """
         Create a new rule.
 
         :param name: Name of the rule.
         :param comment: Optional comment.
+        :param ref: Optional list of references.
         :param by_ref: Name of the referenced rule.
         :raises LGRFormatException: If the rule has conflictual parameters.
         """
         self.name = name
         self.comment = comment
+        self.references = ref or []
         self.by_ref = by_ref
         self.children = []
 
@@ -174,7 +176,7 @@ class Rule(object):
         logger.debug('Validate %s', self)
         if self.by_ref is not None:
             if self.by_ref not in rules_lookup:
-                # From draft-davies-idntables-09, section 5.3.4. The name and by-ref Attributes
+                # From RFC7940, section 6.3.4. The "name" and "by-ref" Attributes
                 # It is an error to reference a rule or class for which
                 # the definition has not been seen.
                 logger.error("Rule cannot reference inexisting rule '%s'",
@@ -184,7 +186,7 @@ class Rule(object):
         is_top_level = len(parents) == 0
         if (is_top_level and self.name is None) or \
             (not is_top_level and self.name is not None):
-            # From draft-davies-idntables-09, section section 5.3.4. The name and by-ref Attributes
+            # From RFC7940, section section 6.3.4. The name and by-ref Attributes
             # rules declared as immediate child elements of the "rules" element
             # MUST be named using a unique "name" attribute,
             # and all other instances MUST NOT be named.
@@ -203,3 +205,9 @@ class Rule(object):
             return '<Anonymous rule>'
         else:
             return '<Rule: %s>' % self.name
+
+    def __str__(self):
+        if self.by_ref is not None:
+            return '(:rule-ref-{}:)'.format(self.by_ref)
+
+        return ' '.join('{}'.format(m) for m in self.children)

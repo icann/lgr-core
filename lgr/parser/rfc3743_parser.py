@@ -120,11 +120,10 @@ class RFC3743Parser(LGRParser):
             if len(char_variant) > 1:
                 preferred_variants = char_variant[1].strip()
                 if len(preferred_variants) > 0 and preferred_variants[0] != '#':
-                    # From draft-davies-idntables-09, Section 6.3. Recommended Disposition Values:
-                    # activate  The resulting string should be activated for use.  (This is
-                    # the typical default action if no dispositions are defined and is
-                    # known as a "preferred" variant in [RFC3743])
-                    var_type = "activate"
+                    # From RFC7940, Section 7.3. Recommended Disposition Values:
+                    # activated  The resulting string should be activated for use.  (This
+                    # is the same as a Preferred Variant [RFC3743].)
+                    var_type = "activated"
                     self.insert_variant(line_num,
                                         codepoints,
                                         preferred_variants,

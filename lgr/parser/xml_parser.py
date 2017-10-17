@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-xml_parser.py - Parse a XML document, as described by draft-davies-idntables
+xml_parser.py - Parse a XML document, as described by RFC7940.
 
 Note:
     - Validation of input XML and actual parsing have been split into two
@@ -319,6 +319,7 @@ class XMLParser(LGRParser):
         """
         rule = Rule(name=elem.get('name', None),
                     comment=elem.get('comment', None),
+                    ref=string_to_list(elem.get('ref', '')),
                     by_ref=elem.get('by-ref', None))
 
         for child in elem:
@@ -393,7 +394,7 @@ class XMLParser(LGRParser):
         all_variants = string_to_list(elem.get('all-variants', ''))
         only_variants = string_to_list(elem.get('only-variants', ''))
 
-        return Action(disp, comment=comment,
+        return Action(disp, comment=comment, ref=string_to_list(elem.get('ref', '')),
                       match=match, not_match=not_match,
                       any_variant=any_variant,
                       all_variants=all_variants,
@@ -412,6 +413,7 @@ class XMLParser(LGRParser):
         if tag == CLASS_TAG:
             cls = Class(name=name,
                         comment=comment,
+                        ref=string_to_list(elem.get('ref', '')),
                         from_tag=elem.get('from-tag', None),
                         unicode_property=elem.get('property', None),
                         by_ref=elem.get('by-ref', None))

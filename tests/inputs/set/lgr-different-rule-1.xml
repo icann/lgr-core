@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<lgr xmlns="urn:ietf:params:xml:ns:lgr-1.0">
+  <meta>
+    <version comment="LGR for testing colliding conditional code points">1</version>
+    <language>fr</language>
+    <unicode-version>6.3.0</unicode-version>
+  </meta>
+  <data>
+    <char cp="002D" tag="sc:Zyyy" not-when="hyphen-minus-disallowed" ref="0" comment="HYPHEN-MINUS" />
+  </data>
+  <rules>
+    <rule name="hyphen-minus-disallowed" comment="RFC5891 restrictions on placement of U+002D">
+      <start/>
+      <end/>
+    </rule>
+  </rules>
+</lgr>
