@@ -16,8 +16,10 @@ import logging
 import re
 from datetime import date
 from cStringIO import StringIO
+# OrderedDict is used in replacement for set in order to get OrderedSets
+from collections import OrderedDict
 
-from lgr.exceptions import LGRFormatException
+from lgr.exceptions import LGRFormatException, CharAlreadyExists
 from lgr.core import LGR, DEFAULT_ACTIONS
 from lgr.metadata import Metadata, Version, Description
 from lgr.tools.compare.utils import compare_objects
@@ -45,17 +47,17 @@ def merge_version(lgr_set):
     :param lgr_set: The LGRs in the set
     :return: The merged version object
     """
-    values = set()
-    comments = set()
-    for version in map(lambda x: x.metadata.version, lgr_set):
+    values = OrderedDict()
+    comments = OrderedDict()
+    for version in [lgr.metadata.version for lgr in lgr_set]:
         if not version:
             continue
         if version.value:
-            values.add(version.value)
+            values.update(OrderedDict.fromkeys([version.value]))
         if version.comment:
-            comments.add(version.comment)
+            comments.update(OrderedDict.fromkeys([version.comment]))
 
-    return Version('|'.join(values), '|'.join(comments))
+    return Version('|'.join(values.keys()), '|'.join(comments.keys()))
 
 
 def merge_description(lgr_set):
@@ -66,19 +68,32 @@ def merge_description(lgr_set):
     :return: The merged description object
     """
     # Check that none of the object is None before processing
-    description_type = 'text/enriched'
     values = []
+    all_html = True
     for lgr in lgr_set:
         description = lgr.metadata.description
         script = get_script(lgr)
         if description:
-            value = """
+            values.append((script, description))
+            all_html &= description.description_type == 'text/html'
+
+    description_type = 'text/plain'
+    if all_html:
+        template = """
+<pre>Script: '{script}' - MIME-type: '{type}'</pre>
+{value}"""
+        join_prefix = ''
+        description_type = 'text/html'
+    else:
+        template = """
 Script: '{script}' - MIME-type: '{type}':
 {value}
-""".format(script=script, type=description.description_type, value=description.value)
-            values.append(value)
+"""
+        join_prefix = '----\n'
 
-    return Description('----\n'.join(values), description_type)
+    merged_description = join_prefix.join([template.format(script=d[0], type=d[1].description_type, value=d[1].value) for d in values])
+
+    return Description(merged_description, description_type)
 
 
 def merge_metadata(lgr_set):
@@ -95,11 +110,11 @@ def merge_metadata(lgr_set):
     output.version = merge_version(lgr_set)
     output.description = merge_description(lgr_set)
 
-    scopes = set()
-    languages = set()
-    for metadata in map(lambda x: x.metadata, lgr_set):
-        scopes.update(set(metadata.scopes))
-        languages.update(set(metadata.languages))
+    scopes = OrderedDict()
+    languages = OrderedDict()
+    for metadata in [lgr.metadata for lgr in lgr_set]:
+        scopes.update(OrderedDict.fromkeys(metadata.scopes))
+        languages.update(OrderedDict.fromkeys(metadata.languages))
         output.validity_start = compare_objects(output.validity_start,
                                                 metadata.validity_start,
                                                 max)
@@ -111,8 +126,8 @@ def merge_metadata(lgr_set):
                                                  metadata.unicode_version,
                                                  max)
 
-    output.scopes = list(scopes)
-    output.languages = list(languages)
+    output.scopes = list(scopes.keys())
+    output.languages = list(languages.keys())
 
     output.date = date.today().isoformat()
 
@@ -128,7 +143,7 @@ def merge_references(lgr, script, merged_lgr, ref_mapping):
     :param merged_lgr: The merged LGR
     :param ref_mapping: The reference id mapping from base LGR to LGR set
     """
-    ref_mapping.setdefault(script, {})
+    ref_mapping.setdefault(script, OrderedDict())
     if lgr.reference_manager:
         inserted_references = {x['value']: ref_id for ref_id, x in merged_lgr.reference_manager.items()}
         for ref_id, ref_dict in lgr.reference_manager.items():
@@ -172,13 +187,14 @@ def rename_action(action, action_xml, script):
     return new_action, action_xml
 
 
-def merge_actions(lgr, script, merged_lgr):
+def merge_actions(lgr, script, merged_lgr, ref_mapping):
     """
     Merge actions from LGR set.
 
     :param lgr: A LGR from the set
     :param script: The LGR script
     :param merged_lgr: The merged LGR
+    :param ref_mapping: The reference mapping from base LGR to new LGR
     """
     logger.debug("Merge actions")
 
@@ -187,20 +203,25 @@ def merge_actions(lgr, script, merged_lgr):
         action_xml = lgr.actions_xml[idx]
         if action in DEFAULT_ACTIONS:
             continue
-        action, action_xml = rename_action(action, action_xml, script)
+        merged_action, merged_action_xml = rename_action(action, action_xml, script)
 
-        merged_lgr.actions.append(action)
-        merged_lgr.actions_xml.append(action_xml)
+        # Replace references in python object and XML
+        new_ref = [ref_mapping.get(script, {}).get(x, x) for x in action.references]
+        merged_action.references = new_ref
+        merged_action_xml = re.sub(r'(?<!by-)ref="([^"]+)"', r'ref="{}"'.format(" ".join(new_ref)), merged_action_xml)
+
+        merged_lgr.actions.append(merged_action)
+        merged_lgr.actions_xml.append(merged_action_xml)
 
 
 def rename_rule(rule, rule_xml, script):
     """
     Prefix rule name or reference with script
 
-    :param rule: The rule 
+    :param rule: The rule
     :param rule_xml: The rule XML
     :param script:  The LGR script
-    :return: Updated rule, updated rule XML
+    :return: Updated rule name, updated rule XML
     """
     if rule.name not in MSR_2_RULES:
         new_rule_name = script + '-' + rule.name
@@ -221,25 +242,33 @@ def rename_rule(rule, rule_xml, script):
     return new_rule_name, rule_xml
 
 
-def merge_rules(lgr, script, merged_lgr):
+def merge_rules(lgr, script, merged_lgr, ref_mapping, specific=None):
     """
     Merge rules from LGR set.
 
     :param lgr: A LGR from the set
     :param script: The LGR script
     :param merged_lgr: The merged LGR
-    :return: (list of rules name, list of XML rules)
+    :param ref_mapping: The reference mapping from base LGR to new LGR
+    :param specific: Merge only a specific rule
     """
     logger.debug("Merge rules")
 
     for rule in lgr.rules_lookup.values():
+        if specific and rule.name != specific:
+            continue
         rule_xml = lgr.rules_xml[lgr.rules.index(rule.name)]
-        rule_name, rule_xml = rename_rule(rule, rule_xml, script)
-        if rule_name in merged_lgr.rules:
+        merged_rule_name, merged_rule_xml = rename_rule(rule, rule_xml, script)
+        if merged_rule_name in merged_lgr.rules:
             # MSR-2
             continue
-        merged_lgr.rules.append(rule_name)
-        merged_lgr.rules_xml.append(rule_xml)
+
+        # Replace references in python object and XML
+        new_ref = [ref_mapping.get(script, {}).get(x, x) for x in rule.references]
+        merged_rule_xml = re.sub(r'(?<!by-)ref="([^"]+)"', r'ref="{}"'.format(" ".join(new_ref)), merged_rule_xml)
+
+        merged_lgr.rules.append(merged_rule_name)
+        merged_lgr.rules_xml.append(merged_rule_xml)
 
 
 def rename_class(classe, class_xml, script):
@@ -249,7 +278,7 @@ def rename_class(classe, class_xml, script):
     :param classe: The class 
     :param class_xml: The class XML
     :param script:  The LGR script
-    :return: Updated class, updated class XML
+    :return: Updated class name, updated class XML
     """
     new_class_name = script + '-' + classe.name
 
@@ -261,14 +290,14 @@ def rename_class(classe, class_xml, script):
     return new_class_name, class_xml
 
 
-def merge_classes(lgr, script, merged_lgr):
+def merge_classes(lgr, script, merged_lgr, ref_mapping):
     """
     Merge classes from LGR set.
 
     :param lgr: A LGR from the set
     :param script: The LGR script
     :param merged_lgr: The merged LGR
-    :return: (list of classes name, list of XML classes)
+    :param ref_mapping: The reference mapping from base LGR to new LGR
     """
     logger.debug("Merge classes")
 
@@ -277,12 +306,17 @@ def merge_classes(lgr, script, merged_lgr):
             # fake classes from tags
             continue
         class_xml = lgr.classes_xml[lgr.classes.index(classe.name)]
-        class_name, class_xml = rename_class(classe, class_xml, script)
-        merged_lgr.classes.append(class_name)
-        merged_lgr.classes_xml.append(class_xml)
+        merged_class_name, merged_class_xml = rename_class(classe, class_xml, script)
+
+        # Replace references in python object and XML
+        new_ref = [ref_mapping.get(script, {}).get(x, x) for x in classe.references]
+        merged_class_xml = re.sub(r'(?<!by-)ref="([^"]+)"', r'ref="{}"'.format(" ".join(new_ref)), merged_class_xml)
+
+        merged_lgr.classes.append(merged_class_name)
+        merged_lgr.classes_xml.append(merged_class_xml)
 
 
-def merge_chars(lgr, script, merged_lgr, ref_mapping):
+def merge_chars(lgr, script, merged_lgr, ref_mapping, previous_scripts):
     """
     Merge chars from LGR set.
 
@@ -290,6 +324,7 @@ def merge_chars(lgr, script, merged_lgr, ref_mapping):
     :param script: The LGR script
     :param merged_lgr: The merged LGR
     :param ref_mapping: The reference mapping from base LGR to new LGR
+    :param previous_scripts: The scripts that has already been processed
     """
     new_variants = []
     merged_codepoints = set([cp for cp in merged_lgr.repertoire])
@@ -300,18 +335,16 @@ def merge_chars(lgr, script, merged_lgr, ref_mapping):
             script_extensions = []
         new_tags = set(script + '-' + x if ':' not in x else x for x in cp.tags) | set(script_extensions)
         existing_cp = None
-        if not cp.when and not cp.not_when:
-            # when and not-when are renamed per script, cannot get same cp
-            # TODO won't work if there is twice the same script but we will also have already exists errors
-            for merged_cp in merged_codepoints:
-                if merged_cp == cp:
-                    # Note that we actually want the object from merged_codepoints, that contains additional information
-                    # not present on cp, even if Char.__hash__() lets think so.
-                    # For example, cannot use:
-                    # if cp in merged_codepoints:
-                    #   existing_cp = cp
-                    existing_cp = merged_cp
-                    break
+        for merged_cp in merged_codepoints:
+            if merged_cp == cp:
+                # Note that we actually want the object from merged_codepoints, that contains additional information
+                # not present on cp, even if Char.__hash__() lets think so.
+                # For example, cannot use:
+                # if cp in merged_codepoints:
+                #   existing_cp = cp
+                existing_cp = merged_cp
+                break
+
         if existing_cp:
             # same cp already in LGR
             existing_cp.comment = let_user_choose(existing_cp.comment, cp.comment)
@@ -349,8 +382,45 @@ def merge_chars(lgr, script, merged_lgr, ref_mapping):
                 merged_lgr.add_variant(existing_cp.cp, v.cp, variant_type='blocked',
                                        when=new_when, not_when=new_not_when,
                                        comment=v.comment, ref=new_ref)
+                # existing variants comment or references are not updated as it is not really important
 
-            # existing variants comment or references are note updated as it is not really important
+            # if when or not-when:
+            #  - if existing cp has no concurrent rule or conversely, keep the rule as is (i.e. if existing cp has
+            #    no rule but cp has one, keep the cp rule with prefixed with the current script)
+            #  - if existing cp has the same when/not-when rules (same name, content is not checked), update cp WLE with
+            #    the prefix from this script
+            #  - if existing cp has a different rule (not the same name), raise an exception
+            existing_when = existing_cp.when
+            existing_not_when = existing_cp.not_when
+            # retrieve WLE names
+            for other_script in reversed(previous_scripts):
+                if existing_cp.when:
+                    existing_when = re.sub(r'^{}-'.format(other_script), '', existing_when)
+                if existing_cp.not_when:
+                    existing_not_when = re.sub(r'^{}-'.format(other_script), '', existing_not_when)
+
+            if cp.when:
+                if not existing_when:
+                    existing_cp.when = script + '-' + cp.when
+                elif existing_when == cp.when:
+                    existing_cp.when = script + '-' + existing_cp.when
+                    # add a merged rule
+                    matching_script = re.sub(r'-{}$'.format(existing_when), '', existing_cp.when)
+                    merge_rules(lgr, matching_script, merged_lgr, ref_mapping, specific=existing_when)
+                else:
+                    raise CharAlreadyExists(cp.cp)
+
+            if cp.not_when:
+                if not existing_not_when:
+                    existing_cp.not_when = script + '-' + cp.not_when
+                elif existing_not_when == cp.not_when:
+                    existing_cp.not_when = script + '-' + existing_cp.not_when
+                    # add a merged rule
+                    matching_script = re.sub(r'-{}$'.format(existing_not_when), '', existing_cp.not_when)
+                    merge_rules(lgr, matching_script, merged_lgr, ref_mapping, specific=existing_not_when)
+                else:
+                    raise CharAlreadyExists(cp.cp)
+
             continue
 
         # add new cp in LGR
@@ -361,7 +431,7 @@ def merge_chars(lgr, script, merged_lgr, ref_mapping):
         if cp.not_when:
             not_when = script + '-' + cp.not_when
 
-        new_ref = [r for r in map(lambda x: ref_mapping[script].get(x, x), cp.references)]
+        new_ref = [ref_mapping.get(script, {}).get(x, x) for x in cp.references]
         merged_lgr.add_cp(cp.cp, comment=cp.comment, ref=new_ref,
                           tag=list(new_tags),
                           when=when, not_when=not_when)
@@ -398,25 +468,28 @@ def merge_lgr_set(lgr_set, name):
     """
     logger.debug("Merge %s", name)
 
+    # order LGRs
+    lgr_set.sort(key=lambda x: get_script(x).replace('und-', 'zzz'))
+
     # Ensure all unicode version are correct
-    unicode_version = set()
-    for lgr in lgr_set:
-        unicode_version.add(lgr.metadata.unicode_version)
+    unicode_version = OrderedDict().fromkeys(lgr.metadata.unicode_version for lgr in lgr_set)
     if len(unicode_version) > 1:
-        logger.warning("Different unicode version in set: %s", unicode_version)
+        logger.warning("Different unicode version in set: %s", unicode_version.keys())
 
     ref_mapping = {}
     metadata = copy.deepcopy(merge_metadata(lgr_set))
     merged_lgr = LGR(name=name, metadata=metadata)
+    previous_scripts = []
     for lgr in lgr_set:
         script = get_script(lgr)
         lgr.expand_ranges()
 
         merge_references(lgr, script, merged_lgr, ref_mapping)
-        merge_chars(lgr, script, merged_lgr, ref_mapping)
-        merge_actions(lgr, script, merged_lgr)
-        merge_rules(lgr, script, merged_lgr)
-        merge_classes(lgr, script, merged_lgr)
+        merge_chars(lgr, script, merged_lgr, ref_mapping, previous_scripts)
+        merge_actions(lgr, script, merged_lgr, ref_mapping)
+        merge_rules(lgr, script, merged_lgr, ref_mapping)
+        merge_classes(lgr, script, merged_lgr, ref_mapping)
+        previous_scripts.append(script)
 
     # XXX As the created merged_lgr is not a valid Python LGR object,
     # we have to serialize it/parse it to get a valid object.

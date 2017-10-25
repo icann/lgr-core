@@ -1,5 +1,78 @@
-Algorithms used in LGR tools
-============================
+Algorithms used in LGR library
+==============================
+
+LGR Sets
+########
+
+Merge Element LGRs
+------------------
+
+Given a list of Element LGRs, the tool will create a merged LGR.
+
+The merged LGR will contain all the repertoires from the Element LGRs and all the individual Whole Label Evaluation (WLE)
+rules from the Element LGRs.
+
+The following modifications are applied while merging the Element LGR:
+ - The variant mapping is the union of the variant mappings from the Element LGRs.
+ - All variant allocations are marked as blocked as variants disposition is specific for each script.
+ - The default rules and actions defined in MSR-2 are annotated in the merged LGR with the prefix ``Common-``.
+ - The rules, tags and character classes defined by an Element LGR are prefixed with the script code for this LGR separated by ``-``.
+ - All repertoire code points are tagged with their script extensions values.
+ - Actions are merged, preserving their order of precedence.
+
+In case of a code point present in more than one LGR, the following rules are applied:
+ - Merged code point gets an union of tags, references and variants and a concatenated comment.
+ - Transitivity with variants is respected
+   (i.e. if ``b`` is variant of ``a`` in LGR 1, ``c`` is variant of ``a`` in LGR 2: set ``b`` as ``c`` variant and conversely).
+ - If the code point is affected by a conditional rule in one Element LGR:
+
+   - If the code point has no conditional rule of the same type in the other LGR, keep the rule on the code point
+     (if the ``when``/``not-when`` rules are complementary between the LGRs an error will be raised as a code point cannot get
+     both ``when`` and ``not-when`` rules). For example:
+
+     .. code-block:: xml
+
+       <char cp="0061" when="rule1" /> <!-- script sc1 -->
+       <char cp="0061" />
+
+     will be merged as:
+
+     .. code-block:: xml
+
+       <char cp="0061" when="sc1-rule1" />
+
+   - If the code point has the "same" conditional rule ("same" means with the same name and same kind -``when`` or ``not-when``-
+     the content of the rule is not actually analyzed), prefix the rule name with the script code of both LGR. For example:
+
+     .. code-block:: xml
+
+       <char cp="0061" when="rule1" /> <!-- script sc1 -->
+       <char cp="0061" when="rule1" /> <!-- script sc2 -->
+
+     will be merged as:
+
+     .. code-block:: xml
+
+       <char cp="0061" when="sc2-sc1-rule1" />
+
+   - If the code point has a "different" conditional rule of the same kind ("different" means with a different name), return a
+     duplicated code point exception.
+
+
+Label validation for LGR set
+----------------------------
+
+The following steps are done to process a label in an LGR set context:
+
+* Verify that a proposed label is valid by processing it with the Element LGR corresponding to the script that was selected for the label in the application.
+  If the label has 'invalid' disposition then processing is stopped.
+* Process the now validated label against the common LGR to verify it does not collide with any existing delegated labels (and any of their variants, whether blocked or allocatable).
+  If a collision is found then processing is stopped.
+* Now that the label is known to be valid, and not in collision, use the appropriate element LGR to generate all allocatable variants.
+
+
+Tools
+#####
 
 Comparison tools
 ----------------
@@ -146,8 +219,10 @@ Cross-script variants
 Given an LGR set and a label list, the tool will iterate through the label list and for each label:
 
 * Check that the label is eligible in the merged LGR.
-* Iterate through the element LGR composing the set:
-    * Generate the variants of the label
+* Generate all the variants in the merged LGR.
+* For each of the variant:
+  * Retrieve the Element LGR(s) for each of their code points.
+  * If the variants is composed of code points from more than one Element LGR, then it is a cross-script variant.
 
 As generating the labels' variants is a very expensive process, the tool is asynchronous: a notification will be sent by email when the processing is done
 

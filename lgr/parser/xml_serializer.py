@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-xml_serializer.py - Create an LGR XML compliant with draft-davies-idntables
+xml_serializer.py - Create an LGR XML compliant with RFC7940.
 """
 from __future__ import unicode_literals
 
@@ -107,7 +107,7 @@ def _serialize_meta(lgr, meta):
     references = lgr.reference_manager
     if len(references) > 0:
         references_node = etree.SubElement(meta, 'references')
-        for ref_id in sorted(references):
+        for ref_id in references:
             ref = references[ref_id]
             ref_attributes = {
                 'id': str(ref_id)

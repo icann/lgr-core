@@ -13,6 +13,7 @@ from lgr.action import Action
 from lgr.rule import Rule
 from lgr.matcher import RuleMatcher, ClassMatcher, StartMatcher
 from lgr.classes import Class, UnionClass
+from lgr.exceptions import CharAlreadyExists
 from lgr.core import LGR
 
 from lgr.parser.xml_parser import XMLParser
@@ -32,13 +33,16 @@ from lgr.tools.merge_set import (rename_action,
 RESOURCE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'inputs', 'set')
 
 
+def parse_lgr(filename):
+    parser = XMLParser(os.path.join(RESOURCE_DIR, filename))
+    return parser.parse_document()
+
+
 class TestLGRSet(unittest.TestCase):
 
     def setUp(self):
-        parser = XMLParser(os.path.join(RESOURCE_DIR, 'lgr-script1.xml'))
-        self.lgr_1 = parser.parse_document()
-        parser = XMLParser(os.path.join(RESOURCE_DIR, 'lgr-script2.xml'))
-        self.lgr_2 = parser.parse_document()
+        self.lgr_1 = parse_lgr('lgr-script1.xml')
+        self.lgr_2 = parse_lgr('lgr-script2.xml')
         self.lgr_set = [self.lgr_1, self.lgr_2]
 
     def test_rename_action_not_msr2(self):
@@ -78,7 +82,7 @@ class TestLGRSet(unittest.TestCase):
         lgr.add_action(Action(match='rule-name', disp='invalid'))
         lgr.actions_xml.append("""<action disp="invalid" match="rule-name"/>""")
 
-        merge_actions(lgr, 'fr', merged_lgr)
+        merge_actions(lgr, 'fr', merged_lgr, {})
 
         self.assertEqual(len(merged_lgr.actions), 1)
         self.assertEqual(len(merged_lgr.actions_xml), 1)
@@ -89,7 +93,7 @@ class TestLGRSet(unittest.TestCase):
         lgr.add_action(Action(disp='invalid', comment="Default action for invalid", any_variant=['invalid']))
         lgr.actions_xml.append("""<action disp="invalid" match="rule-name"/>""")
 
-        merge_actions(lgr, 'fr', merged_lgr)
+        merge_actions(lgr, 'fr', merged_lgr, {})
 
         self.assertEqual(len(merged_lgr.actions), 1)
         self.assertEqual(len(merged_lgr.actions_xml), 1)
@@ -167,20 +171,20 @@ class TestLGRSet(unittest.TestCase):
         lgr.add_rule(rule)
         lgr.rules_xml.append(rule_xml)
 
-        merge_rules(lgr, 'fr', merged_lgr)
+        merge_rules(lgr, 'fr', merged_lgr, {})
 
         self.assertEqual(len(merged_lgr.rules), 1)
         self.assertEqual(len(merged_lgr.rules_xml), 1)
         self.assertEqual(merged_lgr.rules[0], 'fr-rule-name')
 
         # Merging is idempotent
-        merge_rules(lgr, 'fr', merged_lgr)
+        merge_rules(lgr, 'fr', merged_lgr, {})
         self.assertEqual(len(merged_lgr.rules), 1)
         self.assertEqual(len(merged_lgr.rules_xml), 1)
         self.assertEqual(merged_lgr.rules[0], 'fr-rule-name')
 
         # Not with different script
-        merge_rules(lgr, 'en', merged_lgr)
+        merge_rules(lgr, 'en', merged_lgr, {})
         self.assertEqual(len(merged_lgr.rules), 2)
         self.assertEqual(len(merged_lgr.rules_xml), 2)
         self.assertEqual(merged_lgr.rules[1], 'en-rule-name')
@@ -203,12 +207,12 @@ class TestLGRSet(unittest.TestCase):
 </rule>
 """)
 
-        merge_rules(lgr, 'fr', merged_lgr)
+        merge_rules(lgr, 'fr', merged_lgr, {})
         self.assertEqual(len(merged_lgr.rules), 3)
         self.assertEqual(len(merged_lgr.rules_xml), 3)
         self.assertEqual(merged_lgr.rules[2], 'Common-leading-combining-mark')
 
-        merge_rules(lgr, 'fr', merged_lgr)
+        merge_rules(lgr, 'fr', merged_lgr, {})
         self.assertEqual(len(merged_lgr.rules), 3)
         self.assertEqual(len(merged_lgr.rules_xml), 3)
         self.assertEqual(merged_lgr.rules[2], 'Common-leading-combining-mark')
@@ -249,7 +253,7 @@ Script: '{script}' - MIME-type: '{type}':
                           merged_description_placeholder.format(script='und-Khmer',
                                                                 type='text/html',
                                                                 value=self.lgr_2.metadata.description.value)})
-        self.assertEqual(description.description_type, 'text/enriched')
+        self.assertEqual(description.description_type, 'text/plain')
 
     def test_merge_metadata(self):
         metadata = merge_metadata(self.lgr_set)
@@ -282,7 +286,7 @@ Script: '{script}' - MIME-type: '{type}':
         merge_references(self.lgr_1, 'fr', merged_lgr, reference_mapping)
         merge_references(self.lgr_2, 'und-Khmer', merged_lgr, reference_mapping)
 
-        merge_chars(self.lgr_1, 'fr', merged_lgr, reference_mapping)
+        merge_chars(self.lgr_1, 'fr', merged_lgr, reference_mapping, [])
 
         # Simple variant changed to blocked
         cp = merged_lgr.get_char(0x0041)
@@ -295,7 +299,7 @@ Script: '{script}' - MIME-type: '{type}':
         self.assertEqual(var.type, 'blocked')
 
         # Complete merge
-        merge_chars(self.lgr_2, 'und-Khmer', merged_lgr, reference_mapping)
+        merge_chars(self.lgr_2, 'und-Khmer', merged_lgr, reference_mapping, [])
 
         self._test_merged_chars(merged_lgr)
 
@@ -382,6 +386,56 @@ Script: '{script}' - MIME-type: '{type}':
         self.assertEqual(metadata.validity_end, '2020-06-01')
         self.assertEqual(metadata.unicode_version, '6.3.0')
         self.assertEqual(metadata.date, date.today().isoformat())
+
+
+class TestLgrCollidingCP(unittest.TestCase):
+
+    def test_merge_colliding_same_rule(self):
+        lgr1 = parse_lgr('lgr-same-rule-fr.xml')
+        lgr2 = parse_lgr('lgr-same-rule-en.xml')
+        lgr3 = parse_lgr('lgr-same-rule-es.xml')
+        merged_lgr = merge_lgr_set([lgr1, lgr2, lgr3], 'LGR Set')
+
+        hyphen = merged_lgr.get_char(0x002D)
+        # Prefix order is in merge order ~ script sorted alphabetically
+        self.assertEqual(hyphen.not_when, 'fr-es-en-hyphen-minus-disallowed')
+
+        for prefix in ['fr', 'en', 'es', 'fr-es-en']:
+            self.assertIn("{}-hyphen-minus-disallowed".format(prefix), merged_lgr.rules_lookup)
+            self.assertIn("{}-hyphen-minus-disallowed".format(prefix), merged_lgr.rules)
+
+    def test_merge_colliding_different_rule(self):
+        lgr1 = parse_lgr('lgr-different-rule-1.xml')
+        lgr2 = parse_lgr('lgr-different-rule-2.xml')
+        with self.assertRaises(CharAlreadyExists):
+            merge_lgr_set([lgr1, lgr2], 'LGR Set')
+
+    def test_one_rule_twice_no_rule(self):
+        lgr1 = parse_lgr('lgr-same-rule-fr.xml')
+        lgr2 = parse_lgr('lgr-no-rule-en.xml')
+        lgr3 = parse_lgr('lgr-no-rule-es.xml')
+        merged_lgr = merge_lgr_set([lgr1, lgr2, lgr3], 'LGR Set')
+
+        hyphen = merged_lgr.get_char(0x002D)
+        self.assertEqual(hyphen.not_when, 'fr-hyphen-minus-disallowed')
+
+        self.assertIn("fr-hyphen-minus-disallowed", merged_lgr.rules_lookup)
+        self.assertIn("fr-hyphen-minus-disallowed", merged_lgr.rules)
+
+    def test_twice_same_rule_one_no_rule(self):
+        lgr1 = parse_lgr('lgr-same-rule-fr.xml')
+        lgr2 = parse_lgr('lgr-same-rule-en.xml')
+        lgr3 = parse_lgr('lgr-no-rule-es.xml')
+        merged_lgr = merge_lgr_set([lgr1, lgr2, lgr3], 'LGR Set')
+
+        hyphen = merged_lgr.get_char(0x002D)
+        # Prefix order is in merge order ~ script sorted alphabetically
+        self.assertEqual(hyphen.not_when, 'fr-en-hyphen-minus-disallowed')
+
+        for prefix in ['fr', 'en', 'fr-en']:
+            self.assertIn("{}-hyphen-minus-disallowed".format(prefix), merged_lgr.rules_lookup)
+            self.assertIn("{}-hyphen-minus-disallowed".format(prefix), merged_lgr.rules)
+
 
 if __name__ == '__main__':
     import logging

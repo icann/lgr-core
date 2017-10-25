@@ -9,6 +9,7 @@ import mimetypes
 import datetime
 from language_tags import tags as rfc5646
 import logging
+from collections import OrderedDict
 
 from lgr.exceptions import (LGRFormatException,
                             ReferenceAlreadyExists,
@@ -304,23 +305,22 @@ class Metadata(object):
         self.unicode_version = unicode_version
 
 
-class ReferenceManager(dict):
+class ReferenceManager(OrderedDict):
     """
     LGR references manager.
 
     Store and delete references.
     References are indexed by their id, which is stored as a string.
 
-    draft-davies-idntables-09 section 3.3.8. specifies that:
+    RFC7940 section 4.3.8.  The "references" Element specifies that:
 
-        It is RECOMMENDED that the "id" attribute be an zero-
-        based integer.
+        It is RECOMMENDED that the "id" attribute be a zero-based integer.
 
     so if no ref_id is given, generate one int-based id, converted to string.
     """
 
-    def __init__(self):
-        super(ReferenceManager, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(ReferenceManager, self).__init__(*args, **kwargs)
         # Keep track of the next id to generate
         self.next_id = 0
 
