@@ -79,9 +79,7 @@ def merge_description(lgr_set):
 
     description_type = 'text/plain'
     if all_html:
-        template = """
-<pre>Script: '{script}' - MIME-type: '{type}'</pre>
-{value}"""
+        template = """{value}"""
         join_prefix = ''
         description_type = 'text/html'
     else:

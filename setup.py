@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="lgr-core",
-    version='1.8',
+    version='1.8.1',
     author='Viagénie and Wil Tan',
     author_email='support@viagenie.ca',
     description="API for manipulating Label Generation Rules",
