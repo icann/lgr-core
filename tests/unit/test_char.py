@@ -456,6 +456,61 @@ class TestRepertoire(unittest.TestCase):
 
         self.assertEqual(list(self.cd), expected_output)
 
+    def test_all_repertoire(self):
+        self.cd.add_char([0x0010])
+        self.cd.add_range(0x0001, 0x0005)
+        self.cd.add_char([0x0000])
+        self.cd.add_char([0x0011, 0x0012])
+        self.cd.add_char([0x0013])
+
+        # Full output
+        expected_output = {
+            Char(0x0000),
+            RangeChar(0x0001, 0x0001, 0x0005),
+            RangeChar(0x0002, 0x0001, 0x0005),
+            RangeChar(0x0003, 0x0001, 0x0005),
+            RangeChar(0x0004, 0x0001, 0x0005),
+            RangeChar(0x0005, 0x0001, 0x0005),
+            Char(0x0010),
+            CharSequence([0x0011, 0x0012]),
+            Char(0x0013),
+        }
+        self.assertEqual(set(self.cd.all_repertoire()), expected_output)
+
+        # Exclude ranges
+        expected_output = {
+            Char(0x0000),
+            Char(0x0010),
+            CharSequence([0x0011, 0x0012]),
+            Char(0x0013),
+        }
+        self.assertEqual(set(self.cd.all_repertoire(include_ranges=False)),
+                         expected_output)
+
+        # Exclude sequences
+        expected_output = {
+            Char(0x0000),
+            RangeChar(0x0001, 0x0001, 0x0005),
+            RangeChar(0x0002, 0x0001, 0x0005),
+            RangeChar(0x0003, 0x0001, 0x0005),
+            RangeChar(0x0004, 0x0001, 0x0005),
+            RangeChar(0x0005, 0x0001, 0x0005),
+            Char(0x0010),
+            Char(0x0013),
+        }
+        self.assertEqual(set(self.cd.all_repertoire(include_sequences=False)),
+                         expected_output)
+
+        # Exclude ranges and sequences
+        expected_output = {
+            Char(0x0000),
+            Char(0x0010),
+            Char(0x0013),
+        }
+        self.assertEqual(set(self.cd.all_repertoire(include_ranges=False,
+                                                     include_sequences=False)),
+                         expected_output)
+
     def test_get_variants(self):
         self.cd.add_char([0x002A])
         self.cd.add_variant([0x002A], [0x0030])
@@ -534,6 +589,7 @@ class TestRepertoire(unittest.TestCase):
         self.assertSetEqual(variant_sets,
                             {((0x002A,), (0x002C,), (0x002F,)),
                              ((0x002B,), (0x002E,))})
+
 
 if __name__ == '__main__':
     import logging

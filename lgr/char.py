@@ -329,9 +329,9 @@ class Repertoire(object):
         # This list MUST be kept in order!
         # Should this really be here?
         self.ranges = []
-        # Code point objects are indexed by their code point(s), as a tuple.
-        # So the key for a <char cp="1234"/> object is (1234,),
-        # and the key for a  <char cp="1234 5678"/> is (1234, 5678).
+        # Code point objects are indexed by their first code point, as an int.
+        # So the key for a <char cp="1234"/> object is 1234,
+        # and the key for a  <char cp="1234 5678"/> also is 1234.
         # The value stored is a list of CharBase objects.
         self._chardict = dict()
 
@@ -421,6 +421,29 @@ class Repertoire(object):
                     else:
                         last_cp = char.last_cp
 
+                yield char
+
+    def all_repertoire(self, include_sequences=True, include_ranges=True):
+        """
+        Return the whole content of the repertoire, unsorted.
+
+        :param include_sequences: If False CharSequence are excluded from output.
+        :param include_ranges: If False RangeChar are excluded from output.
+        :return: A generator that contains all Char elements of the repertoire.
+
+        >>> cd = Repertoire()
+        >>> char1 = cd.add_char([0x002B])
+        >>> char2 = cd.add_char([0x002A])
+        >>> seq = cd.add_char([0x002A, 0x002B])
+        >>> {char1, char2, seq} == set(cd.all_repertoire())
+        True
+        """
+        for char_list in self._chardict.values():
+            for char in char_list:
+                if isinstance(char, CharSequence) and not include_sequences:
+                    continue
+                if isinstance(char, RangeChar) and not include_ranges:
+                    continue
                 yield char
 
     def __len__(self):
