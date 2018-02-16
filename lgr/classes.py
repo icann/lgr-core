@@ -50,7 +50,8 @@ class Class(object):
                  from_tag=None,
                  unicode_property=None,
                  codepoints=None,
-                 by_ref=None):
+                 by_ref=None,
+                 implicit=False):
         """
         Create a class.
 
@@ -61,6 +62,8 @@ class Class(object):
         :param unicode_property: Define a Unicode property-based class.
         :param codepoints: Initial sequence of code points.
         :param by_ref: Name of the referenced class.
+        :param implicit: If True, then class is implicitly defined
+                         (construct from code points' tags).
         """
         self.name = name
         self.comment = comment
@@ -69,6 +72,7 @@ class Class(object):
         self.unicode_property = unicode_property
         self.codepoints = set(codepoints or [])
         self.by_ref = by_ref
+        self.implicit = implicit
 
         if by_ref is not None:
             if name is not None:

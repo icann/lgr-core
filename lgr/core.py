@@ -1746,7 +1746,8 @@ class LGR(object):
             tag_classname = TAG_CLASSNAME_PREFIX + tag
             self.classes_lookup.setdefault(tag_classname,
                                            Class(name=tag,
-                                                 comment="Virtual class for tag %s" % tag)).add_codepoint(cp_or_sequence)
+                                                 comment="Virtual class for tag %s" % tag,
+                                                 implicit=True)).add_codepoint(cp_or_sequence)
 
     def __unicode__(self):
         return self.name
