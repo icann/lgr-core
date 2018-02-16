@@ -534,6 +534,8 @@ class LGR(object):
         for cp in codepoints:
             self._add_cp_to_tag_classes(cp, tags)
 
+        self._char_number += len(codepoints)
+
     def del_range(self, first_cp, last_cp):
         """
         Delete a range from an LGR.

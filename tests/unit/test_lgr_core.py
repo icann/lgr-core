@@ -509,6 +509,19 @@ class TestLGRCore(unittest.TestCase):
         self.assertEqual(int(math.log(MAX_NUMBER_GENERATED_VARIANTS, 41)),
                          self.lgr.max_label_length())
 
+    def test_char_number(self):
+        self.assertEqual(self.lgr._char_number, 0)
+
+        self.lgr.add_cp([0x0061])
+        self.assertEqual(self.lgr._char_number, 1)
+
+        self.lgr.add_cp([0x0062, 0x0063])
+        self.assertEqual(self.lgr._char_number, 2)
+
+        self.lgr.add_range(0x0064, 0x0066)
+        self.assertEqual(self.lgr._char_number, 5)
+
+
 if __name__ == '__main__':
     import logging
     logging.getLogger('lgr').addHandler(logging.NullHandler())
