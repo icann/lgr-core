@@ -1017,7 +1017,7 @@ class LGR(object):
             rule_logger.error("Label '%s' is not in the LGR", format_cp(label))
             if collect_log:
                 rule_logger.removeHandler(ch)
-            return False, label_part, not_in_lgr, "invalid", -1, log_output.getvalue()
+            return False, label_part, not_in_lgr, INVALID_DISPOSITION, -1, log_output.getvalue()
 
         # Compute label disposition by analyzing reflexive mappings
         (disposition, action_idx) = self._test_label_disposition(label)
@@ -1058,7 +1058,7 @@ class LGR(object):
                      - log: The log of the generation of the label,
                              empty if collect_log is True.
         """
-        # Implements process described in 7. Processing a Label Against an LGR
+        # Implements process described in 8. Processing a Label Against an LGR
 
         if self._unicode_database is None:
             logger.error("You need to define the Unicode database "
@@ -1072,13 +1072,13 @@ class LGR(object):
         # Make sure the label is a sequence
         label = tuple(label)
 
-        # 7.2 Determining Variants for a Label
+        # 8.2 Determining Variants for a Label
         # Step 1 - 2 - 3
         variant_set = self._generate_label_variants(label)
 
         original_label = None
 
-        # Step 4 - 7.3.  Determining a Disposition for a Label or Variant Label
+        # Step 4 - 8.3.  Determining a Disposition for a Label or Variant Label
         for (variant_cp, disp_set, only_variants) in variant_set:
             # Configure log system to redirect logs to local attribute
             log_output = StringIO()
@@ -1087,15 +1087,25 @@ class LGR(object):
                 ch.setLevel(logging.DEBUG)
                 rule_logger.addHandler(ch)
 
-            (variant_disp, idx) = self._apply_actions(variant_cp,
-                                                      disp_set,
-                                                      only_variants)
+            # 8.3.  Determining a Disposition for a Label or Variant Label
+            # Step 1
+            eligible, _, _, _, idx, _ = self.test_label_eligible(variant_cp)
+            if not eligible:
+                variant_disp = INVALID_DISPOSITION
+            else:
+                # 8.3.  Determining a Disposition for a Label or Variant Label
+                # Step 2 - 3
+                (variant_disp, idx) = self._apply_actions(variant_cp,
+                                                          disp_set,
+                                                          only_variants)
 
-            if collect_log:
-                rule_logger.removeHandler(ch)
+                if collect_log:
+                    rule_logger.removeHandler(ch)
 
-            if variant_disp is None:
-                variant_disp = DEFAULT_DISPOSITION
+                if variant_disp is None:
+                    # 8.3.  Determining a Disposition for a Label or Variant Label
+                    # Step 4
+                    variant_disp = DEFAULT_DISPOSITION
 
             if (variant_disp != INVALID_DISPOSITION) or include_invalid:
                 if variant_cp == label:
@@ -1542,7 +1552,7 @@ class LGR(object):
         """
         Apply the defined action of an LGR to a label and its dispositions.
 
-        Implement 7.3 Determining a Disposition for a Label or Variant Label,
+        Implement 8.3 Determining a Disposition for a Label or Variant Label,
         step 1.
 
         :param label: The label to process, as a sequence of code points.
