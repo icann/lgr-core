@@ -70,10 +70,10 @@ def generate_stats(lgr):
                 stats['codepoints_by_tag'][t] = range_len
 
         variants = list(char.get_variants())
-        variants_len = len(variants)
+        # Original char might not be in the variants (no identity mapping)
+        variants_len = len(frozenset(v.cp for v in variants + [char]))
         stats['variant_number'] += variants_len
-        # Need to add 1 to number of variants to count original label.
-        stats['largest_variant_set'] = max(stats['largest_variant_set'], variants_len + 1)
+        stats['largest_variant_set'] = max(stats['largest_variant_set'], variants_len)
         if variants_len > 0:
             stats['codepoints_with_variants'] += 1
 
