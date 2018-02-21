@@ -325,7 +325,7 @@ def merge_chars(lgr, script, merged_lgr, ref_mapping, previous_scripts):
     :param previous_scripts: The scripts that has already been processed
     """
     new_variants = []
-    merged_chars = set([char for char in merged_lgr.repertoire])
+    merged_chars = {char: char for char in merged_lgr.repertoire}
     for char in lgr.repertoire:
         if len(char.cp) == 1 and lgr.unicode_database is not None:
             script_extensions = lgr.unicode_database.get_script_extensions(char.cp[0])
@@ -333,15 +333,8 @@ def merge_chars(lgr, script, merged_lgr, ref_mapping, previous_scripts):
             script_extensions = []
         new_tags = set(script + '-' + x if ':' not in x else x for x in char.tags) | set(script_extensions)
         existing_char = None
-        for merged_char in merged_chars:
-            if merged_char == char:
-                # Note that we actually want the object from merged_chars, that contains additional information
-                # not present on cp, even if Char.__hash__() lets think so.
-                # For example, cannot use:
-                # if char in merged_chars:
-                #   existing_char = char
-                existing_char = merged_char
-                break
+        if char in merged_chars:
+            existing_char = merged_chars[char]
 
         if existing_char:
             # same cp already in LGR
