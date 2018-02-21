@@ -1,9 +1,7 @@
 #!/bin/env python2
 # -*- coding: utf-8 -*-
 """
-lgr_diff_collisions.py - CLI tool to make the diff on a list of labels
-                         confronted to 2 LGR and/or to test a set of labels for
-                         collisions in one or both LGR
+lgr_merge_set.py - CLI tool merge a set of LGRs
 """
 from __future__ import unicode_literals
 
@@ -50,6 +48,7 @@ def main():
     if not merged_lgr:
         return
     print(serialize_lgr_xml(merged_lgr, pretty_print=True))
+
 
 if __name__ == '__main__':
     main()

@@ -24,8 +24,9 @@ setup(
              'tools/lgr_compare.py',
              'tools/lgr_diff_collisions.py',
              'tools/lgr_merge_set.py',
-             'tools/lgr_cross_script_variants.py'
-    ],
+             'tools/lgr_cross_script_variants.py',
+             'tools/lgr_check_harmonized.py'
+             ],
     tests_require=['nose', 'coverage'],
     test_suite='tests.unit',
     classifiers=[
