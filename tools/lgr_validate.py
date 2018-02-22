@@ -160,14 +160,14 @@ def main():
         write_output("# The following labels from the set labels are invalid\n")
         for label, valid, error in read_labels(set_labels, script_lgr.unicode_database):
             if not valid:
-                write_output.write("{}: {}\n".format(label, error))
+                write_output("{}: {}\n".format(label, error))
             else:
                 label_cp = tuple([ord(c) for c in label])
                 if not script_lgr._test_preliminary_eligibility(label_cp)[0]:
                     write_output("%s: Not in LGR %s\n" % label, script_lgr)
                 else:
                     filtered_set_labels.append(label)
-        write_output("# End of filtered set labels %s\n\n")
+        write_output("# End of filtered set labels\n\n")
 
     for label in label_input.read().splitlines():
         if len(args.lgr_xml) > 1:
