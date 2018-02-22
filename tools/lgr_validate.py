@@ -121,7 +121,7 @@ def main():
             logger.error('Error while creating the merged LGR')
             return
 
-        with io.open(args.labels, 'r', encoding='utf-8') as set_labels_input:
+        with io.open(args.set_labels, 'r', encoding='utf-8') as set_labels_input:
             set_labels = StringIO(set_labels_input.read())
 
         script_lgr = None
@@ -163,11 +163,11 @@ def main():
                 write_output.write("{}: {}\n".format(label, error))
             else:
                 label_cp = tuple([ord(c) for c in label])
-                if not lgr._test_preliminary_eligibility(label_cp)[0]:
-                    write_output("%s: Not LGR Set\n" % label)
+                if not script_lgr._test_preliminary_eligibility(label_cp)[0]:
+                    write_output("%s: Not in LGR %s\n" % label, script_lgr)
                 else:
                     filtered_set_labels.append(label)
-        write_output("# End of filtered set labels\n\n")
+        write_output("# End of filtered set labels %s\n\n")
 
     for label in label_input.read().splitlines():
         if len(args.lgr_xml) > 1:
@@ -175,6 +175,7 @@ def main():
                         merged_lgr=merged_lgr, set_labels=filtered_set_labels)
         else:
             check_label(lgr, label, args.variants)
+
 
 if __name__ == '__main__':
     main()

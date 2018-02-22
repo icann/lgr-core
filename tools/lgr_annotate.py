@@ -16,7 +16,7 @@ from cStringIO import StringIO
 from munidata import UnicodeDataVersionManager
 
 from lgr.parser.xml_parser import XMLParser
-from lgr.tools.utils import merge_lgrs, read_labels
+from lgr.tools.utils import merge_lgrs
 from lgr.tools.annotate import annotate, lgr_set_annotate
 
 logger = logging.getLogger("lgr_annotate")
