@@ -9,6 +9,7 @@ import logging
 from cStringIO import StringIO
 
 from lgr.utils import format_cp
+from lgr.exceptions import NotInLGR
 from lgr.validate.transitivity import check_transitivity
 from lgr.validate.symmetry import check_symmetry
 
@@ -120,10 +121,9 @@ def _check_harmonized_char(other_lgr, char):
     output = ''
     harmonized = True
     transitivity = {}
-    for other_char in other_lgr.repertoire:
-        if char == other_char:
-            break
-    else:
+    try:
+        other_char = other_lgr.get_char(char.cp)
+    except NotInLGR:
         harmonized = False
         output += '  Not in LGR\n'
         return output, harmonized, transitivity
