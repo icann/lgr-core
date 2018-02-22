@@ -50,6 +50,8 @@ def _check_lgr_variants(lgr):
     result = log_output.getvalue()
     if result:
         output = '\n## Check variants symmetry\n{md}{r}{md}'.format(r=result, md=MD)
+    else:
+        output = '\n## Check variants symmetry\nOK\n'
 
     # reset log_output
     log_output.truncate(0)
@@ -58,6 +60,8 @@ def _check_lgr_variants(lgr):
     result = log_output.getvalue()
     if result:
         output += '\n## Check variants transitivity\n{md}{r}{md}'.format(r=result, md=MD)
+    else:
+        output = '\n## Check variants transitivity\nOK\n'
 
     return output
 
@@ -98,7 +102,7 @@ def _check_harmonized_two_lgrs(first_lgr, second_lgr):
         except NotInLGR:
             # Do not consider code points not present on other LGRs
             continue
-        check_result, cp_harmonized = _check_harmonized_char(char, other_char)
+        check_result, cp_harmonized = _check_harmonized_char(char, other_char, first_lgr, second_lgr)
         if not cp_harmonized:
             output += 'Code point {} ({}):\n{}'.format(char, format_cp(char.cp), check_result)
             harmonized = False
@@ -111,28 +115,42 @@ def _check_harmonized_two_lgrs(first_lgr, second_lgr):
     return output
 
 
-def _check_harmonized_char(char, other_char):
+def _check_harmonized_char(first_char, second_char, first_lgr, second_lgr):
     """
     Check harmonization of a two chars.
 
-    :param char: The reference code point to check.
-    :param other_char: The char to check against.
+    :param first_char: The reference code point to check.
+    :param second_char: The char to check against.
     :return: The check result, whether the char is harmonized with the other char.
     """
     output = ''
     harmonized = True
 
-    not_in_other = set.difference(set(char.get_variants()), set(other_char.get_variants()))
-    not_in_lgr = set.difference(set(other_char.get_variants()), set(char.get_variants()))
+    not_in_other = set.difference(set(first_char.get_variants()), set(second_char.get_variants()))
+    not_in_lgr = set.difference(set(second_char.get_variants()), set(first_char.get_variants()))
     if not_in_lgr or not_in_other:
         harmonized = False
 
+    tmp = ''
     for v in not_in_lgr:
-        output += '  Additional {}variant {} ({})\n'.format('reflexive ' if v.cp == char.cp else '',
-                                                            v, format_cp(v.cp))
+        tmp += '   - {}variant {} ({}).'.format('reflexive ' if v.cp == first_char.cp else '',
+                                                v, format_cp(v.cp))
+        if v.cp not in first_lgr.repertoire:
+            tmp += " This code point is also not in the LGR {}\n".format(first_lgr)
+        else:
+            tmp += '\n'
+    if tmp:
+        output += "  Additional variants present in {} and not in {}:\n{}".format(second_lgr, first_lgr, tmp)
 
+    tmp = ''
     for v in not_in_other:
-        output += '  Missing {}variant {} ({})\n'.format('reflexive ' if v.cp == char.cp else '',
-                                                         v, format_cp(v.cp))
+        tmp += '   - {}variant {} ({}).'.format('reflexive ' if v.cp == first_char.cp else '',
+                                                v, format_cp(v.cp))
+        if v.cp not in second_lgr.repertoire:
+            tmp += " This code point is also not in the LGR {}\n".format(second_lgr)
+        else:
+            tmp += '\n'
+    if tmp:
+        output += "  Missing variants from {} and present in {}:\n{}".format(second_lgr, first_lgr, tmp)
 
     return output, harmonized
