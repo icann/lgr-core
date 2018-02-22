@@ -79,10 +79,10 @@ def _check_harmonized_lgrs(lgrs, lgr):
         output += '### Code points and variants\n'
         output += MD
         transitivity = {}
-        for cp in lgr.repertoire:
-            out_cp, cp_harmonized, cp_transitivity = _check_harmonized_cp(other_lgr, cp)
+        for char in lgr.repertoire:
+            out_cp, cp_harmonized, cp_transitivity = _check_harmonized_char(other_lgr, char)
             if not cp_harmonized:
-                output += 'Code point {} ({}):\n{}'.format(cp, format_cp(cp.cp), out_cp)
+                output += 'Code point {} ({}):\n{}'.format(char, format_cp(char.cp), out_cp)
                 harmonized = False
             for transitive_cp, transitive_variants in cp_transitivity.items():
                 transitivity.setdefault(transitive_cp, []).extend(transitive_variants)
@@ -91,15 +91,15 @@ def _check_harmonized_lgrs(lgrs, lgr):
             output += MD
             output += '### Transitivity considerations\n'
             output += MD
-        for cp, variants in transitivity.items():
+        for char, variants in transitivity.items():
             for existing_cp in lgr.repertoire:
-                if cp == existing_cp:
+                if char == existing_cp:
                     output += 'Code point {} ({}) would need variant(s) {}\n'.format(
-                        cp, format_cp(cp.cp), ', '.join(['{} ({})'.format(v, format_cp(v.cp)) for v in variants]))
+                        char, format_cp(char.cp), ', '.join(['{} ({})'.format(v, format_cp(v.cp)) for v in variants]))
                     break
                 else:
-                    'Code point {} ({}) is not in LGR, transitivity could not be achieved\n'.format(cp,
-                                                                                                    format_cp(cp.cp))
+                    'Code point {} ({}) is not in LGR, transitivity could not be achieved\n'.format(char,
+                                                                                                    format_cp(char.cp))
         if harmonized:
             output += 'LGRs are harmonized\n'
 
@@ -108,41 +108,42 @@ def _check_harmonized_lgrs(lgrs, lgr):
     return output
 
 
-def _check_harmonized_cp(other_lgr, cp):
+def _check_harmonized_char(other_lgr, char):
     """
+    Check harmonization of a character in another LGR.
 
     :param other_lgr: The other LGR to check the code point with
-    :param cp: The code point to check
-    :return: The check result, whether the cp is harmonized with the other LGR, required variants per code
-             point for transitivity
+    :param char: The code point to check
+    :return: The check result, whether the cp is harmonized with the other LGR,
+             required variants per code point for transitivity
     """
     output = ''
     harmonized = True
     transitivity = {}
-    for other_cp in other_lgr.repertoire:
-        if cp == other_cp:
+    for other_char in other_lgr.repertoire:
+        if char == other_char:
             break
     else:
         harmonized = False
         output += '  Not in LGR\n'
         return output, harmonized, transitivity
 
-    not_in_other = set.difference(set(cp.get_variants()), set(other_cp.get_variants()))
-    not_in_lgr = set.difference(set(other_cp.get_variants()), set(cp.get_variants()))
+    not_in_other = set.difference(set(char.get_variants()), set(other_char.get_variants()))
+    not_in_lgr = set.difference(set(other_char.get_variants()), set(char.get_variants()))
     if not_in_lgr or not_in_other:
         harmonized = False
 
     for v in not_in_lgr:
-        output += '  Missing {}variant {} ({})\n'.format('reflexive ' if v.cp == cp.cp else '',
+        output += '  Missing {}variant {} ({})\n'.format('reflexive ' if v.cp == char.cp else '',
                                                          v, format_cp(v.cp))
 
     for v in not_in_other:
-        output += '  Additional {}variant {} ({})\n'.format('reflexive ' if v.cp == cp.cp else '',
+        output += '  Additional {}variant {} ({})\n'.format('reflexive ' if v.cp == char.cp else '',
                                                             v, format_cp(v.cp))
 
     # remove reflexive variants for transitivity
-    not_in_lgr = [v for v in not_in_lgr if v.cp != cp.cp]
-    not_in_other = [v for v in not_in_other if v.cp != cp.cp]
+    not_in_lgr = [v for v in not_in_lgr if v.cp != char.cp]
+    not_in_other = [v for v in not_in_other if v.cp != char.cp]
     if not_in_lgr and not_in_other:
         # handle transitivity for variants that differ between scripts
         for v1 in not_in_lgr:
