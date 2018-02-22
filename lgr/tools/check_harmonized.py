@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 
 import logging
 from cStringIO import StringIO
+from collections import defaultdict
 
 from lgr.utils import format_cp
 from lgr.exceptions import NotInLGR
@@ -26,7 +27,7 @@ def check_harmonized(lgrs):
     for lgr in lgrs:
         yield '\n# Check LGR {}\n{}{}'.format(lgr,
                                               _check_lgr_variants(lgr),
-                                              _check_harmonized_lgrs(lgrs, lgr))
+                                              _check_harmonized_with_lgrs(lgr, lgrs))
 
 
 def _check_lgr_variants(lgr):
@@ -62,71 +63,83 @@ def _check_lgr_variants(lgr):
     return output
 
 
-def _check_harmonized_lgrs(lgrs, lgr):
+def _check_harmonized_with_lgrs(lgr, lgrs):
     """
-    Check if a LGR is harmonized with other LGRs
+    Ensure that `lgr` is harmonized with each of the LGR contained in `lgrs`.
 
-    :param lgrs: The other LGRs (can contain the LGR itself)
-    :param lgr: The LGR to check
-    :return: The check result
+    :param lgr: The LGR to consider.
+    :param lgrs: List of other LGRs to check (`lgr` included).
+    :return: Check result.
     """
     output = ''
     for other_lgr in lgrs:
-        harmonized = True
-        if other_lgr == lgr:
+        if lgr == other_lgr:
             continue
+        output += _check_harmonized_two_lgrs(lgr, other_lgr)
+    return output
 
-        output += '\n## Check harmonization with LGR {}\n'.format(other_lgr)
-        output += '### Code points and variants\n'
+
+def _check_harmonized_two_lgrs(first_lgr, second_lgr):
+    """
+    Check if a LGR is harmonized against another LGR.
+
+    :param first_lgr: The first LGR to be used as a reference.
+    :param second_lgr: The second LGR to check.
+    :return: The check result
+    """
+    output = ''
+    harmonized = True
+
+    output += '\n## Check of harmonization with LGR {}\n'.format(second_lgr)
+    output += '### Code points and variants\n'
+    output += MD
+    transitivity = {}
+    for char in first_lgr.repertoire:
+        try:
+            other_char = second_lgr.get_char(char.cp)
+        except NotInLGR:
+            # Do not consider code points not present on other LGRs
+            continue
+        check_result, cp_harmonized, cp_transitivity = _check_harmonized_char(char, other_char)
+        if not cp_harmonized:
+            output += 'Code point {} ({}):\n{}'.format(char, format_cp(char.cp), check_result)
+            harmonized = False
+        for transitive_cp, transitive_variants in cp_transitivity.items():
+            transitivity.setdefault(transitive_cp, []).extend(transitive_variants)
+
+    if len(transitivity) > 0:
         output += MD
-        transitivity = {}
-        for char in lgr.repertoire:
-            out_cp, cp_harmonized, cp_transitivity = _check_harmonized_char(other_lgr, char)
-            if not cp_harmonized:
-                output += 'Code point {} ({}):\n{}'.format(char, format_cp(char.cp), out_cp)
-                harmonized = False
-            for transitive_cp, transitive_variants in cp_transitivity.items():
-                transitivity.setdefault(transitive_cp, []).extend(transitive_variants)
-
-        if len(transitivity) > 0:
-            output += MD
-            output += '### Transitivity considerations\n'
-            output += MD
-        for char, variants in transitivity.items():
-            for existing_cp in lgr.repertoire:
-                if char == existing_cp:
-                    output += 'Code point {} ({}) would need variant(s) {}\n'.format(
-                        char, format_cp(char.cp), ', '.join(['{} ({})'.format(v, format_cp(v.cp)) for v in variants]))
-                    break
-                else:
-                    'Code point {} ({}) is not in LGR, transitivity could not be achieved\n'.format(char,
-                                                                                                    format_cp(char.cp))
-        if harmonized:
-            output += 'LGRs are harmonized\n'
-
+        output += '### Transitivity considerations\n'
         output += MD
+    for char, variants in transitivity.items():
+        for existing_cp in first_lgr.repertoire:
+            if char == existing_cp:
+                output += 'Code point {} ({}) would need variant(s) {}\n'.format(
+                    char, format_cp(char.cp), ', '.join(['{} ({})'.format(v, format_cp(v.cp)) for v in variants]))
+                break
+            else:
+                'Code point {} ({}) is not in LGR, transitivity could not be achieved\n'.format(char,
+                                                                                                format_cp(char.cp))
+    if harmonized:
+        output += 'LGRs are harmonized\n'
+
+    output += MD
 
     return output
 
 
-def _check_harmonized_char(other_lgr, char):
+def _check_harmonized_char(char, other_char):
     """
-    Check harmonization of a character in another LGR.
+    Check harmonization of a two chars.
 
-    :param other_lgr: The other LGR to check the code point with
-    :param char: The code point to check
-    :return: The check result, whether the cp is harmonized with the other LGR,
+    :param char: The reference code point to check.
+    :param other_char: The char to check against.
+    :return: The check result, whether the char is harmonized with the other char,
              required variants per code point for transitivity
     """
     output = ''
     harmonized = True
-    transitivity = {}
-    try:
-        other_char = other_lgr.get_char(char.cp)
-    except NotInLGR:
-        harmonized = False
-        output += '  Not in LGR\n'
-        return output, harmonized, transitivity
+    transitivity = defaultdict(list)
 
     not_in_other = set.difference(set(char.get_variants()), set(other_char.get_variants()))
     not_in_lgr = set.difference(set(other_char.get_variants()), set(char.get_variants()))
@@ -134,12 +147,12 @@ def _check_harmonized_char(other_lgr, char):
         harmonized = False
 
     for v in not_in_lgr:
-        output += '  Missing {}variant {} ({})\n'.format('reflexive ' if v.cp == char.cp else '',
-                                                         v, format_cp(v.cp))
-
-    for v in not_in_other:
         output += '  Additional {}variant {} ({})\n'.format('reflexive ' if v.cp == char.cp else '',
                                                             v, format_cp(v.cp))
+
+    for v in not_in_other:
+        output += '  Missing {}variant {} ({})\n'.format('reflexive ' if v.cp == char.cp else '',
+                                                         v, format_cp(v.cp))
 
     # remove reflexive variants for transitivity
     not_in_lgr = [v for v in not_in_lgr if v.cp != char.cp]
@@ -147,9 +160,8 @@ def _check_harmonized_char(other_lgr, char):
     if not_in_lgr and not_in_other:
         # handle transitivity for variants that differ between scripts
         for v1 in not_in_lgr:
-            transitivity[v1] = []
             for v2 in not_in_other:
                 transitivity[v1].append(v2)
-                transitivity.setdefault(v2, []).append(v1)
+                transitivity[v2].append(v1)
 
     return output, harmonized, transitivity
