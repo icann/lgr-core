@@ -23,7 +23,9 @@ def check_symmetry(lgr, options):
 
     :param lgr: The LGR to be tested.
     :param options: Dictionary of options to the validation function - unused.
+    :return True is LGR symmetry is achieved, False otherwise.
     """
+    result = True
     logger.info("Testing symmetry")
     for a in lgr.repertoire:
         if isinstance(a, RangeChar):
@@ -35,14 +37,16 @@ def check_symmetry(lgr, options):
                 # Variant is not defined in repertoire
                 logger.warning('CP %s: Variant %s is not in repertoire.',
                                format_cp(a.cp), format_cp(b.cp))
+                result = False
                 continue
 
             # Variant is defined in repertoire,
             # let's see if the original character is in its
             # variants
             if a.cp not in [var.cp for var in lgr.get_variants(b.cp)]:
+                result = False
                 logger.warning('CP %s should have CP %s in its variants.',
                                format_cp(b.cp), format_cp(a.cp))
     logger.info("Symmetry test done")
 
-    return True
+    return result

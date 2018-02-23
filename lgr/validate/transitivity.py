@@ -26,7 +26,9 @@ def check_transitivity(lgr, options):
 
     :param LGR lgr: The LGR to check.
     :param options: Dictionary of options to the validation function - unused.
+    :return True is LGR transitivity is achieved, False otherwise.
     """
+    result = True
     logger.info("Testing transitivity")
     for a in lgr.repertoire:
         if isinstance(a, RangeChar):
@@ -41,6 +43,7 @@ def check_transitivity(lgr, options):
                 variants = lgr.get_variants(b.cp)
             except NotInLGR:
                 logger.error("Code point '%s' not in LGR", format_cp(b.cp))
+                result = False
                 continue
             # Variant is defined in repertoire
             # (we have checked for symmetry first)
@@ -52,9 +55,10 @@ def check_transitivity(lgr, options):
                 # Iterate through all second-level variants
                 # which are not the original code point
                 if c.cp not in [var.cp for var in a_variants]:
+                    result = False
                     logger.warning("CP %s should have CP %s in its variants.",
                                    format_cp(a.cp),
                                    format_cp(c.cp))
     logger.info("Transitivity test done")
 
-    return True
+    return result

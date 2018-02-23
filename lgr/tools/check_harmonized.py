@@ -36,7 +36,6 @@ def _check_lgr_variants(lgr):
     :param lgr: The LGR to check
     :return: The check result
     """
-    output = ''
     # Configure log system to redirect validation logs to local attribute
     log_output = StringIO()
     ch = logging.StreamHandler(log_output)

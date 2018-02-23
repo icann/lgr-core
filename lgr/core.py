@@ -28,6 +28,7 @@ from lgr.exceptions import (LGRApiInvalidParameter,
                             LGRApiException,
                             LGRException)
 from lgr.validate import validate_lgr
+from lgr.populate import populate_lgr
 from lgr.utils import (collapse_codepoints,
                        format_cp)
 
@@ -1232,6 +1233,13 @@ class LGR(object):
             if clsname.startswith(TAG_CLASSNAME_PREFIX):
                 out.append(clsname[prefix_len:])
         return out
+
+    def populate_variants(self):
+        """
+        Add missing variants code points and fix symmetry and transitivity
+        """
+        logger.debug('Populate LGR variants')
+        return populate_lgr(self)
 
     def _test_preliminary_eligibility(self, label, generate_chars=False):
         """
