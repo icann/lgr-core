@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 import logging
 
-from lgr.exceptions import VariantAlreadyExists, NotInLGR
+from lgr.exceptions import NotInLGR
 from lgr.validate.symmetry import check_symmetry
 from lgr.validate.transitivity import check_transitivity
 from lgr.utils import format_cp
@@ -21,18 +21,15 @@ def populate_lgr(lgr):
     :param lgr: The LGR to be populated.
     :return: Result of checks and summary as a string
     """
-    now_in_lgr = []
     # not in LGR variants
     for a in lgr.repertoire:
         for b in a.get_variants():
             try:
                 lgr.get_variants(b.cp)
             except NotInLGR:
-                if b.cp not in now_in_lgr:
-                    logger.info("Add missing code point '{}' in LGR as it is a variant of '{}'".format(
-                        format_cp(b.cp), format_cp(a.cp)))
-                    lgr.add_cp(b.cp)
-                    now_in_lgr.append(b.cp)
+                logger.info("Add missing code point '{}' in LGR as it is a variant of '{}'".format(
+                    format_cp(b.cp), format_cp(a.cp)))
+                lgr.add_cp(b.cp)
                 # add current code point as variant for missing code point
                 logger.info("Add code point '{}' as variant of '{}' for symmetry".format(format_cp(a.cp),
                                                                                          format_cp(b.cp)))
