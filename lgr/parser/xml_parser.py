@@ -13,6 +13,7 @@ Note:
 import logging
 from lxml import etree
 
+from lgr import text_type
 from lgr.core import LGR
 from lgr.metadata import (Metadata,
                           ReferenceManager,
@@ -295,17 +296,17 @@ class XMLParser(LGRParser):
                 cls = self._parse_class(child)
                 self._lgr.add_class(cls, force=True)
                 child = drop_ns(child)
-                self._lgr.classes_xml.append(etree.tostring(child))
+                self._lgr.classes_xml.append(etree.tostring(child, encoding=text_type))
             elif child.tag == RULE_TAG:
                 rule = self._parse_rule(child)
                 self._lgr.add_rule(rule, force=True)
                 child = drop_ns(child)
-                self._lgr.rules_xml.append(etree.tostring(child))
+                self._lgr.rules_xml.append(etree.tostring(child, encoding=text_type))
             elif child.tag == ACTION_TAG:
                 action = self._parse_action(child)
                 self._lgr.add_action(action, force=True)
                 child = drop_ns(child)
-                self._lgr.actions_xml.append(etree.tostring(child))
+                self._lgr.actions_xml.append(etree.tostring(child, encoding=text_type))
             else:
                 logger.warning("Unhandled '%s' element in <rules> section",
                                child.tag)

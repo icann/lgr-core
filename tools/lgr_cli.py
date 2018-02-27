@@ -5,6 +5,8 @@ lgr_cli.py - Small CLI tool to exercise the LGR API.
 
 Can parse an LGR XML file, and make some checks/display some data.
 """
+from __future__ import unicode_literals
+
 import sys
 import codecs
 import argparse
@@ -12,6 +14,7 @@ import logging
 
 from munidata import UnicodeDataVersionManager
 
+from lgr import wide_unichr
 from lgr.tools.utils import write_output
 
 logger = logging.getLogger("lgr_cli")
@@ -20,7 +23,7 @@ logger = logging.getLogger("lgr_cli")
 def check_label(lgr, label, invalid, test):
     from lgr.utils import format_cp
     label_cp = tuple([ord(c) for c in label])
-    label_display = u' '.join(u"{:04X}".format(cp) for cp in label_cp)
+    label_display = ' '.join("{:04X}".format(cp) for cp in label_cp)
 
     logger.info("- Code points: %s", label_display)
 
@@ -32,22 +35,19 @@ def check_label(lgr, label, invalid, test):
     action_name = "DefaultAction" if is_default_action else "Action"
     logger.info("- Action triggered: %s[%d]", action_name, actual_index)
     logger.info("- Logs: %s", logs)
-
-    write_output(u"Validation: {} ({}): Result: {}".format(label,
-                                                           label_display,
-                                                           "valid" if eligible else "INVALID"),
+    write_output("Validation: {} ({}): Result: {}".format(label, label_display, "valid" if eligible else "INVALID"),
                  test)
 
     if eligible:
-        write_output(u"Disposition: {} ({}): Result: {} due to {}[{}]".format(label, label_display, disp, action_name, actual_index),
-                     test)
+        write_output("Disposition: {} ({}): Result: {} due to {}[{}]".format(label, label_display, disp,
+                                                                             action_name, actual_index), test)
 
         summary, labels = lgr.compute_label_disposition_summary(label_cp,
                                                                 include_invalid=invalid)
         logger.info("Summary: %s", summary)
         for (variant_cp, var_disp, action_idx, disp_set, logs) in labels:
-            variant_u = ''.join([unichr(c) for c in variant_cp])
-            variant_display = u' '.join(u"{:04X}".format(cp) for cp in variant_cp)
+            variant_u = ''.join([wide_unichr(c) for c in variant_cp])
+            variant_display = ' '.join("{:04X}".format(cp) for cp in variant_cp)
             logger.info("\tVariant '%s'", variant_u)
             logger.info("\t- Code points: %s", format_cp(variant_cp))
             logger.info("\t- Disposition: '%s'", var_disp)
@@ -57,15 +57,15 @@ def check_label(lgr, label, invalid, test):
             action_name = "DefaultAction" if is_default_action else "Action"
             logger.info("\t- Action triggered: %s[%d]", action_name, actual_index)
             disp_set_display = '{%s}' % ','.join(disp_set)
-            write_output(u"Variant: ({}): [{}] ==> {} due to {}[{}]".format(variant_display, disp_set_display, var_disp, action_name, actual_index),
-                         test)
+            write_output("Variant: ({}): [{}] ==> {} due to {}[{}]".format(variant_display, disp_set_display, var_disp,
+                                                                           action_name, actual_index), test)
 
             logger.info("\t- Logs: %s", logs)
     else:
         logger.info("- Valid code points from label: %s",
-                    u' '.join(u"{:04X}".format(cp) for cp in label_part))
+                    ' '.join("{:04X}".format(cp) for cp in label_part))
         logger.info("- Invalid code points from label: %s",
-                    u' '.join(u"{:04X}".format(cp) for cp in not_in_lgr))
+                    ' '.join("{:04X}".format(cp) for cp in not_in_lgr))
 
 
 def main():
@@ -98,8 +98,7 @@ def main():
     if args.test and not args.verbose:
         log_level = logging.ERROR
     logging.basicConfig(stream=sys.stderr, level=log_level,
-                        format="%(levelname)s:%(name)s "
-                        "[%(filename)s:%(lineno)s] %(message)s")
+                        format="%(levelname)s:%(name)s [%(filename)s:%(lineno)s] %(message)s")
 
     lgr_parser = XMLParser(args.xml)
 
@@ -143,12 +142,13 @@ def main():
 
     if args.check:
         if args.label:
-            label_u = ''.join(unichr(int(cphex, 16)) for cphex in args.label.split())
+            label_u = ''.join(wide_unichr(int(cphex, 16)) for cphex in args.label.split())
             check_label(lgr, label_u, args.invalid, args.test)
         else:
             for label in label_input.read().splitlines():
                 logger.info("Label '%s'", label)
                 check_label(lgr, label, args.invalid, args.test)
+
 
 if __name__ == '__main__':
     main()

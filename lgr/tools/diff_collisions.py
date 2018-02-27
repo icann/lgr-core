@@ -9,6 +9,7 @@ from copy import deepcopy
 
 from collections import Counter
 
+from lgr import wide_unichr
 from lgr.utils import format_cp
 from lgr.exceptions import InvalidSymmetry
 
@@ -69,7 +70,7 @@ def _generate_indexes(lgr, labels, keep=False, quiet=False):
                  log) in lgr.compute_label_disposition(label_cp,
                                                        include_invalid=True,
                                                        collect_log=not quiet):
-                variant = ''.join([unichr(c) for c in variant_cp])
+                variant = ''.join([wide_unichr(c) for c in variant_cp])
                 log = log.strip()
                 if quiet:
                     log = ''
@@ -326,9 +327,7 @@ def _full_dump(label_indexes):
 
             yield "\nDisposition count:"
             try:
-                for (disp, count) in Counter(disp for disp in
-                                             map(lambda x: x['disp'][prim].lower(),
-                                                 labels)).most_common():
+                for (disp, count) in Counter(disp for disp in [l['disp'][prim].lower() for l in labels]).most_common():
                     yield "\n - {}: {}".format(disp, count)
             except KeyError:
                 raise InvalidSymmetry()

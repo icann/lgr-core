@@ -6,7 +6,8 @@ from __future__ import unicode_literals
 
 import unittest
 import logging
-from cStringIO import StringIO
+
+from io import StringIO
 
 from lgr.core import LGR
 from lgr.populate import populate_lgr

@@ -9,7 +9,7 @@ import logging
 import unittest
 
 import os
-from cStringIO import StringIO
+from io import StringIO
 
 from munidata.database import IDNADatabase
 
@@ -459,7 +459,7 @@ class TestStats(unittest.TestCase):
         stats['variant_number'] = 7
         stats['variants_by_type'] = {None: 3, 'blocked': 1}
         stats['largest_variant_set'] = 3
-        stats['average_variants'] = 7 / 3
+        stats['average_variants'] = round(7 / 3, 1)
         self.assertDictEqual(result, {'description': 'Generate stats',
                                       'stats': stats})
 

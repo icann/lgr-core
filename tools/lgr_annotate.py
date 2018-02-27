@@ -11,7 +11,6 @@ import sys
 import argparse
 import logging
 import io
-from io import StringIO
 
 from munidata import UnicodeDataVersionManager
 
@@ -61,10 +60,10 @@ def main():
             logger.error('Error while creating the merged LGR')
             return
 
-        set_labels = StringIO()
+        set_labels = io.StringIO()
         if args.set_labels:
             with io.open(args.set_labels, 'r', encoding='utf-8') as set_labels_input:
-                set_labels = StringIO(set_labels_input.read())
+                set_labels = io.StringIO(set_labels_input.read())
 
         script_lgr = None
         for lgr_s in lgr_set:

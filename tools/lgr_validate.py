@@ -13,10 +13,11 @@ import codecs
 import argparse
 import logging
 import io
-from cStringIO import StringIO
+from io import StringIO
 
 from munidata import UnicodeDataVersionManager
 
+from lgr import wide_unichr
 from lgr.parser.xml_parser import XMLParser
 from lgr.tools.utils import write_output, merge_lgrs, read_labels
 from lgr.tools.diff_collisions import get_collisions
@@ -46,7 +47,7 @@ def check_label(lgr, label, generate_variants=False, merged_lgr=None, set_labels
                     logger.error('More than one collision, please check your LGR set labels')
                     return
                 elif len(indexes) > 0:
-                    collisions = indexes[indexes.keys()[0]]
+                    collisions = indexes[list(indexes.keys())[0]]
                     collision = None
                     collide_with = []
                     # retrieve label in collision list
@@ -74,7 +75,7 @@ def check_label(lgr, label, generate_variants=False, merged_lgr=None, set_labels
             write_output("Variants:")
             summary, labels = lgr.compute_label_disposition_summary(label_cp)
             for (variant_cp, var_disp, _, _, _) in labels:
-                variant_u = ''.join([unichr(c) for c in variant_cp])
+                variant_u = ''.join([wide_unichr(c) for c in variant_cp])
                 write_output("\tVariant %s [%s]" % (variant_u, format_cp(variant_cp)))
                 write_output("\t- Disposition: '%s'" % var_disp)
     else:

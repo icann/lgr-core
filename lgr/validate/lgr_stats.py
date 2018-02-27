@@ -85,8 +85,7 @@ def generate_stats(lgr):
                 stats['variants_by_type'][var.type] = 1
 
     if stats['codepoints_with_variants'] != 0:
-        stats['average_variants'] = \
-            stats['variant_number'] / stats['codepoints_with_variants']
+        stats['average_variants'] = round(stats['variant_number'] / stats['codepoints_with_variants'], 1)
 
     return stats
 
@@ -126,7 +125,7 @@ Variants:
 
 """.format(**stats)
 
-        for (variant_type, number) in stats['variants_by_type'].iteritems():
+        for (variant_type, number) in stats['variants_by_type'].items():
             output += "\tNumber of variants for type '{0}': {1}.\n"\
                     .format(variant_type, number)
 
@@ -134,7 +133,7 @@ Variants:
         output += """
 Tags:
 """
-        for (tag_name, number) in stats['codepoints_by_tag'].iteritems():
+        for (tag_name, number) in stats['codepoints_by_tag'].items():
             output += "\tNumber of code points for tag '{0}': {1}.\n"\
                     .format(tag_name, number)
 

@@ -5,7 +5,8 @@ xml_validity.py - Check that the resulting LGR serialized to XML is valid.
 from __future__ import unicode_literals
 
 import logging
-from cStringIO import StringIO
+
+from io import BytesIO
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +32,7 @@ def check_xml_validity(lgr, options):
         logger.warning("rng_filepath not in 'options' arguments, skipping")
         return True, {}
 
-    xml = StringIO(serialize_lgr_xml(lgr))
+    xml = BytesIO(serialize_lgr_xml(lgr))
     parser = XMLParser(xml)
 
     result = {

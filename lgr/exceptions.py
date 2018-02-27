@@ -240,8 +240,11 @@ class RuleError(LGRException):
     def __unicode__(self):
         return '<rule %s>: %s' % (self.rule_name, self.message)
 
+    __str__ = __unicode__
+
 
 class LGRInvalidLabelException(LGRException):
+
     """
     Raised when a label is invalid in an LGR
     """

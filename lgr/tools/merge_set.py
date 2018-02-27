@@ -11,11 +11,12 @@ Algorithm:
 """
 from __future__ import unicode_literals
 
+import sys
 import copy
 import logging
 import re
 from datetime import date
-from cStringIO import StringIO
+from io import BytesIO
 # OrderedDict is used in replacement for set in order to get OrderedSets
 from collections import OrderedDict
 
@@ -163,7 +164,7 @@ def rename_action(action, action_xml, script):
     
     :param action: The action 
     :param action_xml: The action XML
-    :param script:  The LGR script
+    :param script: The LGR script
     :return: Updated action, updated action XML
     """
     new_action = copy.deepcopy(action)
@@ -434,7 +435,7 @@ def merge_chars(lgr, script, merged_lgr, ref_mapping, previous_scripts):
             if v.not_when:
                 not_when = script + '-' + v.not_when
 
-            new_ref = [r for r in map(lambda x: ref_mapping[script].get(x, x), v.references)]
+            new_ref = [r for r in [ref_mapping[script].get(r, r) for r in v.references]]
             merged_lgr.add_variant(char.cp, v.cp, variant_type='blocked',
                                    comment=v.comment, ref=new_ref,
                                    when=when, not_when=not_when)
@@ -485,7 +486,7 @@ def merge_lgr_set(lgr_set, name):
     # XXX As the created merged_lgr is not a valid Python LGR object,
     # we have to serialize it/parse it to get a valid object.
 
-    merged_lgr_xml = StringIO(serialize_lgr_xml(merged_lgr))
+    merged_lgr_xml = BytesIO(serialize_lgr_xml(merged_lgr))
 
     lgr_parser = XMLParser(source=merged_lgr_xml, filename=name)
 

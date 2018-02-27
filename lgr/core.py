@@ -7,8 +7,9 @@ from __future__ import unicode_literals
 import logging
 import collections
 import math
-from cStringIO import StringIO
 from collections import OrderedDict
+
+from io import StringIO
 
 from lgr.metadata import ReferenceManager, Metadata
 from lgr.char import Repertoire, CharSequence
@@ -1365,7 +1366,7 @@ class LGR(object):
         # Store all disposition of reflexive mappings
         disp_set = set()
 
-        for i in xrange(len(label)):
+        for i in range(len(label)):
             cp = label[i]
             rule_logger.debug("Code point: '%s'", format_cp(cp))
 
@@ -1823,6 +1824,8 @@ class LGR(object):
 
     def __unicode__(self):
         return self.name
+
+    __str__ = __unicode__
 
 
 if __name__ == "__main__":

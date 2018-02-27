@@ -87,6 +87,8 @@ class Version(object):
     def __unicode__(self):
         return self.value
 
+    __str__ = __unicode__
+
 
 class Scope(object):
     """
@@ -101,6 +103,8 @@ class Scope(object):
 
     def __unicode__(self):
         return '{}: {}'.format(self.scope_type, self.value)
+
+    __str__ = __unicode__
 
     def __eq__(self, other):
         return (self.value == other.value) \

@@ -4,11 +4,12 @@ diff.py - Compute (textual) diff of two LGRs.
 """
 from __future__ import unicode_literals
 
+from lgr import text_type
 from lgr.tools.compare.utils import display_variant, VariantProperties
 from lgr.utils import format_cp
 
 
-def compare_sets(first, second, format_fct=unicode,
+def compare_sets(first, second, format_fct=text_type,
                  show_same=False):
     """
     Utility function to compare two sets.
@@ -40,7 +41,7 @@ Common values: {}.
     return out
 
 
-def compare_things(first, second, name, is_set=False, format_fct=unicode,
+def compare_things(first, second, name, is_set=False, format_fct=text_type,
                    show_same=False):
     """
     Compare two 'things'.
@@ -152,7 +153,7 @@ def diff_metadata(first, second, is_set=False, show_same=False):
     second_scope_set = set(second.scopes)
 
     output += compare_things(first_scope_set, second_scope_set, "scopes", True,
-                             lambda s: ", ".join(map(unicode, s)),
+                             lambda s: ", ".join(map(text_type, s)),
                              show_same=show_same)
 
     first_lang_set = set(first.languages)

@@ -13,6 +13,7 @@ import io
 
 from munidata import UnicodeDataVersionManager
 
+from lgr import wide_unichr
 from lgr.parser.xml_parser import XMLParser
 from lgr.exceptions import NotInLGR
 from lgr.utils import format_cp
@@ -21,7 +22,7 @@ logger = logging.getLogger("lgr_collision")
 
 
 def write_output(s):
-    print s.encode('utf-8')
+    print(s.encode('utf-8'))
 
 
 def compute_label_index(lgr, label):
@@ -33,7 +34,7 @@ def find_variants_to_block(lgr, label_ref, label):
 
     for (variant_cp, disp, _, disp_set, _) in lgr.compute_label_disposition(label):
         if variant_cp in var_ref:
-            variant_u = ''.join([unichr(c) for c in variant_cp])
+            variant_u = ''.join([wide_unichr(c) for c in variant_cp])
             write_output("Variant '%s' [%s] with disposition set '%s' "
                          "should be blocked (current disposition :%s)" % (variant_u, format_cp(variant_cp), disp_set, disp))
 
@@ -94,7 +95,7 @@ def main():
         if label_index in ref_label_indexes:
             ref_label_cp = ref_label_indexes[label_index]
             ref_label_disp = format_cp(ref_label_cp)
-            ref_label_u = ''.join([unichr(c) for c in ref_label_cp])
+            ref_label_u = ''.join([wide_unichr(c) for c in ref_label_cp])
 
             write_output("Collision for label '%s' [%s] with '%s' [%s]" % (label, label_disp, ref_label_u, ref_label_disp))
             if args.generate:

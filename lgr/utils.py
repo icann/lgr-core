@@ -6,6 +6,8 @@ from __future__ import unicode_literals
 
 import logging
 
+from lgr import text_type
+
 logger = logging.getLogger(__name__)
 
 
@@ -23,14 +25,14 @@ def format_cp(cp_or_sequence):
     :param cp_or_sequence: Code point/Code point sequence to format.
     :returns: Formatted code point or code point sequence as a string.
 
-    >>> format_cp(1)
-    u'U+0001'
-    >>> format_cp([1])
-    u'U+0001'
-    >>> format_cp([1,2,3])
-    u'U+0001 U+0002 U+0003'
-    >>> format_cp(None)
-    u'None'
+    >>> format_cp(1) == text_type('U+0001')
+    True
+    >>> format_cp([1]) == text_type('U+0001')
+    True
+    >>> format_cp([1,2,3]) == text_type('U+0001 U+0002 U+0003')
+    True
+    >>> format_cp(None) == text_type('None')
+    True
     """
     if cp_or_sequence is None:
         return 'None'
@@ -46,18 +48,18 @@ def format_cp_collapsed(cp_or_sequence):
     :param cp_or_sequence: Code point/Code point sequence to format.
     :returns: Formatted code point or code point sequence as a string.
 
-    >>> format_cp_collapsed(1)
-    u'U+0001'
-    >>> format_cp_collapsed([1])
-    u'U+0001'
-    >>> format_cp_collapsed([1,3])
-    u'U+0001 U+0003'
-    >>> format_cp_collapsed([1,2,3])
-    u'U+0001-U+0003'
-    >>> format_cp(None)
-    u'None'
-    >>> format_cp_collapsed([1,2,3,5,6,10,12,13,14,15])
-    u'U+0001-U+0003 U+0005 U+0006 U+000A U+000C-U+000F'
+    >>> format_cp_collapsed(1) == text_type('U+0001')
+    True
+    >>> format_cp_collapsed([1]) == text_type('U+0001')
+    True
+    >>> format_cp_collapsed([1,3]) == text_type('U+0001 U+0003')
+    True
+    >>> format_cp_collapsed([1,2,3]) == text_type('U+0001-U+0003')
+    True
+    >>> format_cp(None) == text_type('None')
+    True
+    >>> format_cp_collapsed([1,2,3,5,6,10,12,13,14,15]) == text_type('U+0001-U+0003 U+0005 U+0006 U+000A U+000C-U+000F')
+    True
     """
     if cp_or_sequence is None:
         return 'None'

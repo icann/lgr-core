@@ -6,8 +6,10 @@ from __future__ import unicode_literals
 
 import logging
 
-from lgr.parser.xml_parser import XMLParser
+import sys
 
+from lgr import wide_unichr, text_type
+from lgr.parser.xml_parser import XMLParser
 from lgr.tools.merge_set import merge_lgr_set
 
 logger = logging.getLogger(__name__)
@@ -23,7 +25,8 @@ def read_labels(input, unidb, do_raise=False, keep_commented=False):
     :param keep_commented: Whether commented labels are returned (still commented) or not
     :return: [(label, valid, error)]
     """
-    labels = map(lambda x: x.strip(), input)
+    labels = [l.strip() for l in input]
+
     # remove comments
     for label in labels:
         if '#' in label:
@@ -45,7 +48,7 @@ def read_labels(input, unidb, do_raise=False, keep_commented=False):
             if do_raise:
                 raise
             valid = False
-            error = unicode(ex)
+            error = text_type(ex)
         yield label, valid, error
 
 
@@ -137,7 +140,7 @@ def parse_codepoint_input(s):
     return [parse_single_cp_input(x) for x in s.split()]
 
 
-def parse_label_input(s, idna_decoder=lambda x: x.decode('idna'), as_cp=True):
+def parse_label_input(s, idna_decoder=lambda x: x.encode('utf-8').decode('idna'), as_cp=True):
     """
     Parses a label from user input, applying a bit of auto-detection smarts
 
@@ -173,7 +176,7 @@ def parse_label_input(s, idna_decoder=lambda x: x.decode('idna'), as_cp=True):
         if as_cp:
             return label_cp
         else:
-            return ''.join([unichr(c) for c in label_cp])
+            return ''.join([wide_unichr(c) for c in label_cp])
     else:
         # treat as unicode
         if as_cp:
@@ -184,7 +187,10 @@ def parse_label_input(s, idna_decoder=lambda x: x.decode('idna'), as_cp=True):
 
 def write_output(s, test=True):
     if test:
-        print(s.encode('utf-8'))
+        if sys.version_info.major > 2:
+            print(s)
+        else:
+            print(s.encode('utf-8'))
 
 
 def merge_lgrs(input_lgrs, name=None, rng=None, unidb=None):

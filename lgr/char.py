@@ -3,8 +3,10 @@
 char.py - Definition of base classes for character objects.
 """
 from __future__ import unicode_literals
+
 import logging
 
+from lgr import wide_unichr, text_type
 from lgr.exceptions import (CharAlreadyExists,
                             NotInLGR,
                             RangeAlreadyExists,
@@ -65,7 +67,9 @@ class Variant(object):
         self.references = ref if ref is not None else []
 
     def __unicode__(self):
-        return u''.join(unichr(c) for c in self.cp)
+        return u''.join(wide_unichr(c) for c in self.cp)
+
+    __str__ = __unicode__
 
     def __repr__(self):
         return "<Variant: %s>" % ' '.join(cp_to_str(c) for c in self.cp)
@@ -123,8 +127,8 @@ class CharBase(object):
         >>> c.add_variant([10], 'BLOCKED')
         >>> (10, ) in c._variants
         True
-        >>> c._variants[(10,)][0].type
-        u'BLOCKED'
+        >>> c._variants[(10,)][0].type == text_type('BLOCKED')
+        True
         """
         assert len(cp_or_sequence), "there should be at least one char"
 
@@ -180,7 +184,9 @@ class CharBase(object):
         return hash(self.cp)
 
     def __unicode__(self):
-        return u''.join(unichr(c) for c in self.cp)
+        return u''.join(wide_unichr(c) for c in self.cp)
+
+    __str__ = __unicode__
 
     def __repr__(self):
         return '<%s: %s>' % (self.__class__.__name__,
@@ -417,7 +423,7 @@ class Repertoire(object):
             char_list = self._chardict[index]
 
             # Reset last_cp once we have exhausted the range
-            if last_cp < index:
+            if last_cp is not None and last_cp < index:
                 last_cp = None
 
             for char in sorted(char_list, key=lambda c: len(c.cp)):
@@ -809,7 +815,7 @@ class Repertoire(object):
 
         :param ref_id: The reference to remove.
         """
-        for cp_list in self._chardict.itervalues():
+        for cp_list in self._chardict.values():
             for char in cp_list:
                 if ref_id in char.references:
                     char.references.remove(ref_id)

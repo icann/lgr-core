@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import logging
 
+from lgr import text_type
 from lgr.exceptions import (LGRFormatException, RuleError)
 from lgr.utils import format_cp_collapsed
 
@@ -35,9 +36,9 @@ def set_to_rvalue(cp_set, as_set):
         if len(cp_set) == 0:
             # Empty set, we have to return empty string
             # because '[]' is an invalid REGEX
-            return unicode('')
+            return ''
         else:
-            return unicode(cp_set)
+            return text_type(cp_set)
 
 
 class Class(object):
