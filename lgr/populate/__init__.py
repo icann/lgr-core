@@ -35,7 +35,7 @@ def populate_lgr(lgr):
                                                                                          format_cp(b.cp)))
                 lgr.add_variant(b.cp, a.cp)
 
-    while not check_symmetry(lgr, None) or not check_transitivity(lgr, None):
+    while not check_symmetry(lgr, None)[0] or not check_transitivity(lgr, None)[0]:
         # symmetry
         for a in lgr.repertoire:
             for b in a.get_variants():

@@ -5,7 +5,6 @@ __init__.py - Definition of various checks/validation of an LGR.
 from __future__ import unicode_literals
 
 import logging
-from cStringIO import StringIO
 
 from lgr.exceptions import LGRException
 from lgr.validate.xml_validity import check_xml_validity
@@ -38,31 +37,20 @@ def validate_lgr(lgr, options):
 
     :param lgr: The LGR to be validated.
     :param options: Dictionary of options to the validation function.
-    :return: Result of checks and summary as a string
+    :return: Result of checks and summary as a list of (check function name, check results).
     """
-
-    # Configure log system to redirect validation logs to local attribute
-    log_output = StringIO()
-    ch = logging.StreamHandler(log_output)
-    ch.setLevel(logging.INFO)
-
-    validation_logger = logging.getLogger('lgr.validate')
-    # Configure module logger - since user may have disabled the 'lgr' logger,
-    # reset its level
-    validation_logger.addHandler(ch)
-    validation_logger.setLevel('INFO')
-
-    # Store handler into options dictionary so some tests may
-    # interact with it.
-    options['log_handler'] = ch
+    result = []
 
     for check_function in CHECKS:
         try:
-            if not check_function(lgr, options):
+            valid, func_result = check_function(lgr, options)
+            result.append((check_function.__name__, func_result))
+            if not valid:
                 logger.error("Validation failed")
                 break
         except LGRException as exc:
             logger.error("Error while validating LGR '%s': %s",
                          lgr, exc)
+            result.append((check_function.__name__, exc))
 
-    return log_output.getvalue()
+    return result

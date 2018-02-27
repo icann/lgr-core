@@ -30,20 +30,17 @@ def rebuild_lgr(lgr, options):
     # Local import to prevent import cycles
     from lgr.core import LGR
 
-    # Redirect LGR-general log to lgr.validate logger
-    # Since we are just rebuilding an LGR, the main point of the test
-    # being to catch all errors/warning from regular code
-    # when we insert codepoints/variants
-    lgr_logger = logging.getLogger('lgr.core')
-    lgr_logger_level = lgr_logger.getEffectiveLevel()
-    log_handler = options.get('log_handler', None)
-    if log_handler is not None:
-        lgr_logger.setLevel('INFO')
-        lgr_logger.addHandler(log_handler)
-
     unicode_version = options.get('unicode_version',
                                   lgr.metadata.unicode_version)
     validating_repertoire = options.get('validating_repertoire', None)
+
+    description = "Rebuilding LGR with Unicode version {}".format(unicode_version)
+    if validating_repertoire is not None:
+        description += " and validating repertoire '{}'".format(validating_repertoire)
+    result = {
+        'description': description,
+        'repertoire': []
+    }
 
     logger.info("Rebuilding LGR '%s' with Unicode version %s "
                 "and Validating Repertoire '%s'",
@@ -53,6 +50,9 @@ def rebuild_lgr(lgr, options):
     if unidb is not None:
         unidb_version = unidb.get_unicode_version()
         if unidb_version != unicode_version:
+            result['generic'] = "Target Unicode version {} " \
+                                "differs from UnicodeDatabase {}".format(unicode_version,
+                                                                         unidb_version)
             logger.warning("Target Unicode version %s differs "
                            "from UnicodeDatabase %s",
                            unicode_version, unidb_version)
@@ -77,7 +77,11 @@ def rebuild_lgr(lgr, options):
                                      when=char.when, not_when=char.not_when,
                                      validating_repertoire=validating_repertoire,
                                      override_repertoire=False)
-            except LGRException:
+            except LGRException as exc:
+                result['repertoire'].append({
+                    'char': char,
+                    'error': exc
+                })
                 logger.error("Cannot add range '%s-%s'",
                              format_cp(char.first_cp),
                              format_cp(char.last_cp))
@@ -92,7 +96,11 @@ def rebuild_lgr(lgr, options):
                               when=char.when, not_when=char.not_when,
                               validating_repertoire=validating_repertoire,
                               override_repertoire=False)
-        except LGRException:
+        except LGRException as exc:
+            result['repertoire'].append({
+                'char': char,
+                'error': exc
+            })
             logger.error("Cannot add code point '%s'",
                          format_cp(char.cp))
 
@@ -106,15 +114,16 @@ def rebuild_lgr(lgr, options):
                                        comment=var.comment, ref=var.references,
                                        validating_repertoire=validating_repertoire,
                                        override_repertoire=True)
-            except LGRException:
+            except LGRException as exc:
+                result['repertoire'].append({
+                    'char': char,
+                    'variant': var,
+                    'error': exc
+                })
                 logger.error("Cannot add variant '%s' to code point '%s'",
                              format_cp(var.cp),
                              format_cp(char.cp))
 
-    if log_handler is not None:
-        lgr_logger.setLevel(lgr_logger_level)
-        lgr_logger.removeHandler(log_handler)
-
     logger.info("Rebuilding LGR '%s done", lgr)
 
-    return True
+    return True, result

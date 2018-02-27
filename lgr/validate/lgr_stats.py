@@ -98,9 +98,14 @@ def compute_stats(lgr, options):
     :param options: Not used.
     """
     stats = generate_stats(lgr)
+    result = {
+        'description': 'Generate stats',
+        'stats': stats
+    }
 
-    # General summary
-    output = """
+    if logger.isEnabledFor(logging.DEBUG):
+        # General summary
+        output = """
 General summary:
 \tNumber of code points: {codepoint_number}.
 
@@ -111,8 +116,8 @@ General summary:
 \tLargest sequence: {largest_sequence} (length: {largest_sequence_len}).
 """.format(**stats)
 
-    # Variants
-    output += """
+        # Variants
+        output += """
 Variants:
 \tTotal number of variants: {variant_number}.
 \tAverage number of variants per code point: {average_variants}.
@@ -120,22 +125,22 @@ Variants:
 
 """.format(**stats)
 
-    for (variant_type, number) in stats['variants_by_type'].iteritems():
-        output += "\tNumber of variants for type '{0}': {1}.\n"\
-                .format(variant_type, number)
+        for (variant_type, number) in stats['variants_by_type'].iteritems():
+            output += "\tNumber of variants for type '{0}': {1}.\n"\
+                    .format(variant_type, number)
 
-    # Tags
-    output += """
+        # Tags
+        output += """
 Tags:
 """
-    for (tag_name, number) in stats['codepoints_by_tag'].iteritems():
-        output += "\tNumber of code points for tag '{0}': {1}.\n"\
-                .format(tag_name, number)
+        for (tag_name, number) in stats['codepoints_by_tag'].iteritems():
+            output += "\tNumber of code points for tag '{0}': {1}.\n"\
+                    .format(tag_name, number)
 
-    # Rules summary
-    output += "\nRules:\n"
-    output += "\tNumber of rules defined: {0}.\n".format(stats['rule_number'])
+        # Rules summary
+        output += "\nRules:\n"
+        output += "\tNumber of rules defined: {0}.\n".format(stats['rule_number'])
 
-    logger.info(output)
+        logger.debug(output)
 
-    return True
+    return True, result
