@@ -178,22 +178,27 @@ def diff_reference_manager(first, second):
     return compare_things(first_ref, second_ref, 'references', True)
 
 
-def diff_char(first, second):
+def diff_char(first, second, full_dump=True):
     """
     Intersect two chars with same CP.
 
     :param first: The first object.
     :param second: The other object.
+    :param full_dump: Whether identical char should return something or not.
     :return: Text comparison.
     """
     output = ""
 
-    output += compare_things(first.comment, second.comment, "comment")
-    output += compare_things(first.tags, second.tags, "tags")
-
     # Must redefine this since __hash__ of Variant does not include comment
     variant_first = {VariantProperties(v.cp, v.type, v.when, v.not_when, v.comment) for v in first.get_variants()}
     variant_second = {VariantProperties(v.cp, v.type, v.when, v.not_when, v.comment) for v in second.get_variants()}
+
+    if not full_dump and \
+       first.comment == second.comment and first.tags == second.tags and variant_first == variant_second:
+        return output
+
+    output += compare_things(first.comment, second.comment, "comment")
+    output += compare_things(first.tags, second.tags, "tags")
 
     output += compare_things(variant_first, variant_second, "variants", True,
                              lambda v: ", ".join(map(display_variant, v)))
@@ -236,7 +241,7 @@ def diff_classes(lgr1, lgr2):
     return compare_things(set(lgr1.classes), set(lgr2.classes), "classes", True)
 
 
-def diff_lgrs(lgr1, lgr2):
+def diff_lgrs(lgr1, lgr2, full_dump=True):
     """
     Compare 2 LGRs.
 
@@ -244,6 +249,7 @@ def diff_lgrs(lgr1, lgr2):
 
     :param lgr1: First LGR.
     :param lgr2: Second LGR.
+    :param full_dump: Whether identical char should return something or not.
     :return: Text comparison.
     """
     output = ""
@@ -274,14 +280,24 @@ def diff_lgrs(lgr1, lgr2):
 ** Compare common code points in repertoire **
 """
 
+    identical = 0
     for cp in set.intersection(first_cps, second_cps):
         char1 = lgr1.get_char(cp)
         char2 = lgr2.get_char(cp)
 
+        diff = diff_char(char1, char2, full_dump=full_dump)
+        if not full_dump and not diff:
+            identical += 1
+        else:
+            output += """
+
+    Compare code point {}""".format(format_cp(cp))
+            output += diff
+
+    if not full_dump and identical > 0:
         output += """
 
-Compare code point {}""".format(format_cp(cp))
-        output += diff_char(char1, char2)
+    {} code points are identical""".format(identical)
 
     output += """
 
@@ -296,7 +312,7 @@ Compare code point {}""".format(format_cp(cp))
     return output
 
 
-def diff_lgr_sets(lgr1, lgr2, lgr_set_1, lgr_set_2):
+def diff_lgr_sets(lgr1, lgr2, lgr_set_1, lgr_set_2, full_dump=True):
     """
     Compare 2 LGR sets.
 
@@ -306,6 +322,7 @@ def diff_lgr_sets(lgr1, lgr2, lgr_set_1, lgr_set_2):
     :param lgr2: Second LGR set.
     :param lgr_set_1: LGR included in the first LGR set.
     :param lgr_set_2: LGR included in the second LGR set.
+    :param full_dump: Whether identical char should return something or not.
     :return: Text comparison.
     """
     output = ""
@@ -359,6 +376,6 @@ Script '{script}' is available in LGR set '{set2}' with LGR '{lgrs}' but not in 
 ### Compare LGRs for script {script}: {lgr1} - {lgr2} ###
 
 """.format(script=script, lgr1=l1.name, lgr2=l2.name)
-                output += diff_lgrs(l1, l2)
+                output += diff_lgrs(l1, l2, full_dump=full_dump)
 
     return output
