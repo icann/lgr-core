@@ -227,6 +227,14 @@ class CharBase(object):
             for var in variants:
                 yield var
 
+    def get_variant(self, var_cp):
+        """
+        Return a the variant marching the code point.
+
+        :returns: The required variant
+        """
+        return self._variants.get(var_cp, None)
+
     def get_reflexive_variants(self):
         """
         Return the list of reflexive variants.
@@ -735,6 +743,25 @@ class Repertoire(object):
         """
         char = self.get_char(cp_or_sequence)
         return char.get_variants()
+
+    def get_variant(self, cp_or_sequence, var_cp):
+        """
+        Get a specific variant of a code point.
+
+        :param cp_or_sequence: Code point or code point sequence of the character
+                               to list the variant of.
+        :param var_cp: Variant code point to retrieve
+        :returns: Generator of Variants objects of a char.
+        :raises NotInRepertoire: If the code point does not exist.
+
+        >>> cd = Repertoire()
+        >>> _ = cd.add_char([0x002A])
+        >>> cd.add_variant([0x002A], [0x003A], 'BLOCK')
+        >>> cd.get_variant([0x002A], (0x003A, )) == [Variant((0x003A,), 'BLOCK')]
+        True
+        """
+        char = self.get_char(cp_or_sequence)
+        return char.get_variant(var_cp)
 
     def get_variant_sets(self):
         """

@@ -257,6 +257,20 @@ class TestChar(unittest.TestCase):
 
         self.assertEqual(variant_list, expected_output)
 
+    def test_get_variant(self):
+        c = Char(0x002A)
+        c.add_variant([0x0030], when='w1')
+        c.add_variant([0x0031], when='w2')
+        c.add_variant([0x0031], not_when='nw-1')
+
+        variant = c.get_variant((0x031, ))
+        expected_output = [
+            Variant((0x0031, ), when='w2'),
+            Variant((0x0031, ), not_when='nw-1')
+        ]
+
+        self.assertEqual(variant, expected_output)
+
 
 class TestRepertoire(unittest.TestCase):
 

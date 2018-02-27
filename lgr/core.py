@@ -799,6 +799,36 @@ class LGR(object):
                                                 force=True)
         return self.repertoire.get_variants(cp_or_sequence)
 
+    def get_variant(self, cp_or_sequence, var_cp):
+        """
+        Retrieve a specific variant of a given code point.
+
+        :param cp_or_sequence: Code point or sequence in the LGR.
+                               Can be either:
+
+                                   - An int (code point)
+                                   - A list (non-empty)
+        :param var_cp: The desired variant code point.
+        :returns: Generator of Variant objects.
+        :raises LGRApiInvalidParameter: If cp_or_sequence is empty list,
+                                        or non-supported input type.
+        :raises NotInLGR: If cp_or_sequence is not in the current LGR.
+
+        >>> lgr = LGR()
+        >>> lgr.add_cp([0x0061])
+        >>> lgr.add_variant([0x0061], [0x0062])
+        >>> lgr.add_variant([0x0061], [0x0063])
+        >>> variant = lgr.get_variant([0x0061], (0x0063, ))
+        >>> len(variant) == 1
+        True
+        """
+        logger.debug("Get variant for cp '%s' from LGR '%s'",
+                     cp_or_sequence, self)
+
+        cp_or_sequence = self._check_convert_cp(cp_or_sequence,
+                                                force=True)
+        return self.repertoire.get_variant(cp_or_sequence, var_cp)
+
     def get_char(self, cp_or_sequence):
         """
         Return the char object associated to a given code point.
