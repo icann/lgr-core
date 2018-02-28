@@ -20,6 +20,7 @@ from lgr.exceptions import (LGRApiInvalidParameter,
                             NotInRepertoire,
                             NotInLGR,
                             CharInvalidIdnaProperty,
+                            CharNotInScript,
                             RangeInvalidContextRule,
                             VariantInvalidContextRule,
                             ReferenceNotDefined,
@@ -272,7 +273,7 @@ class LGR(object):
         """
         logger.debug("Add cp '%s' to LGR '%s'", cp_or_sequence, self)
 
-        cp_or_sequence = self._check_convert_cp(cp_or_sequence, force)
+        cp_or_sequence = self._check_convert_cp(cp_or_sequence)
 
         if (not force) and (when is not None) and (not_when is not None):
             logger.error("Cannot add code point '%s' with both 'when' "
@@ -369,8 +370,7 @@ class LGR(object):
         >>> lgr.check_cp([0x0061, 0x0062])
         False
         """
-        cp_or_sequence = self._check_convert_cp(cp_or_sequence,
-                                                force=True)
+        cp_or_sequence = self._check_convert_cp(cp_or_sequence)
         return cp_or_sequence in self.repertoire
 
     def del_cp(self, cp_or_sequence):
@@ -394,8 +394,7 @@ class LGR(object):
         """
         logger.debug("Delete cp '%s' from LGR '%s'", cp_or_sequence, self)
 
-        cp_or_sequence = self._check_convert_cp(cp_or_sequence,
-                                                force=True)
+        cp_or_sequence = self._check_convert_cp(cp_or_sequence)
 
         self.repertoire.del_char(cp_or_sequence)
 
@@ -665,10 +664,8 @@ class LGR(object):
         logger.debug("Add variant '%s' for cp '%s' to LGR '%s'",
                      variant_cp, cp_or_sequence, self)
 
-        cp_or_sequence = self._check_convert_cp(cp_or_sequence,
-                                                force)
-        var_cp_or_sequence = self._check_convert_cp(variant_cp,
-                                                    force)
+        cp_or_sequence = self._check_convert_cp(cp_or_sequence)
+        var_cp_or_sequence = self._check_convert_cp(variant_cp)
 
         if (not force) and (when is not None) and (not_when is not None):
             logger.error("Cannot add variant '%s' to code point '%s' "
@@ -763,8 +760,7 @@ class LGR(object):
         logger.debug("Delete variant '%s' for cp '%s' from LGR '%s'",
                      variant_cp, cp_or_sequence, self)
 
-        cp_or_sequence = self._check_convert_cp(cp_or_sequence,
-                                                force=True)
+        cp_or_sequence = self._check_convert_cp(cp_or_sequence)
 
         self._variant_number -= 1
 
@@ -795,8 +791,7 @@ class LGR(object):
         logger.debug("Get variant for cp '%s' from LGR '%s'",
                      cp_or_sequence, self)
 
-        cp_or_sequence = self._check_convert_cp(cp_or_sequence,
-                                                force=True)
+        cp_or_sequence = self._check_convert_cp(cp_or_sequence)
         return self.repertoire.get_variants(cp_or_sequence)
 
     def get_variant(self, cp_or_sequence, var_cp):
@@ -825,8 +820,7 @@ class LGR(object):
         logger.debug("Get variant for cp '%s' from LGR '%s'",
                      cp_or_sequence, self)
 
-        cp_or_sequence = self._check_convert_cp(cp_or_sequence,
-                                                force=True)
+        cp_or_sequence = self._check_convert_cp(cp_or_sequence)
         return self.repertoire.get_variant(cp_or_sequence, var_cp)
 
     def get_char(self, cp_or_sequence):
@@ -853,8 +847,7 @@ class LGR(object):
         logger.debug("Get variant for cp '%s' from LGR '%s'",
                      cp_or_sequence, self)
 
-        cp_or_sequence = self._check_convert_cp(cp_or_sequence,
-                                                force=True)
+        cp_or_sequence = self._check_convert_cp(cp_or_sequence)
         return self.repertoire.get_char(cp_or_sequence)
 
     def check_range(self, first_cp, last_cp,
@@ -1663,7 +1656,7 @@ class LGR(object):
 
         return True
 
-    def _check_convert_cp(self, cp_or_sequence, force=False):
+    def _check_convert_cp(self, cp_or_sequence, assert_in_script=False):
         """
         Check validity of code point input.
 
@@ -1675,13 +1668,15 @@ class LGR(object):
 
                                    - An int (code point)
                                    - A list (non-empty)
-        :param force: If True, still convert the codepoint even if invalid.
-                      Note: This won't skip the IDNA check.
+        :param assert_in_script: If True, ensure that the added code point
+                                 is in one of the LGR's scripts.
         :returns: Input argument to internally used format.
         :raises LGRApiInvalidParameter: If cp_or_sequence is empty list,
                                         or non-supported input type.
         :raises CharInvalidIdnaProperty: If cp_or_sequence is or contains
                                          an invalid IDNA2008 code point.
+        :raises CharNotInScript: If cp_or_sequence is not in LGR's scripts.
+
         >>> from munidata.database import IDNADatabase
         >>> unidb = IDNADatabase('6.3.0')
         >>> lgr = LGR(unicode_database=unidb)
@@ -1721,7 +1716,6 @@ class LGR(object):
                 raise LGRApiInvalidParameter('cp_or_sequence')
 
         if self.unicode_database is not None:
-            lgr_scripts = self.metadata.get_scripts()
             for cp in cp_or_sequence:
                 # Check IDNA properties - This check cannot be overridden
                 idna_prop = self.unicode_database.get_idna_prop(cp)
@@ -1729,19 +1723,41 @@ class LGR(object):
                     logger.error("Code point %s is not IDNA-valid",
                                  format_cp(cp))
                     raise CharInvalidIdnaProperty(cp)
-
-                # Check code point is in defined script - only warning
-                try:
-                    script = self.unicode_database.get_script(cp, alpha4=True)
-                    if len(lgr_scripts) > 0 and script not in lgr_scripts:
-                        logger.warning("Code point '%s' (script %s) "
-                                       "not in LGR script '%s'",
-                                       format_cp(cp), script, lgr_scripts)
-                except NotImplementedError:
-                    # get_script() not implemented in all munidata's databases.
-                    pass
+            in_script, _ = self.cp_in_script(cp_or_sequence)
+            if assert_in_script:
+                raise CharNotInScript(cp_or_sequence)
 
         return cp_or_sequence
+
+    def cp_in_script(self, codepoints):
+        """
+        Given a code point or code point sequence, return if the code point is in
+        one of the LGR's scripts and the code point script.
+
+        Assume the LGR has a proper unicode_database set.
+
+        :param codepoints: List of code points.
+        :return: (in_script, cp_script) with:
+                 - in_script: True if cp_or_sequence is in LGR's scripts, False otherwise.
+                 - cp_scripts: cp_or_sequence's scripts.
+        """
+        in_script = True
+        cp_scripts = set()
+        lgr_scripts = self.metadata.get_scripts()
+        for cp in codepoints:
+            try:
+                script = self.unicode_database.get_script(cp, alpha4=True)
+                cp_scripts.add(script)
+                if len(lgr_scripts) > 0 and script not in lgr_scripts:
+                    logger.debug("Code point '%s' (script %s) "
+                                 "not in LGR script '%s'",
+                                 format_cp(cp), script, lgr_scripts)
+                    in_script = False
+            except NotImplementedError:
+                # get_script() not implemented in all munidata's databases.
+                pass
+
+        return in_script, cp_scripts
 
     def _insert_list(self, codepoints, comment=None,
                      ref=None, tag=None,
