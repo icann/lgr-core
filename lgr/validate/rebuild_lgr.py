@@ -8,7 +8,7 @@ import copy
 
 from lgr.char import RangeChar
 from lgr.utils import format_cp
-from lgr.exceptions import LGRException
+from lgr.exceptions import LGRException, CharNotInScript
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ def rebuild_lgr(lgr, options):
         description += " and validating repertoire '{}'".format(validating_repertoire)
     result = {
         'description': description,
-        'repertoire': []
+        'repertoire': {}  # XXX: Cannot use defaultdict because of django...
     }
 
     logger.info("Rebuilding LGR '%s' with Unicode version %s "
@@ -69,6 +69,13 @@ def rebuild_lgr(lgr, options):
 
     for char in lgr.repertoire:
         if isinstance(char, RangeChar):
+            for cp, status in target_lgr.check_range(char.first_cp, char.last_cp,
+                                                     validating_repertoire):
+                if status is not None:
+                    result['repertoire'].setdefault(char, {}).setdefault('errors', []).append(status)
+                in_script, _ = lgr.cp_in_script([cp])
+                if not in_script:
+                    result['repertoire'].setdefault(char, {}).setdefault('errors', []).append(CharNotInScript(cp))
             try:
                 target_lgr.add_range(char.first_cp, char.last_cp,
                                      comment=char.comment,
@@ -78,15 +85,15 @@ def rebuild_lgr(lgr, options):
                                      validating_repertoire=validating_repertoire,
                                      override_repertoire=False)
             except LGRException as exc:
-                result['repertoire'].append({
-                    'char': char,
-                    'error': exc
-                })
+                result['repertoire'].setdefault(char, {}).setdefault('errors', []).append(exc)
                 logger.error("Cannot add range '%s-%s'",
                              format_cp(char.first_cp),
                              format_cp(char.last_cp))
             continue
 
+        in_script, _ = lgr.cp_in_script(char.cp)
+        if not in_script:
+            result['repertoire'].setdefault(char, {}).setdefault('errors', []).append(CharNotInScript(char.cp))
         # Insert code point
         try:
             target_lgr.add_cp(char.cp,
@@ -97,10 +104,7 @@ def rebuild_lgr(lgr, options):
                               validating_repertoire=validating_repertoire,
                               override_repertoire=False)
         except LGRException as exc:
-            result['repertoire'].append({
-                'char': char,
-                'error': exc
-            })
+            result['repertoire'].setdefault(char, {}).setdefault('errors', []).append(exc)
             logger.error("Cannot add code point '%s'",
                          format_cp(char.cp))
 
@@ -115,11 +119,7 @@ def rebuild_lgr(lgr, options):
                                        validating_repertoire=validating_repertoire,
                                        override_repertoire=True)
             except LGRException as exc:
-                result['repertoire'].append({
-                    'char': char,
-                    'variant': var,
-                    'error': exc
-                })
+                result['repertoire'].setdefault(char, {}).setdefault('variants', {}).setdefault(var, []).append(exc)
                 logger.error("Cannot add variant '%s' to code point '%s'",
                              format_cp(var.cp),
                              format_cp(char.cp))
