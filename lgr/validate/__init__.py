@@ -45,9 +45,6 @@ def validate_lgr(lgr, options):
         try:
             valid, func_result = check_function(lgr, options)
             result.append((check_function.__name__, func_result))
-            if not valid:
-                logger.error("Validation failed")
-                break
         except LGRException as exc:
             logger.error("Error while validating LGR '%s': %s",
                          lgr, exc)

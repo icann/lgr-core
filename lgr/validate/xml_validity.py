@@ -29,7 +29,7 @@ def check_xml_validity(lgr, options):
 
     if 'rng_filepath' not in options:
         logger.warning("rng_filepath not in 'options' arguments, skipping")
-        return True
+        return True, {}
 
     xml = StringIO(serialize_lgr_xml(lgr))
     parser = XMLParser(xml)

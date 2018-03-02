@@ -69,13 +69,20 @@ def rebuild_lgr(lgr, options):
 
     for char in lgr.repertoire:
         if isinstance(char, RangeChar):
+            range_ok = True
             for cp, status in target_lgr.check_range(char.first_cp, char.last_cp,
                                                      validating_repertoire):
                 if status is not None:
                     result['repertoire'].setdefault(char, {}).setdefault('errors', []).append(status)
+                    range_ok = False
                 in_script, _ = lgr.cp_in_script([cp])
                 if not in_script:
                     result['repertoire'].setdefault(char, {}).setdefault('errors', []).append(CharNotInScript(cp))
+                    range_ok = False
+
+            if not range_ok:
+                continue
+
             try:
                 target_lgr.add_range(char.first_cp, char.last_cp,
                                      comment=char.comment,

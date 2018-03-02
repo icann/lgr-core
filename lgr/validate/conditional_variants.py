@@ -22,6 +22,7 @@ def check_conditional_variants(lgr, options):
     :param options: Dictionary of options to the validation function - unused.
     """
     logger.info("Testing conditional variants")
+    success = True
     result = {
         'description': 'Testing conditional variants',
         'repertoire': []
@@ -39,6 +40,7 @@ def check_conditional_variants(lgr, options):
                                "'%s' is not an existing rule name.",
                                format_cp(char.cp), format_cp(var.cp),
                                when)
+                success = False
                 result['repertoire'].append({
                     'char': char,
                     'variant': var,
@@ -50,6 +52,7 @@ def check_conditional_variants(lgr, options):
                                "'%s' is not an existing rule name.",
                                format_cp(char.cp), format_cp(var.cp),
                                not_when)
+                success = False
                 result['repertoire'].append({
                     'char': char,
                     'variant': var,
@@ -59,4 +62,4 @@ def check_conditional_variants(lgr, options):
 
     logger.info("Conditional variants test done")
 
-    return True, result
+    return success, result

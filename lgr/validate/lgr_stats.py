@@ -2,6 +2,7 @@
 """
 lgr_stats.py - Compute some stats for an LGR.
 """
+from __future__ import unicode_literals
 
 import logging
 
@@ -71,7 +72,7 @@ def generate_stats(lgr):
 
         variants = list(char.get_variants())
         # Original char might not be in the variants (no identity mapping)
-        variants_len = len(frozenset(v.cp for v in variants + [char]))
+        variants_len = len(frozenset(v.cp for v in variants + ([char] if len(variants) > 0 else [])))
         stats['variant_number'] += variants_len
         stats['largest_variant_set'] = max(stats['largest_variant_set'], variants_len)
         if variants_len > 0:

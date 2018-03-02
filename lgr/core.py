@@ -1749,8 +1749,7 @@ class LGR(object):
                 script = self.unicode_database.get_script(cp, alpha4=True)
                 cp_scripts.add(script)
                 if len(lgr_scripts) > 0 and script not in lgr_scripts:
-                    logger.debug("Code point '%s' (script %s) "
-                                 "not in LGR script '%s'",
+                    logger.debug("Code point '%s' (script %s) not in LGR script '%s'",
                                  format_cp(cp), script, lgr_scripts)
                     in_script = False
             except NotImplementedError:
