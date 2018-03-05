@@ -929,6 +929,9 @@ class LGR(object):
         """
         logger.debug('Add code points to LGR %s', self)
 
+        if not codepoints:
+            return
+
         ranges = collapse_codepoints(codepoints)
         for (first_cp, last_cp) in ranges:
             if first_cp == last_cp:
@@ -1778,7 +1781,7 @@ class LGR(object):
 
 
         >>> lgr = LGR()
-        >>> lgr.add_codepoints(range(0x0061, 0x007A))
+        >>> lgr._insert_list(range(0x0061, 0x007A))
         """
         logger.debug('Add code points to LGR %s', self)
 
