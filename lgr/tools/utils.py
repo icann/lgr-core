@@ -17,15 +17,13 @@ def read_labels(input, unidb, do_raise=False, keep_commented=False):
     """
     Read a label file and format lines to get a list of correct labels
 
-    :param input: The name of the file containing the labels, as an iterator of Unicode strings.
+    :param input: Input label list as an iterator of Unicode strings.
     :param unidb: The UnicodeDatabase
     :param do_raise: Whether the label parsing exceptions are raised or not
     :param keep_commented: Whether commented labels are returned (still commented) or not
     :return: [(label, valid, error)]
     """
-    # Compute index label
     labels = map(lambda x: x.strip(), input)
-
     # remove comments
     for label in labels:
         if '#' in label:

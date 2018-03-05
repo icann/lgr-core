@@ -11,7 +11,7 @@ import sys
 import argparse
 import logging
 import io
-from cStringIO import StringIO
+from io import StringIO
 
 from munidata import UnicodeDataVersionManager
 
