@@ -226,7 +226,7 @@ def _write_complete_output(label_indexes):
                           their variants (with various information) for each index.
     """
     output_labels = ("\n## Collision ##\n" + MD +
-                     "Label:       \t{label:{len}}   | {variant}\n"
+                     "Label:       \t{label:{len}} | {variant}\n"
                      "Code points: \t{label_cp:{len}} | {variant_cp}\n"
                      "Category:    \t{label_cat:{len}} | {variant_cat}" +
                      MD)
