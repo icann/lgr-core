@@ -1418,7 +1418,7 @@ class LGR(object):
 
         return self._apply_actions(label, disp_set, only_variants)
 
-    def _get_prefix_list(self, label, orig_label, label_prefix):
+    def _get_prefix_list(self, label, label_prefix):
         """
         Generate the list of characters with same prefix.
 
@@ -1427,8 +1427,6 @@ class LGR(object):
         the variants of a label.
 
         :param label: The label to generate the variants of.
-        :param orig_label: The full original label,
-                           used when evaluating when/not-when rules
         :param label_prefix: The prefix of the label.
         :return: list of valid prefix characters.
         """
@@ -1439,9 +1437,15 @@ class LGR(object):
             if not prefix.is_prefix_of(label):
                 continue
 
-            # Test when/not-when rules - Use original label
+            # Generate "prefixed label":
+            # label prefix + variant code point + label 'suffix'
+            # label suffix is obtained by removing
+            # the prefix code points from the label.
+            prefixed_label = label_prefix + prefix.cp + tuple(label[len(prefix):])
+
+            # Test when/not-when rules on prefixed_label
             if not self._test_context_rules(prefix,
-                                            orig_label,
+                                            prefixed_label,
                                             len(label_prefix)):
                 rule_logger.debug('No context rule')
                 continue
@@ -1498,7 +1502,7 @@ class LGR(object):
             return
 
         try:
-            same_prefix = self._get_prefix_list(label, orig_label, label_prefix)
+            same_prefix = self._get_prefix_list(label, label_prefix)
         except NotInLGR:
             rule_logger.debug('Char is not in LGR,'
                               'assume we are handling a sequence')
