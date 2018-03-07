@@ -1,5 +1,15 @@
 # lgr-core Release notes
 
+## 1.9 (2018-03-09)
+New features:
+- New tool to check that multiple LGRs are harmonized.
+- New function to populate the missing symmetric and transitive variants.
+Fixes:
+- Validate that a generated variant label is valid based on LGR rules.
+- Reduce verbosity of lgr\_compare's diff output
+- Improve handling of large LGR.
+- Improve display for summary (now renamed to LGR validation).
+
 ## 1.8.1 (2017-11-15)
 Fixes:
  - Remove script/mimetype from merged description when all descriptions use the text/html mimetype.
