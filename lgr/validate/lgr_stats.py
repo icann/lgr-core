@@ -53,14 +53,14 @@ def generate_stats(lgr):
             stats['range_number'] += 1
             if range_len > stats['largest_range_len']:
                 stats['largest_range_len'] = range_len
-                stats['largest_range'] = format_cp(char.cp)
+                stats['largest_range'] = char
         elif isinstance(char, CharSequence):
             stats['codepoint_number'] += 1
             stats['sequence_number'] += 1
             sequence_len = len(char.cp)
             if sequence_len > stats['largest_sequence_len']:
                 stats['largest_sequence_len'] = sequence_len
-                stats['largest_sequence'] = format_cp(char.cp)
+                stats['largest_sequence'] = char
         elif isinstance(char, Char):
             stats['codepoint_number'] += 1
 
