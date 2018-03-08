@@ -14,7 +14,7 @@ from cStringIO import StringIO
 from munidata.database import IDNADatabase
 
 from lgr.core import LGR
-from lgr.char import RangeChar
+from lgr.char import RangeChar, CharSequence
 from lgr.rule import Rule
 from lgr.exceptions import CharInvalidIdnaProperty
 
@@ -427,7 +427,7 @@ class TestStats(unittest.TestCase):
         stats = self.STATS.copy()
         stats['codepoint_number'] = 8
         stats['range_number'] = 2
-        stats['largest_range'] = 'U+0061'
+        stats['largest_range'] = RangeChar(0x0061, 0x0061, 0x0065)
         stats['largest_range_len'] = 5
         self.assertDictEqual(result, {'description': 'Generate stats',
                                       'stats': stats})
@@ -439,7 +439,7 @@ class TestStats(unittest.TestCase):
         stats = self.STATS.copy()
         stats['codepoint_number'] = 2
         stats['sequence_number'] = 2
-        stats['largest_sequence'] = 'U+0061 U+0062 U+0063'
+        stats['largest_sequence'] = CharSequence(cp_or_sequence=(0x0061, 0x0062, 0x0063))
         stats['largest_sequence_len'] = 3
         self.assertDictEqual(result, {'description': 'Generate stats',
                                       'stats': stats})
