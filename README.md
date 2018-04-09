@@ -51,7 +51,7 @@ THE POSSIBILITY OF SUCH DAMAGE.
 
 For testing:
 
-* [nose](https://nose.readthedocs.org/en/latest/)
+* [pytest](https://docs.pytest.org/)
 * [coverage](http://nedbatchelder.com/code/coverage/)
 
 For documentation generation:
@@ -109,14 +109,15 @@ Other tools are available to manipulate LGR files and labels:
 
 Tests and coverage report can be run as follows:
 
+	(venv) $ pip install pytest pytest-cov
 	(venv) $ ./runtests.sh
 
-Open `cover/index.html` in a web browser for the coverage report.
+Open `htmlcov/index.html` in a web browser for the coverage report.
 
 ## Documentation
 
 To generate the documentation, go to the `doc` directory and run the following command:
 
-    (venv) $ make html
+	(venv) $ make html
 
 The generated documentation is available in `doc/_build/html/index.html`.
