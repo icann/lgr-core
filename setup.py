@@ -1,6 +1,7 @@
-#!/bin/env python2
+#!/bin/env python
 # -*- coding: utf-8 -*-
 from setuptools import setup, find_packages
+from io import open
 
 setup(
     name="lgr-core",
@@ -8,7 +9,7 @@ setup(
     author='Viagénie and Wil Tan',
     author_email='support@viagenie.ca',
     description="API for manipulating Label Generation Rules",
-    long_description=open('README.md').read(),
+    long_description=open('README.md', encoding='utf-8').read(),
     license="TBD",
     install_requires=['lxml', 'language-tags', 'munidata', 'picu'],
     packages=find_packages(),
