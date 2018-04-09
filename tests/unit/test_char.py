@@ -36,11 +36,7 @@ class TestVariant(unittest.TestCase):
         v2 = Variant([1], when='w-2')
         v3 = Variant([1], not_when='nw-1')
         v4 = Variant([1], not_when='nw-2')
-        v5 = Variant([1], when='w-1', not_when='nw-1')
-        v6 = Variant([1], when='w-2', not_when='nw-1')
-        v7 = Variant([1], when='w-1', not_when='nw-2')
-        v8 = Variant([1], when='w-2', not_when='nw-2')
-        variants = [v1, v2, v3, v4, v5, v6, v7, v8]
+        variants = [v1, v2, v3, v4]
         for (a, b) in itertools.product(variants, variants):
             if a is b:
                 # 'Memory' equality: a and b point to the same object.
@@ -52,11 +48,7 @@ class TestVariant(unittest.TestCase):
         v2 = Variant([1], when='w-2')
         v3 = Variant([1], not_when='nw-1')
         v4 = Variant([1], not_when='nw-2')
-        v5 = Variant([1], when='w-1', not_when='nw-1')
-        v6 = Variant([1], when='w-2', not_when='nw-1')
-        v7 = Variant([1], when='w-1', not_when='nw-2')
-        v8 = Variant([1], when='w-2', not_when='nw-2')
-        variants = [v1, v2, v3, v4, v5, v6, v7, v8]
+        variants = [v1, v2, v3, v4]
         for (a, b) in itertools.product(variants, variants):
             if a is b:
                 # 'Memory' equality: a and b point to the same object.

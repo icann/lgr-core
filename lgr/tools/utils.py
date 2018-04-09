@@ -86,11 +86,11 @@ def parse_single_cp_input(s):
     Traceback (most recent call last):
     ...
     ValueError: code point value must be in the range [0, U+10FFFF]
-    >>> parse_single_cp_input('U+')  # short
+    >>> parse_single_cp_input('U+')  # short # doctest: +IGNORE_EXCEPTION_DETAIL, +ELLIPSIS
     Traceback (most recent call last):
     ...
     ValueError: invalid literal for int() with base 16: ''
-    >>> parse_single_cp_input('0061 0062')  # too many values
+    >>> parse_single_cp_input('0061 0062')  # too many values # doctest: +IGNORE_EXCEPTION_DETAIL, +ELLIPSIS
     Traceback (most recent call last):
     ...
     ValueError: invalid literal for int() with base 16: '0061 0062'
