@@ -8,7 +8,8 @@ import logging
 
 import sys
 
-from lgr import wide_unichr, text_type
+from lgr import text_type
+from lgr.utils import cp_to_ulabel
 from lgr.parser.xml_parser import XMLParser
 from lgr.tools.merge_set import merge_lgr_set
 
@@ -176,7 +177,7 @@ def parse_label_input(s, idna_decoder=lambda x: x.encode('utf-8').decode('idna')
         if as_cp:
             return label_cp
         else:
-            return ''.join([wide_unichr(c) for c in label_cp])
+            return cp_to_ulabel(label_cp)
     else:
         # treat as unicode
         if as_cp:

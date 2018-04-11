@@ -6,8 +6,7 @@ from __future__ import unicode_literals
 
 import logging
 
-from lgr import wide_unichr
-from lgr.utils import format_cp
+from lgr.utils import format_cp, cp_to_ulabel
 from lgr.tools.utils import read_labels
 from lgr.exceptions import LGRException
 
@@ -81,10 +80,9 @@ def cross_script_variants(lgr, labels_input):
                                                                                     label)
                     label_displayed = True
                     found = True
-                yield "\t- Cross-variant {} ({}), disposition {}:\n".format(format_cp(variant),
-                                                                            ''.join([wide_unichr(c) for c in variant]),
+                yield "\t- Cross-variant {} ({}), disposition {}:\n".format(format_cp(variant), cp_to_ulabel(variant),
                                                                             disp)
-                yield '\t\t+ ' + '\t\t+ '.join(["{} ({}): {}\n".format(format_cp(c), wide_unichr(c), s) for c, s in script_mapping.items()])
+                yield '\t\t+ ' + '\t\t+ '.join(["{} ({}): {}\n".format(format_cp(c), cp_to_ulabel(c), s) for c, s in script_mapping.items()])
 
     if not found:
         yield 'No cross-script variants for input!'

@@ -15,6 +15,7 @@ import logging
 from munidata import UnicodeDataVersionManager
 
 from lgr import wide_unichr
+from lgr.utils import cp_to_ulabel
 from lgr.tools.utils import write_output
 
 logger = logging.getLogger("lgr_cli")
@@ -46,7 +47,7 @@ def check_label(lgr, label, invalid, test):
                                                                 include_invalid=invalid)
         logger.info("Summary: %s", summary)
         for (variant_cp, var_disp, action_idx, disp_set, logs) in labels:
-            variant_u = ''.join([wide_unichr(c) for c in variant_cp])
+            variant_u = cp_to_ulabel(variant_cp)
             variant_display = ' '.join("{:04X}".format(cp) for cp in variant_cp)
             logger.info("\tVariant '%s'", variant_u)
             logger.info("\t- Code points: %s", format_cp(variant_cp))

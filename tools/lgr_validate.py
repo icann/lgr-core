@@ -17,7 +17,7 @@ from io import StringIO
 
 from munidata import UnicodeDataVersionManager
 
-from lgr import wide_unichr
+from lgr.utils import cp_to_ulabel
 from lgr.parser.xml_parser import XMLParser
 from lgr.tools.utils import write_output, merge_lgrs, read_labels
 from lgr.tools.diff_collisions import get_collisions
@@ -75,7 +75,7 @@ def check_label(lgr, label, generate_variants=False, merged_lgr=None, set_labels
             write_output("Variants:")
             summary, labels = lgr.compute_label_disposition_summary(label_cp)
             for (variant_cp, var_disp, _, _, _) in labels:
-                variant_u = ''.join([wide_unichr(c) for c in variant_cp])
+                variant_u = cp_to_ulabel(variant_cp)
                 write_output("\tVariant %s [%s]" % (variant_u, format_cp(variant_cp)))
                 write_output("\t- Disposition: '%s'" % var_disp)
     else:

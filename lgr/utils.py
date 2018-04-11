@@ -6,9 +6,30 @@ from __future__ import unicode_literals
 
 import logging
 
-from lgr import text_type
+from lgr import text_type, wide_unichr
 
 logger = logging.getLogger(__name__)
+
+
+def cp_to_ulabel(cp_or_sequence):
+    """
+    Convert a code point or code point sequence to the corresponding U-label.
+
+    :param cp_or_sequence: Code point/Code point sequence to convert to label.
+    :returns: Label composed of the `cp_or_sequence`.
+
+    >>> cp_to_ulabel(0x0061) == text_type('a')
+    True
+    >>> cp_to_ulabel([0x0061, 0x0062, 0x0063]) == text_type('abc')
+    True
+    >>> cp_to_ulabel(None) == text_type('None')
+    True
+    """
+    if cp_or_sequence is None:
+        return 'None'
+    if isinstance(cp_or_sequence, int):
+        cp_or_sequence = [cp_or_sequence]
+    return ''.join((wide_unichr(c) for c in cp_or_sequence))
 
 
 def cp_to_str(cp):

@@ -6,13 +6,13 @@ from __future__ import unicode_literals
 
 import logging
 
-from lgr import wide_unichr, text_type
+from lgr import text_type
 from lgr.exceptions import (CharAlreadyExists,
                             NotInLGR,
                             RangeAlreadyExists,
                             LGRFormatException,
                             VariantAlreadyExists)
-from lgr.utils import cp_to_str, format_cp
+from lgr.utils import cp_to_str, format_cp, cp_to_ulabel
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +67,7 @@ class Variant(object):
         self.references = ref if ref is not None else []
 
     def __unicode__(self):
-        return u''.join(wide_unichr(c) for c in self.cp)
+        return cp_to_ulabel(self.cp)
 
     __str__ = __unicode__
 
@@ -184,7 +184,7 @@ class CharBase(object):
         return hash(self.cp)
 
     def __unicode__(self):
-        return u''.join(wide_unichr(c) for c in self.cp)
+        return cp_to_ulabel(self.cp)
 
     __str__ = __unicode__
 

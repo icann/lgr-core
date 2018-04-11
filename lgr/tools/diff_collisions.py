@@ -9,8 +9,7 @@ from copy import deepcopy
 
 from collections import Counter
 
-from lgr import wide_unichr
-from lgr.utils import format_cp
+from lgr.utils import format_cp, cp_to_ulabel
 from lgr.exceptions import InvalidSymmetry
 
 #MD = "\n"
@@ -70,7 +69,7 @@ def _generate_indexes(lgr, labels, keep=False, quiet=False):
                  log) in lgr.compute_label_disposition(label_cp,
                                                        include_invalid=True,
                                                        collect_log=not quiet):
-                variant = ''.join([wide_unichr(c) for c in variant_cp])
+                variant = cp_to_ulabel(variant_cp)
                 log = log.strip()
                 if quiet:
                     log = ''
