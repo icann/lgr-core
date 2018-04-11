@@ -102,5 +102,6 @@ def main():
         else:
             write_output("No collision for label %s [%s]" % (label, label_disp))
 
+
 if __name__ == '__main__':
     main()

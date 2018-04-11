@@ -5,7 +5,6 @@ xml_validity.py - Check that the resulting LGR serialized to XML is valid.
 from __future__ import unicode_literals
 
 import logging
-
 from io import BytesIO
 
 logger = logging.getLogger(__name__)

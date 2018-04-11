@@ -8,7 +8,6 @@ import logging
 import collections
 import math
 from collections import OrderedDict
-
 from io import StringIO
 
 from lgr.metadata import ReferenceManager, Metadata

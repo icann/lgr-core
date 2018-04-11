@@ -237,7 +237,7 @@ def _write_complete_output(label_indexes):
     for collisions in label_indexes.values():
         # do not output anything if there is not at least 2 primaries colliding
         if len(collisions) < 2 or \
-           len([lbl for lbl in collisions if lbl['cat'] == PRIMARY]) < 2:
+                        len([lbl for lbl in collisions if lbl['cat'] == PRIMARY]) < 2:
             continue
         idx = 0
         collided = True

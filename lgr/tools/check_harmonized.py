@@ -6,7 +6,6 @@ check_harmonized.py - Check if some LGRs are harmonized (variants cp are transit
 from __future__ import unicode_literals
 
 import logging
-
 from io import StringIO
 
 from lgr.utils import format_cp

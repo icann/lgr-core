@@ -11,7 +11,6 @@ Algorithm:
 """
 from __future__ import unicode_literals
 
-import sys
 import copy
 import logging
 import re
@@ -435,7 +434,7 @@ def merge_chars(lgr, script, merged_lgr, ref_mapping, previous_scripts):
             if v.not_when:
                 not_when = script + '-' + v.not_when
 
-            new_ref = [r for r in [ref_mapping[script].get(r, r) for r in v.references]]
+            new_ref = [ref_mapping[script].get(r, r) for r in v.references]
             merged_lgr.add_variant(char.cp, v.cp, variant_type='blocked',
                                    comment=v.comment, ref=new_ref,
                                    when=when, not_when=not_when)

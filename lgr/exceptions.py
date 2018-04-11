@@ -244,7 +244,6 @@ class RuleError(LGRException):
 
 
 class LGRInvalidLabelException(LGRException):
-
     """
     Raised when a label is invalid in an LGR
     """

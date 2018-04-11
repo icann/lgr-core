@@ -193,6 +193,7 @@ def let_user_choose(first, second, separator='|'):
         return first
     return '{0!s}{1!s}{2!s}'.format(first, separator, second)
 
+
 if __name__ == "__main__":
     import doctest
 
