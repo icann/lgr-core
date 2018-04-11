@@ -74,6 +74,8 @@ def main():
     parser = argparse.ArgumentParser(description='LGR CLI')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='be verbose')
+    parser.add_argument('-q', '--quiet', action='store_true',
+                        help='Be quiet (no log)')
     parser.add_argument('-r', '--rng', metavar='RNG',
                         help='RelaxNG XML schema')
     parser.add_argument('-m', '--msr', metavar='MSR',
@@ -97,6 +99,8 @@ def main():
     log_level = logging.DEBUG if args.verbose else logging.INFO
     if args.test and not args.verbose:
         log_level = logging.ERROR
+    if args.quiet:
+        log_level = logging.CRITICAL
     logging.basicConfig(stream=sys.stderr, level=log_level,
                         format="%(levelname)s:%(name)s [%(filename)s:%(lineno)s] %(message)s")
 
