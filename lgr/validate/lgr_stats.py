@@ -18,17 +18,17 @@ def generate_stats(lgr):
     Given an LGR, generate the stats.
 
     :param lgr: The LGR to use.
-    :return: Dictionnary containing various stats.
+    :return: Dictionary containing various stats.
     """
     stats = {
         'codepoint_number': 0,
 
         'range_number': 0,
-        'largest_range': '',
+        'largest_range': None,
         'largest_range_len': 0,
 
         'sequence_number': 0,
-        'largest_sequence': '',
+        'largest_sequence': None,
         'largest_sequence_len': 0,
 
         'codepoints_with_variants': 0,
