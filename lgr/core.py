@@ -1220,6 +1220,8 @@ class LGR(object):
         :param label: The label to compute the disposition of,
                       as a sequence of code points.
         :return: The index label, as a list.
+        :raises NotInLgr: If the label is not in the LGR
+                          (does not pass preliminary eligibility testing).
         :raises RuleError: If rule is invalid.
         """
         logger.debug("Generating index label for '%s'", format_cp(label))

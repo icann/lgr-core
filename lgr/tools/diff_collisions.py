@@ -10,9 +10,8 @@ from copy import deepcopy
 from collections import Counter
 
 from lgr.utils import format_cp, cp_to_ulabel
-from lgr.exceptions import InvalidSymmetry
+from lgr.exceptions import InvalidSymmetry, NotInLGR
 
-#MD = "\n"
 MD = "\n```\n"
 
 LRI = '\u2066'
@@ -27,18 +26,26 @@ def _generate_indexes(lgr, labels, keep=False, quiet=False):
     Generate indexes based on labels provided in the list
 
     :param lgr: The current LGR
-    :param labels: The list of labels
+    :param labels: The list of labels, as a list of U-Labels.
     :param keep: Do we keep labels without collision in the output
     :param quiet: If True, do not collect rule log.
 
-    :return: the dictionary containing the primary labels and their variants
-             (with various information) for each index>
-    """
+    :return: (label_indexes, not_in_lgr), with:
+              - label_indexes: the dictionary containing the primary labels
+                               and their variants (with various information) for each index.
+              - not_in_lgr: List of labels that do not pass preliminary eligibility testing.
+  """
+
     label_indexes = {}
+    not_in_lgr = []
     # Get the indexes and variants for all labels
     for label in labels:
         label_cp = tuple([ord(c) for c in label])
-        label_index = lgr.generate_index_label(label_cp)
+        try:
+            label_index = lgr.generate_index_label(label_cp)
+        except NotInLGR:
+            not_in_lgr.append(label_cp)
+            continue
 
         label_cp_out = format_cp(label_cp)
         if label_index not in label_indexes:
@@ -89,14 +96,14 @@ def _generate_indexes(lgr, labels, keep=False, quiet=False):
                                                        'disp': {label: variant_disp},
                                                        'rules': {label: log},
                                                        'action_idx': {label: action_idx}
-                                                      })
+                                                       })
                 else:
                     assert len(existing) == 1
                     existing[0]['disp'][label] = variant_disp
                     existing[0]['rules'][label] = log
                     existing[0]['action_idx'][label] = action_idx
 
-    return label_indexes
+    return label_indexes, not_in_lgr
 
 
 def _compare(labels, label1_indexes, label2_indexes):
@@ -355,18 +362,37 @@ def diff(lgr_1, lgr_2, labels_input, show_collision=True,
 
     # get diff between labels and variants for the two LGR
     # keep label without collision as we need to compare
-    label1_indexes = _generate_indexes(lgr_1, labels, keep=True,
-                                       quiet=quiet)
-    label2_indexes = _generate_indexes(lgr_2, labels, keep=True,
-                                       quiet=quiet)
+    label1_indexes, not_in_lgr_1 = _generate_indexes(lgr_1,
+                                                     labels,
+                                                     keep=True,
+                                                     quiet=quiet)
+    label2_indexes, not_in_lgr_2 = _generate_indexes(lgr_2,
+                                                     labels,
+                                                     keep=True,
+                                                     quiet=quiet)
+
+    if not_in_lgr_1 or not_in_lgr_2:
+        for index, not_in_lgr in enumerate([not_in_lgr_1, not_in_lgr_2], 1):
+            yield "# Labels not in LGR {} #\n\n".format(index)
+            for label_cp in not_in_lgr:
+                yield "Label {}\n".format(cp_to_ulabel(label_cp))
+            yield '\n'
 
     # generate a dictionary of indexes per label
     labels_dic = {}
-    yield "# LGR comparison #\n"
+    yield "\n# LGR comparison #\n"
     for label in labels:
         label_cp = tuple([ord(c) for c in label])
-        index1 = lgr_1.generate_index_label(label_cp)
-        index2 = lgr_2.generate_index_label(label_cp)
+        try:
+            index1 = lgr_1.generate_index_label(label_cp)
+        except NotInLGR:
+            yield "Label {} not in LGR {}\n".format(label, lgr_1)
+            continue
+        try:
+            index2 = lgr_2.generate_index_label(label_cp)
+        except NotInLGR:
+            yield "Label {} not in LGR {}\n".format(label, lgr_2)
+            continue
         labels_dic[label] = (index1, index2)
 
     for output in _compare(labels_dic, label1_indexes, label2_indexes):
@@ -408,8 +434,13 @@ def collision(lgr, labels_input, show_dump=False, quiet=False):
 
     # get diff between labels and variants for the two LGR
     # only keep label without collision for a full dump
-    label_indexes = _generate_indexes(lgr, labels, keep=show_dump,
-                                      quiet=quiet)
+    label_indexes, not_in_lgr = _generate_indexes(lgr, labels, keep=show_dump,
+                                                  quiet=quiet)
+
+    if not_in_lgr:
+        yield "\n# Labels not in LGR #\n\n"
+        for label_cp in not_in_lgr:
+            yield "Label {}\n".format(cp_to_ulabel(label_cp))
 
     # output collisions
     yield "\n# Collisions #\n\n"
@@ -435,7 +466,7 @@ def get_collisions(lgr, labels_input, quiet=True):
     for label, valid, error in read_labels(labels_input, lgr.unicode_database):
         if valid:
             labels.add(label)
-    label_indexes = _generate_indexes(lgr, labels, keep=False, quiet=quiet)
+    label_indexes, _ = _generate_indexes(lgr, labels, keep=False, quiet=quiet)
     return label_indexes
 
 
