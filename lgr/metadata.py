@@ -213,6 +213,7 @@ class Metadata(object):
         """
         # check all languages
         found_error = False
+        languages = list(languages)  # languages is iterator, so for-loop will exhaust it
         for language in languages:
             try:
                 if not rfc5646.check(language):
@@ -228,7 +229,7 @@ class Metadata(object):
             raise LGRFormatException(LGRFormatException.
                                      LGRFormatReason.INVALID_LANGUAGE_TAG)
         else:
-            self.languages = list(languages)
+            self.languages = languages
 
     def set_date(self, date, force=False):
         """
