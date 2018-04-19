@@ -34,3 +34,4 @@ doc/_build/
 
 # Tox testing
 .tox/
+tests-out-*
