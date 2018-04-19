@@ -1,4 +1,4 @@
-#!/bin/env python2
+#!/bin/env python
 # -*- coding: utf-8 -*-
 """
 lgr_annotate.py - Annotate a set of labels with disposition.

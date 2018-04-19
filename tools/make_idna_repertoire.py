@@ -1,4 +1,4 @@
-#!/bin/env python2
+#!/bin/env python
 # -*- coding: utf-8 -*-
 """
 make_idna_repertoire.py - Parse IDNA2008 table to create a repertoire.
@@ -58,7 +58,7 @@ def make_idna_repertoire(version):
             # Single codepoint
             lgr.add_cp(int(codepoint, 16))
 
-    lgr_root = serialize_lgr_xml(lgr)
+    lgr_root = serialize_lgr_xml(lgr, pretty_print=True, encoding='unicode', xml_declaration=False)
     print(lgr_root)
 
 

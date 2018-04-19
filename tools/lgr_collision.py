@@ -1,4 +1,4 @@
-#!/bin/env python2
+#!/bin/env python
 # -*- coding: utf-8 -*-
 """
 lgr_collision.py - Small CLI tool to test collisions of labels.
@@ -79,8 +79,7 @@ def main():
             try:
                 label_index = compute_label_index(lgr, label_cp)
             except NotInLGR:
-                # Do not care for now
-                pass
+                continue
             ref_label_indexes[label_index] = label_cp
 
     # Deal with input

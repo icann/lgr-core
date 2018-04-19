@@ -1,4 +1,4 @@
-#!/bin/env python2
+#!/bin/env python
 # -*- coding: utf-8 -*-
 """
 lgr_populate_variants.py - CLI tool to populate variants
@@ -53,7 +53,7 @@ def main():
         return
 
     lgr.populate_variants()
-    print(serialize_lgr_xml(lgr, pretty_print=True))
+    print(serialize_lgr_xml(lgr, pretty_print=True, encoding='unicode', xml_declaration=False))
 
 
 if __name__ == '__main__':

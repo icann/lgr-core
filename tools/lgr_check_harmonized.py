@@ -1,4 +1,4 @@
-#!/bin/env python2
+#!/bin/env python
 # -*- coding: utf-8 -*-
 """
 lgr_check_harmonized.py - CLI tool to check if LGRs are harmonized

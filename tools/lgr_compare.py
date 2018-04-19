@@ -1,4 +1,4 @@
-#!/bin/env python2
+#!/bin/env python
 # -*- coding: utf-8 -*-
 """
 lgr_compare.py - CLI tool to compare 2 LGRs
@@ -96,7 +96,7 @@ def main():
             elif args.action == 'UNION':
                 lgr = union_lgrs(lgr1, lgr2)
 
-            print(serialize_lgr_xml(lgr, pretty_print=True))
+            print(serialize_lgr_xml(lgr, pretty_print=True, encoding='unicode', xml_declaration=False))
         elif args.action == 'DIFF':
             print(diff_lgrs(lgr1, lgr2, show_same=args.generate))
 

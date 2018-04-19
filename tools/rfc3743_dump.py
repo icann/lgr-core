@@ -1,4 +1,4 @@
-#!/bin/env python2
+#!/bin/env python
 # -*- coding: utf-8 -*-
 """
 rfc3743_dump.py - Tool to parse a RFC3743 file and dump LGR on stdout
@@ -29,12 +29,13 @@ def main():
     rfc_parser = RFC3743Parser(args.file)
     lgr = rfc_parser.parse_document()
 
-    xml = serialize_lgr_xml(lgr, pretty_print=True)
     if args.output is not None:
+        xml = serialize_lgr_xml(lgr, pretty_print=True)
         with io.open(args.output, mode='wb') as output:
             output.write(xml)
     else:
-        print(xml)
+        print(serialize_lgr_xml(lgr, pretty_print=True, encoding='unicode', xml_declaration=False))
+
 
 if __name__ == '__main__':
     # XXX: Add LGR module to PYTHONPATH

@@ -1,4 +1,4 @@
-#!/bin/env python2
+#!/bin/env python
 # -*- coding: utf-8 -*-
 """
 lgr_cross_script_variants.py - CLI tool to generate the list of cross-script variants.
@@ -46,7 +46,7 @@ def main():
         return
     label_input = codecs.getreader('utf8')(sys.stdin)
 
-    for out in cross_script_variants(merged_lgr, unidb, label_input):
+    for out in cross_script_variants(merged_lgr, label_input):
         write_output(out)
 
 
