@@ -38,11 +38,11 @@ def _validate_date(date, force):
     >>> _validate_date('2015-13-26', False) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
         ...
-    LGRFormatException
+    LGRFormatException:
     >>> _validate_date('2015', False) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
         ...
-    LGRFormatException
+    LGRFormatException:
     """
 
     # Date shoud be date-fullyear "-" date-month "-" date-mday
@@ -361,7 +361,7 @@ class ReferenceManager(OrderedDict):
         >>> mgr.add_reference("Test Existing", ref_id=0) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         ...
-        ReferenceAlreadyExists
+        ReferenceAlreadyExists:
         """
         # Construct reference object (simple dict)
         reference = {

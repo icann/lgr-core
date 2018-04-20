@@ -659,7 +659,7 @@ class LGR(object):
         >>> lgr.add_variant([0x0062], [0x0062]) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         ...
-        NotInLGR
+        NotInLGR:
         """
         logger.debug("Add variant '%s' for cp '%s' to LGR '%s'",
                      variant_cp, cp_or_sequence, self)
@@ -755,7 +755,7 @@ class LGR(object):
         >>> lgr.del_variant([0x0062], [0x0031]) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         ...
-        NotInLGR
+        NotInLGR:
         """
         logger.debug("Delete variant '%s' for cp '%s' from LGR '%s'",
                      variant_cp, cp_or_sequence, self)
@@ -1692,21 +1692,21 @@ class LGR(object):
         >>> lgr._check_convert_cp([]) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
             ...
-        LGRApiInvalidParameter
+        LGRApiInvalidParameter:
         >>> lgr._check_convert_cp(0x0061) == [0x0061]
         True
         >>> lgr._check_convert_cp(dict()) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
             ...
-        LGRApiInvalidParameter
+        LGRApiInvalidParameter:
         >>> lgr._check_convert_cp(0) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
             ...
-        CharInvalidIdnaProperty
+        CharInvalidIdnaProperty:
         >>> lgr._check_convert_cp(3.14) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
             ...
-        LGRApiInvalidParameter
+        LGRApiInvalidParameter:
         """
         if isinstance(cp_or_sequence, int):
             # If input is unique code point as int,

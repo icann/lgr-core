@@ -504,7 +504,7 @@ class Repertoire(object):
         >>> cd.add_char([0x002A]) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         ...
-        CharAlreadyExists
+        CharAlreadyExists:
         """
         # Entries are keyed to the first code point of the `cp_or_sequence`
         # with values appended to a list.
@@ -535,7 +535,7 @@ class Repertoire(object):
         >>> cd.del_char([0x002B]) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         ...
-        NotInLGR
+        NotInLGR:
         """
         assert len(cp_or_sequence), "there should be at least one char"
 
@@ -577,7 +577,7 @@ class Repertoire(object):
         >>> cd.add_range(0x002A, 0x0030) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         ...
-        RangeAlreadyExists
+        RangeAlreadyExists:
         """
         assert first_cp < last_cp, "range must be defined in order"
 
@@ -615,7 +615,7 @@ class Repertoire(object):
         >>> cd.del_range(0x002A, 0x0030) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         ...
-        NotInLGR
+        NotInLGR:
         """
         assert first_cp < last_cp, "range must be defined in order"
 
@@ -880,7 +880,7 @@ class Repertoire(object):
         >>> cd._add_char(Char(0x002A)) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         ...
-        CharAlreadyExists
+        CharAlreadyExists:
         """
         idx = char.as_index()
         if idx in self._chardict and char in set(self._chardict[idx]):
