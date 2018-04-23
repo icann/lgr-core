@@ -109,7 +109,9 @@ class CharInvalidContextRule(CharLGRException):
     """
     Raised when adding a char with invalid context rule(s).
     """
-    pass
+    def __init__(self, cp, rule=None):
+        super(CharInvalidContextRule, self).__init__(cp)
+        self.rule = rule
 
 
 class CharInvalidIdnaProperty(CharLGRException):

@@ -13,7 +13,7 @@ from lgr.action import Action
 from lgr.rule import Rule
 from lgr.matcher import RuleMatcher, ClassMatcher, StartMatcher
 from lgr.classes import Class, UnionClass
-from lgr.exceptions import CharAlreadyExists
+from lgr.exceptions import CharInvalidContextRule
 from lgr.core import LGR
 
 from lgr.parser.xml_parser import XMLParser
@@ -407,7 +407,7 @@ class TestLgrCollidingCP(unittest.TestCase):
     def test_merge_colliding_different_rule(self):
         lgr1 = parse_lgr('lgr-different-rule-1.xml')
         lgr2 = parse_lgr('lgr-different-rule-2.xml')
-        with self.assertRaises(CharAlreadyExists):
+        with self.assertRaises(CharInvalidContextRule):
             merge_lgr_set([lgr1, lgr2], 'LGR Set')
 
     def test_one_rule_twice_no_rule(self):

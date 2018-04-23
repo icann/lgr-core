@@ -19,7 +19,7 @@ from io import BytesIO
 # OrderedDict is used in replacement for set in order to get OrderedSets
 from collections import OrderedDict
 
-from lgr.exceptions import LGRFormatException, CharAlreadyExists
+from lgr.exceptions import LGRFormatException, CharAlreadyExists, CharInvalidContextRule
 from lgr.core import LGR, DEFAULT_ACTIONS
 from lgr.metadata import Metadata, Version, Description
 from lgr.tools.compare.utils import compare_objects
@@ -399,7 +399,7 @@ def merge_chars(lgr, script, merged_lgr, ref_mapping, previous_scripts):
                     matching_script = re.sub(r'-{}$'.format(existing_when), '', existing_char.when)
                     merge_rules(lgr, matching_script, merged_lgr, ref_mapping, specific=existing_when)
                 else:
-                    raise CharAlreadyExists(char.cp)
+                    raise CharInvalidContextRule(char.cp, char.when)
 
             if char.not_when:
                 if not existing_not_when:
@@ -410,7 +410,7 @@ def merge_chars(lgr, script, merged_lgr, ref_mapping, previous_scripts):
                     matching_script = re.sub(r'-{}$'.format(existing_not_when), '', existing_char.not_when)
                     merge_rules(lgr, matching_script, merged_lgr, ref_mapping, specific=existing_not_when)
                 else:
-                    raise CharAlreadyExists(char.cp)
+                    raise CharInvalidContextRule(char.cp, char.not_when)
 
             continue
 
