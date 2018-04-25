@@ -47,7 +47,7 @@ setup(
         'tools/lgr_diff_collisions.py',
         'tools/lgr_merge_set.py',
         'tools/lgr_cross_script_variants.py',
-        'tools/lgr_check_harmonized.py'
+        'tools/lgr_harmonize'
     ],
     tests_require=['pytest'],
     cmdclass={'test': PyTest},
