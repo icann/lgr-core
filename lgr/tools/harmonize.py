@@ -39,7 +39,8 @@ def harmonize(lgr_1, lgr_2, rz_lgr=None, script=None, _copy=True):
     if rz_lgr is not None:
         rz_lgr_script = deepcopy(rz_lgr)
         for char in rz_lgr.repertoire:
-            if rz_lgr.unicode_database.get_script(char.cp[0]) != script:
+            if (rz_lgr.unicode_database is not None
+               and rz_lgr.unicode_database.get_script(char.cp[0]) != script):
                 rz_lgr_script.del_cp(char.cp)
         harmonize(h_lgr_1, rz_lgr_script, _copy=False)
         harmonize(h_lgr_2, rz_lgr_script, _copy=False)
