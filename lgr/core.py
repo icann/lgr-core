@@ -221,6 +221,18 @@ class LGR(object):
         self.repertoire.del_reference(ref_id)
         self.reference_manager.del_reference(ref_id)
 
+    def del_tag(self, tag_id):
+        """
+        Delete a tag from the LGR.
+        Iterate through the list of defined code points to remove the tag.
+        Note: WLE rules are not touched by this function, so any class using a 'from-tag=`tag_id`'
+        attribute will still be present after calling this method.
+
+        :param tag_id: The tag name.
+        """
+        self.repertoire.del_tag(tag_id)
+        self.classes_lookup.pop(TAG_CLASSNAME_PREFIX + tag_id, None)
+
     def add_cp(self, cp_or_sequence,
                comment=None, ref=None,
                tag=None,
@@ -1260,6 +1272,19 @@ class LGR(object):
         for clsname in self.classes_lookup:
             if clsname.startswith(TAG_CLASSNAME_PREFIX):
                 out.append(clsname[prefix_len:])
+        return out
+
+    def get_tag_classes(self):
+        """
+        Return the list of "tag-classes" used in this LGR.
+
+        :return: {tag name -> class} mapping.
+        """
+        prefix_len = len(TAG_CLASSNAME_PREFIX)
+        out = {}
+        for clsname, clz in self.classes_lookup.items():
+            if clsname.startswith(TAG_CLASSNAME_PREFIX):
+                out[clsname[prefix_len:]] = clz
         return out
 
     def populate_variants(self):

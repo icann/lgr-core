@@ -9,6 +9,7 @@ import types
 import math
 
 from lgr.char import Char, RangeChar
+from lgr.classes import TAG_CLASSNAME_PREFIX
 from lgr.core import LGR, MAX_NUMBER_GENERATED_VARIANTS, PROTOCOL_LABEL_MAX_LENGTH
 from lgr.exceptions import (CharAlreadyExists,
                             VariantAlreadyExists,
@@ -320,6 +321,16 @@ class TestLGRCore(unittest.TestCase):
         the_exception = cm.exception
         self.assertEqual(the_exception.reason,
                          LGRFormatException.LGRFormatReason.DUPLICATE_TAG)
+
+    def test_del_tag(self):
+        self.lgr.add_cp([0x0061], tag=['1'])
+        self.lgr.add_cp([0x0062], tag=['1', '2'])
+
+        self.lgr.del_tag('1')
+
+        self.assertNotIn(TAG_CLASSNAME_PREFIX + '1', self.lgr.classes_lookup)
+        self.assertEquals(self.lgr.get_char([0x0061]).tags, [])
+        self.assertEquals(self.lgr.get_char([0x0062]).tags, ['2'])
 
     def test_list_types(self):
         self.lgr.add_cp([0x0061])

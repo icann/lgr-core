@@ -823,6 +823,18 @@ class Repertoire(object):
                     if ref_id in variant.references:
                         variant.references.remove(ref_id)
 
+    def del_tag(self, tag_id):
+        """
+        Iterate through the repertoire to remove the tag tag_id
+        from the list of code point tags.
+
+        :param tag_id: The tag to remove.
+        """
+        for cp_list in self._chardict.values():
+            for char in cp_list:
+                if tag_id in char.tags:
+                    char.tags.remove(tag_id)
+
     def get_chars_from_prefix(self, cp, only_variants=False):
         """
         Return the list of characters starting with cp.

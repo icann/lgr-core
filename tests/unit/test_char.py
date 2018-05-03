@@ -558,6 +558,18 @@ class TestRepertoire(unittest.TestCase):
         self.assertEqual(self.cd.get_char([0x002A]).references, ['1'])
         self.assertEqual(list(self.cd.get_variants([0x002A]))[0].references, ['3'])
 
+    def test_del_tag(self):
+        self.cd.add_char([0x002A], tag=['1', '2'])
+        self.cd.add_char([0x002B], tag=['2', '3'])
+        self.cd.add_char([0x002C], tag=['3', '4'])
+        self.cd.del_tag('2')
+
+        self.assertEqual(self.cd.get_char([0x002A]).tags, ['1'])
+        self.assertEqual(self.cd.get_char([0x002B]).tags, ['3'])
+        self.assertEqual(self.cd.get_char([0x002C]).tags, ['3', '4'])
+
+        self.cd.del_tag('5')  # Assert that nothing breaks
+
     def test_get_chars_from_prefix(self):
         c1 = self.cd.add_char([0x002A])
         c2 = self.cd.add_char([0x002A, 0x002B])
