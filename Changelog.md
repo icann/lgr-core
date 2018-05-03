@@ -1,4 +1,32 @@
-# lgr-core Release notes
+# Changelog for lgr-core
+
+## 2.0.0 (2018-09-06)
+### New features
+- Support of Python 3. Compatibility with python2 is preserved for this release.
+- Add tox configuration for testing multiple Python versions (2.7 and 3.X).
+- Add MSR-3 validating repertoire.
+- Delete a tag from the LGR.
+- Check id format when adding reference.
+### Improvements
+- Update harmonization tool.
+- Better error reporting for CharInvalidContextRule.
+- Collision-based tools do not stop at the first label not in the LGR.
+- Include invalid variants in x-script variants.
+- Add missing language exception in order to clarify cross script variant tool output.
+- Remove label length limits based on heuristic by method that computes estimated number of variants.
+- Make description of LGR union as text/html.
+- Force inclusion of invalid code points when rebuilding LGR.
+- Remove script parameter from harmonization function.
+- Display rule name(s) when a code point does not comply with a contextual rule.
+- Better notification for invalid language tags.
+### Fixes
+- Remove code points from tag-based classes on deletion.
+- Replace number of variants by number of variant mappings in LGR validation statistics.
+- Add 'blocked' type to tools that add variants.
+- Update make_idna_repertoire to handle IDNA tables <= 6.0.0.
+- In union comparison and intersection tools, do not duplicate rules, classes and actions.
+- Add missing variants in LGR union.
+- Workaround a libxml2 bug that do not normalize EOL in CDATA.
 
 ## 1.9 (2018-03-09)
 New features:
@@ -9,6 +37,7 @@ Fixes:
 - Reduce verbosity of lgr\_compare's diff output
 - Improve handling of large LGR.
 - Improve display for summary (now renamed to LGR validation).
+- Fix generation of prefix list with a code point sequence and look-around rule.
 
 ## 1.8.1 (2017-11-15)
 Fixes:
