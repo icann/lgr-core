@@ -11,6 +11,7 @@ import os
 import io
 from lxml import etree
 
+
 def main():
     from lgr.parser.rfc3743_parser import RFC3743Parser
     from lgr.parser.xml_serializer import serialize_lgr_xml

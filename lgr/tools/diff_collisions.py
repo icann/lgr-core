@@ -1,4 +1,3 @@
-#!/bin/env python2
 # -*- coding: utf-8 -*-
 """
 diff_collisions.py - Diff and collisions of labels

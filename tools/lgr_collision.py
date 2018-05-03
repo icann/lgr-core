@@ -39,7 +39,7 @@ def find_variants_to_block(lgr, label_ref, label):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='LGR CLI')
+    parser = argparse.ArgumentParser(description='LGR Collision')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='be verbose')
     parser.add_argument('-g', '--generate', action='store_true',

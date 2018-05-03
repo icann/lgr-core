@@ -75,8 +75,6 @@ def main():
 
     make_idna_repertoire(args.unicode)
 
+
 if __name__ == '__main__':
-    # XXX: Add LGR module to PYTHONPATH
-    sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                 '..'))
     main()

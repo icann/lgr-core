@@ -11,6 +11,7 @@ import os
 import io
 from lxml import etree
 
+
 def main():
     from lgr.parser.rfc4290_parser import RFC4290Parser
     from lgr.parser.xml_serializer import serialize_lgr_xml
@@ -38,7 +39,4 @@ def main():
 
 
 if __name__ == '__main__':
-    # XXX: Add LGR module to PYTHONPATH
-    sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                 '..'))
     main()
