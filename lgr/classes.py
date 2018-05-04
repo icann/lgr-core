@@ -107,6 +107,21 @@ class Class(object):
             cp = [cp]
         self.codepoints.update(cp)
 
+    def del_codepoint(self, cp):
+        """
+        Delete (a) codepoint(s) from the set of codepoints.
+
+        :param cp: Code point(s) to delete. An integer or a sequence of code points.
+        """
+        if self.by_ref is not None:
+            logger.error("Cannot delete code point from a 'by-ref' class")
+            raise LGRFormatException(LGRFormatException.LGRFormatReason.BY_REF_AND_OTHER)
+
+        if isinstance(cp, int):
+            cp = [cp]
+        for c in cp:
+            self.codepoints.discard(c)
+
     def get_pattern(self, rules_lookup, classes_lookup, unicode_database,
                     is_look_behind=False, as_set=False):
         """

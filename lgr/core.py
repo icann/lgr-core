@@ -408,7 +408,9 @@ class LGR(object):
 
         cp_or_sequence = self._check_convert_cp(cp_or_sequence)
 
+        char = self.repertoire.get_char(cp_or_sequence)
         self.repertoire.del_char(cp_or_sequence)
+        self._del_cp_from_tag_classes(cp_or_sequence, char.tags)
 
         self._char_number -= 1
 
@@ -1833,12 +1835,12 @@ class LGR(object):
 
     def _add_cp_to_tag_classes(self, cp_or_sequence, tags):
         """
-        Add a code point to a tag class.
+        Add a code point to tag classes.
 
         Tag classes are internal virtual classes used to list the code points
         by tags.
 
-        :param cp_or_sequence: Sequence of code point to add to the class.
+        :param cp_or_sequence: Sequence of code point to add to the classes.
         :param tags: List of tags associated to the code points.
         """
         for tag in tags:
@@ -1847,6 +1849,21 @@ class LGR(object):
                                            Class(name=tag,
                                                  comment="Virtual class for tag %s" % tag,
                                                  implicit=True)).add_codepoint(cp_or_sequence)
+
+    def _del_cp_from_tag_classes(self, cp_or_sequence, tags):
+        """
+        Remove a code point from tag classes.
+
+        Tag classes are internal virtual classes used to list the code points
+        by tags.
+
+        :param cp_or_sequence: Sequence of code point to remove from the classes.
+        :param tags: List of tags associated to the code points.
+        """
+        for tag in tags:
+            tag_classname = TAG_CLASSNAME_PREFIX + tag
+            if tag_classname in self.classes_lookup:
+                self.classes_lookup[tag_classname].del_codepoint(cp_or_sequence)
 
     def __unicode__(self):
         return self.name
