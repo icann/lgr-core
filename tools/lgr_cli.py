@@ -8,7 +8,6 @@ Can parse an LGR XML file, and make some checks/display some data.
 from __future__ import unicode_literals
 
 import sys
-import codecs
 import argparse
 import logging
 
@@ -16,7 +15,7 @@ from munidata import UnicodeDataVersionManager
 
 from lgr import wide_unichr
 from lgr.utils import cp_to_ulabel
-from lgr.tools.utils import write_output
+from lgr.tools.utils import write_output, get_stdin
 
 logger = logging.getLogger("lgr_cli")
 
@@ -143,14 +142,12 @@ def main():
         summary = lgr.validate(options)
         logger.info('Result of validation: %s', summary)
 
-    label_input = codecs.getreader('utf8')(sys.stdin)
-
     if args.check:
         if args.label:
             label_u = ''.join(wide_unichr(int(cphex, 16)) for cphex in args.label.split())
             check_label(lgr, label_u, args.invalid, args.test)
         else:
-            for label in label_input.read().splitlines():
+            for label in get_stdin().read().splitlines():
                 logger.info("Label '%s'", label)
                 check_label(lgr, label, args.invalid, args.test)
 

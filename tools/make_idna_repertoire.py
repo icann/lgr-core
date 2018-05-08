@@ -10,7 +10,6 @@ from lxml import etree
 import sys
 import argparse
 import logging
-import os
 
 IDNATABLES_URL = "http://www.iana.org/assignments/idna-tables-{version}/idna-tables-{version}.xml"
 IDNATABLES_NS = "http://www.iana.org/assignments"

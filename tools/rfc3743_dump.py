@@ -7,9 +7,7 @@ from __future__ import unicode_literals
 import sys
 import argparse
 import logging
-import os
 import io
-from lxml import etree
 
 
 def main():
@@ -39,7 +37,4 @@ def main():
 
 
 if __name__ == '__main__':
-    # XXX: Add LGR module to PYTHONPATH
-    sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                 '..'))
     main()

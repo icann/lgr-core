@@ -7,9 +7,7 @@ from __future__ import unicode_literals
 import sys
 import argparse
 import logging
-import os
 import io
-from lxml import etree
 
 
 def main():

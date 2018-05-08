@@ -5,8 +5,8 @@ utils - List of utility functions for tools.
 from __future__ import unicode_literals
 
 import logging
-
 import sys
+import codecs
 
 from lgr import text_type
 from lgr.utils import cp_to_ulabel
@@ -185,15 +185,6 @@ def parse_label_input(s, idna_decoder=lambda x: x.encode('utf-8').decode('idna')
         else:
             return s
 
-
-def write_output(s, test=True):
-    if test:
-        if sys.version_info.major > 2:
-            print(s)
-        else:
-            print(s.encode('utf-8'))
-
-
 def merge_lgrs(input_lgrs, name=None, rng=None, unidb=None):
     """
     Merge LGRs to create a LGR set
@@ -232,3 +223,21 @@ def merge_lgrs(input_lgrs, name=None, rng=None, unidb=None):
         merged_lgr.unicode_database = unidb
 
     return merged_lgr, lgr_set
+
+# Helpers for CLI tools
+
+
+def write_output(s, test=True):
+    if test:
+        if sys.version_info.major > 2:
+            print(s)
+        else:
+            print(s.encode('utf-8'))
+
+
+def get_stdin():
+    if sys.version_info.major > 2:
+        # Python3 automagically convert to unicode
+        return sys.stdin
+    else:
+        return codecs.getreader('utf8')(sys.stdin)

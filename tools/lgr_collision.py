@@ -6,7 +6,6 @@ lgr_collision.py - Small CLI tool to test collisions of labels.
 from __future__ import unicode_literals
 
 import sys
-import codecs
 import argparse
 import logging
 import io
@@ -16,12 +15,9 @@ from munidata import UnicodeDataVersionManager
 from lgr.parser.xml_parser import XMLParser
 from lgr.exceptions import NotInLGR
 from lgr.utils import format_cp, cp_to_ulabel
+from lgr.tools.utils import write_output, get_stdin
 
 logger = logging.getLogger("lgr_collision")
-
-
-def write_output(s):
-    print(s.encode('utf-8'))
 
 
 def compute_label_index(lgr, label):
@@ -83,8 +79,7 @@ def main():
             ref_label_indexes[label_index] = label_cp
 
     # Deal with input
-    label_input = codecs.getreader('utf8')(sys.stdin)
-    for label in label_input.read().splitlines():
+    for label in get_stdin().read().splitlines():
         write_output("Check label '%s'" % label)
         label_cp = tuple([ord(c) for c in label])
         label_disp = format_cp(label_cp)

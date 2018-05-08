@@ -9,7 +9,6 @@ a label and generate its variants.
 from __future__ import unicode_literals
 
 import sys
-import codecs
 import argparse
 import logging
 import io
@@ -19,7 +18,7 @@ from munidata import UnicodeDataVersionManager
 
 from lgr.utils import cp_to_ulabel
 from lgr.parser.xml_parser import XMLParser
-from lgr.tools.utils import write_output, merge_lgrs, read_labels
+from lgr.tools.utils import write_output, merge_lgrs, read_labels, get_stdin
 from lgr.tools.diff_collisions import get_collisions
 
 logger = logging.getLogger("lgr_validate")
@@ -154,8 +153,6 @@ def main():
             logger.error("Please check compliance with RNG.")
             return
 
-    label_input = codecs.getreader('utf8')(sys.stdin)
-
     filtered_set_labels = []
     if len(args.lgr_xml) > 1:
         write_output("# The following labels from the set labels are invalid\n")
@@ -170,7 +167,7 @@ def main():
                     filtered_set_labels.append(label)
         write_output("# End of filtered set labels\n\n")
 
-    for label in label_input.read().splitlines():
+    for label in get_stdin().read().splitlines():
         if len(args.lgr_xml) > 1:
             check_label(script_lgr, label, args.variants,
                         merged_lgr=merged_lgr, set_labels=filtered_set_labels)
