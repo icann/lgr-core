@@ -45,7 +45,7 @@ def _validate_date(date, force):
     LGRFormatException:
     """
 
-    # Date shoud be date-fullyear "-" date-month "-" date-mday
+    # Date should be date-fullyear "-" date-month "-" date-mday
     date_elements = date.split('-')
     if len(date_elements) == 3:
         try:
