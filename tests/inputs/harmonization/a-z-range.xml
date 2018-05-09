@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<lgr xmlns="urn:ietf:params:xml:ns:lgr-1.0">
+  <meta>
+    <version>1</version>
+    <unicode-version>10.0.0</unicode-version>
+  </meta>
+  <data>
+    <range first-cp="0061" last-cp="007A"/>
+  </data>
+  <rules/>
+</lgr>

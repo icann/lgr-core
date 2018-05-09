@@ -78,6 +78,18 @@ class TestHarmonize(unittest.TestCase):
         self.assertEqual(log_hindi, {(0x0079, )})
         self.assertEqual(log_nepali, {(0x007A, )})
 
+    def test_lgr_with_range(self):
+        a_z = load_lgr('a-z-range.xml')
+        a_b = load_lgr('a-b.xml')
+
+        a_z_harmonized, a_b_harmonized, _ = harmonize(a_z, a_b)
+
+        for cp, var_cp in ((0x0061, 0x0062), (0x0062, 0x0061)):
+            char = a_z_harmonized.get_char(cp)
+            variants = list(char.get_variants())
+            self.assertEqual(len(variants), 1)
+            self.assertEqual(variants[0].cp, (var_cp, ))
+
 
 if __name__ == '__main__':
     logging.getLogger('lgr').addHandler(logging.NullHandler())

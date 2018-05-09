@@ -16,8 +16,10 @@ def harmonize(lgr_1, lgr_2, rz_lgr=None, script=None, _copy=True):
     """
     Harmonize 2 LGRs, using an optional related Rootzone LGR.
 
-    :param lgr_1: First LGR.
-    :param lgr_2: Second LGR.
+    This function will expand all ranges on the input LGRs `lgr_1` and `lgr_2`.
+
+    :param lgr_1: First LGR. Will have its ranges expanded.
+    :param lgr_2: Second LGR. Will have its ranges expanded.
     :param rz_lgr: Optional related Rootzone LGR.
     :param script: Optional script to consider in `rz_lgr`.
     :param _copy: If False, update the input `lgr_1`, `lgr_2` parameters instead of doing a copy.
@@ -30,6 +32,9 @@ def harmonize(lgr_1, lgr_2, rz_lgr=None, script=None, _copy=True):
 
     h_lgr_1 = deepcopy(lgr_1) if _copy else lgr_1
     h_lgr_2 = deepcopy(lgr_2) if _copy else lgr_2
+
+    h_lgr_1.expand_ranges()
+    h_lgr_2.expand_ranges()
 
     for lgr in (h_lgr_1, h_lgr_2):
         if lgr.metadata.version is not None:
