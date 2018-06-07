@@ -391,7 +391,7 @@ class TestStats(unittest.TestCase):
         'largest_sequence_len': 0,
 
         'codepoints_with_variants': 0,
-        'variant_number': 0,
+        'mapping_number': 0,
         'variants_by_type': {},
         'largest_variant_set': 0,
 
@@ -456,10 +456,10 @@ class TestStats(unittest.TestCase):
         stats = self.STATS.copy()
         stats['codepoint_number'] = 3
         stats['codepoints_with_variants'] = 3
-        stats['variant_number'] = 7
+        stats['mapping_number'] = 4
         stats['variants_by_type'] = {None: 3, 'blocked': 1}
         stats['largest_variant_set'] = 3
-        stats['average_variants'] = round(7 / 3, 1)
+        stats['average_variants'] = round(4 / 3, 1)
         self.assertDictEqual(result, {'description': 'Generate stats',
                                       'stats': stats})
 

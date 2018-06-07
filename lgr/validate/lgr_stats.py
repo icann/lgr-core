@@ -32,7 +32,7 @@ def generate_stats(lgr):
         'largest_sequence_len': 0,
 
         'codepoints_with_variants': 0,
-        'variant_number': 0,
+        'mapping_number': 0,
         'variants_by_type': {},
         'largest_variant_set': 0,
 
@@ -72,10 +72,10 @@ def generate_stats(lgr):
 
         variants = list(char.get_variants())
         # Original char might not be in the variants (no identity mapping)
-        variants_len = len(frozenset(v.cp for v in variants + ([char] if len(variants) > 0 else [])))
-        stats['variant_number'] += variants_len
-        stats['largest_variant_set'] = max(stats['largest_variant_set'], variants_len)
-        if variants_len > 0:
+        variant_set_len = len(frozenset(v.cp for v in variants + ([char] if len(variants) > 0 else [])))
+        stats['mapping_number'] += len(frozenset(v.cp for v in variants))
+        stats['largest_variant_set'] = max(stats['largest_variant_set'], variant_set_len)
+        if variant_set_len > 0:
             stats['codepoints_with_variants'] += 1
 
         for var in variants:
@@ -85,7 +85,7 @@ def generate_stats(lgr):
                 stats['variants_by_type'][var.type] = 1
 
     if stats['codepoints_with_variants'] != 0:
-        stats['average_variants'] = round(stats['variant_number'] / stats['codepoints_with_variants'], 1)
+        stats['average_variants'] = round(stats['mapping_number'] / stats['codepoints_with_variants'], 1)
 
     return stats
 
@@ -119,7 +119,7 @@ General summary:
         # Variants
         output += """
 Variants:
-\tTotal number of variants: {variant_number}.
+\tTotal number of variant mappings: {mapping_number}.
 \tAverage number of variants per code point: {average_variants}.
 \tLargest variant set: {largest_variant_set}.
 
