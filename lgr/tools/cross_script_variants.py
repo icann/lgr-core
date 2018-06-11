@@ -33,7 +33,7 @@ def _generate_variants(lgr, label):
         raise Exception
 
     try:
-        for variant, variant_disp, _, _, _ in lgr.compute_label_disposition(label):
+        for variant, variant_disp, _, _, _ in lgr.compute_label_disposition(label, include_invalid=True):
             script_mapping = {}
             for var_cp in variant:
                 char = lgr.get_char(var_cp)
