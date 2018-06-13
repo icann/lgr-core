@@ -44,6 +44,9 @@ class TestHarmonize(unittest.TestCase):
             var = variants[0]
             self.assertEqual(var.cp, (var_cp, ))
 
+        self.assertEqual(nepali_harmonized.get_variant(0x0063, (0x0064, ))[0].type, 'blocked')
+        self.assertEqual(nepali_harmonized.get_variant(0x0064, (0x0063, ))[0].type, 'blocked')
+
     def test_case_2(self):
         hindi = load_lgr('hindi-rz.xml')
         nepali = load_lgr('nepali-rz.xml')
@@ -60,10 +63,13 @@ class TestHarmonize(unittest.TestCase):
             variants = list(char.get_variants())
             self.assertEqual(len(variants), 1)
             self.assertEqual(variants[0].cp, (var_cp, ))
+            self.assertEqual(variants[0].type, 'blocked')
+
             var_char = lgr.get_char(var_cp)
             variants = list(var_char.get_variants())
             self.assertEqual(len(variants), 1)
             self.assertEqual(variants[0].cp, (cp, ))
+            self.assertEqual(variants[0].type, 'blocked')
 
     def test_case_3(self):
         hindi = load_lgr('hindi-log.xml')
@@ -89,6 +95,7 @@ class TestHarmonize(unittest.TestCase):
             variants = list(char.get_variants())
             self.assertEqual(len(variants), 1)
             self.assertEqual(variants[0].cp, (var_cp, ))
+            self.assertEqual(variants[0].type, 'blocked')
 
 
 if __name__ == '__main__':

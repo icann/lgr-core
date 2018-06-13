@@ -33,7 +33,7 @@ def populate_lgr(lgr):
                 # add current code point as variant for missing code point
                 logger.info("Add code point '{}' as variant of '{}' for symmetry".format(format_cp(a.cp),
                                                                                          format_cp(b.cp)))
-                lgr.add_variant(b.cp, a.cp)
+                lgr.add_variant(b.cp, a.cp, variant_type='blocked')
 
     while not check_symmetry(lgr, None)[0] or not check_transitivity(lgr, None)[0]:
         # symmetry
@@ -45,7 +45,7 @@ def populate_lgr(lgr):
                 if a.cp not in [var.cp for var in lgr.get_variants(b.cp)]:
                     logger.info("Add code point '{}' as variant of '{}' for symmetry".format(format_cp(a.cp),
                                                                                              format_cp(b.cp)))
-                    lgr.add_variant(b.cp, a.cp)
+                    lgr.add_variant(b.cp, a.cp, variant_type='blocked')
 
         # transitivity
         for a in lgr.repertoire:
@@ -56,4 +56,4 @@ def populate_lgr(lgr):
                     if c.cp not in [var.cp for var in a.get_variants()]:
                         logger.info("Add code point '{}' as variant of '{}' for transitivity with '{}'".format(
                             format_cp(c.cp), format_cp(a.cp), format_cp(b.cp)))
-                        lgr.add_variant(a.cp, c.cp)
+                        lgr.add_variant(a.cp, c.cp, variant_type='blocked')

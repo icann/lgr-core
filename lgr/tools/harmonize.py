@@ -67,14 +67,14 @@ def harmonize(lgr_1, lgr_2, rz_lgr=None, script=None, _copy=True):
                 # Add variant to repertoire
                 h_lgr_2.add_cp(variant_cp, comment='Out-of-repertoire')
             # Add variant to LGR 2
-            h_lgr_2.add_variant(cp, variant_cp)
+            h_lgr_2.add_variant(cp, variant_cp, variant_type='blocked')
         # Find variants present in LGR 2 but not 1
         for variant_cp in lgr_2_variants - lgr_1_variants:
             if variant_cp not in lgr_1_repertoire:
                 # Add variant to repertoire
                 h_lgr_1.add_cp(variant_cp, comment='Out-of-repertoire')
             # Add variant to LGR 1
-            h_lgr_1.add_variant(cp, variant_cp)
+            h_lgr_1.add_variant(cp, variant_cp, variant_type='blocked')
 
     # Ensure resulting LGRs are symmetric and transitive
     populate_lgr(h_lgr_1)
