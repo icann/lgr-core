@@ -40,7 +40,11 @@ def make_idna_repertoire(version):
 
     # To keep '{}' when string-formatting
     namespace = "{{{0}}}".format(IDNATABLES_NS)
-    record_xpath = '{0}registry[@id="idna-tables-properties"]/{0}record'.format(namespace)
+    registry_id = "idna-tables-properties"
+    if list(map(int, version.split('.'))) <= [6, 0, 0]:
+        registry_id = "idna-tables-{}-properties".format(version)
+    record_xpath = '{0}registry[@id="{1}"]/{0}record'.format(namespace,
+                                                             registry_id)
 
     for record in registry.findall(record_xpath):
         codepoint = record.find(CODEPOINT_TAG).text
