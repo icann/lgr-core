@@ -8,7 +8,7 @@ import logging
 
 from lgr.utils import format_cp, cp_to_ulabel
 from lgr.tools.utils import read_labels
-from lgr.exceptions import LGRException
+from lgr.exceptions import LGRException, MissingLanguage
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ def _generate_variants(lgr, label):
     if not lgr_scripts:
         logger.error("Cannot generate cross-scripts variants "
                      "for LGR without languages")
-        raise Exception
+        raise MissingLanguage('Cannot generate cross-scripts variants for LGR without languages')
 
     try:
         for variant, variant_disp, _, _, _ in lgr.compute_label_disposition(label, include_invalid=True):

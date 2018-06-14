@@ -245,6 +245,15 @@ class RuleError(LGRException):
     __str__ = __unicode__
 
 
+class MissingLanguage(LGRException):
+    """
+    Raised when the LGR has no language while it is expected
+    """
+    def __init__(self, message):
+        super(MissingLanguage, self).__init__(message)
+        self.message = message
+
+
 class LGRInvalidLabelException(LGRException):
     """
     Raised when a label is invalid in an LGR
