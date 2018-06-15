@@ -90,6 +90,10 @@ class Version(object):
 
     __str__ = __unicode__
 
+    def __eq__(self, other):
+        return (self.value == other.value) \
+               and (self.comment == other.comment)
+
 
 class Scope(object):
     """
@@ -134,6 +138,10 @@ class Description(object):
             logger.warning("Description type '%s' is not a valid MIME type",
                            description_type)
         self.description_type = description_type
+
+    def __eq__(self, other):
+        return (self.value == other.value) \
+               and (self.description_type == other.description_type)
 
 
 class Metadata(object):

@@ -8,9 +8,8 @@ import copy
 import logging
 from datetime import date
 
-from lgr.tools.compare.utils import VariantProperties, compare_objects
+from lgr.tools.compare.utils import compare_objects
 
-from lgr.char import CharBase
 from lgr.core import LGR
 from lgr.metadata import Metadata, Version, Description, ReferenceManager
 from lgr.utils import let_user_choose
@@ -31,6 +30,9 @@ def union_version(first, second):
     if second is None:
         return first
 
+    if first == second:
+        return first
+
     value = let_user_choose(first.value, second.value)
     comment = let_user_choose(first.comment, second.comment)
 
@@ -48,6 +50,9 @@ def union_description(first, second):
     if first is None:
         return second
     if second is None:
+        return first
+
+    if first == second:
         return first
 
     description_type = 'text/enriched'
