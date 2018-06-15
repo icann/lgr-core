@@ -13,7 +13,8 @@ from collections import OrderedDict
 
 from lgr.exceptions import (LGRFormatException,
                             ReferenceAlreadyExists,
-                            ReferenceNotDefined)
+                            ReferenceNotDefined,
+                            ReferenceInvalidId)
 from lgr.memoize import MethodAttributeMemoizer
 from lgr.utils import script_iso15924_to_unicode
 
@@ -324,6 +325,8 @@ class ReferenceManager(OrderedDict):
     so if no ref_id is given, generate one int-based id, converted to string.
     """
 
+    REFERENCE_REGEX = r'^[\-_.:0-9A-Z]*$'
+
     def __init__(self, *args, **kwargs):
         super(ReferenceManager, self).__init__(*args, **kwargs)
         # Keep track of the next id to generate
@@ -362,6 +365,16 @@ class ReferenceManager(OrderedDict):
         Traceback (most recent call last):
         ...
         ReferenceAlreadyExists:
+        >>> mgr.add_reference("Test 2", ref_id='ABC-123') == 'ABC-123'
+        True
+        >>> mgr.add_reference("Test Existing Str", ref_id='ABC-123') # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+        ...
+        ReferenceAlreadyExists:
+        >>> mgr.add_reference("Test Invalid Id", ref_id='aBC') # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+        ...
+        ReferenceInvalidId:
         """
         # Construct reference object (simple dict)
         reference = {
@@ -375,6 +388,9 @@ class ReferenceManager(OrderedDict):
             if ref_id in self:
                 logger.error("Reference '%s' already exists", ref_id)
                 raise ReferenceAlreadyExists(ref_id)
+            if not re.match(self.REFERENCE_REGEX, str(ref_id)):
+                logger.error("Invalid reference id '%s'", ref_id)
+                raise ReferenceInvalidId(ref_id)
         else:
             # Compute next id
             next_id = self.next_id

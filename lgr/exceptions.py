@@ -223,6 +223,15 @@ class ReferenceAlreadyExists(LGRException):
         self.ref_id = ref_id
 
 
+class ReferenceInvalidId(LGRException):
+    """
+    Raised when trying to create a reference invalid id.
+    """
+    def __init__(self, ref_id):
+        super(ReferenceInvalidId, self).__init__()
+        self.ref_id = ref_id
+
+
 class InvalidSymmetry(LGRException):
     """
     Raised when symmetry is not ensured.
