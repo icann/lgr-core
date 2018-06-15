@@ -504,33 +504,25 @@ class TestLGRCore(unittest.TestCase):
         self.assertEqual(self.lgr._test_label_disposition([0x0061, 0x0062]),
                          ('invalid', 0))
 
-    def test_label_length(self):
+    def test_estimate_variant_numbers(self):
         self.lgr.add_cp([0x0061])
+
+        self.assertEqual(1, self.lgr.estimate_variant_number([0x0061]))
+
         self.lgr.add_variant([0x0061], [0x0061], 'disp')
         self.lgr.add_cp([0x0062])
         self.lgr.add_variant([0x0062], [0x0062], 'disp')
 
-        self.assertEqual(PROTOCOL_LABEL_MAX_LENGTH,
-                         self.lgr.max_label_length())
+        self.assertEqual(2, self.lgr.estimate_variant_number([0x0061]))
+        self.assertEqual(2, self.lgr.estimate_variant_number([0x0062]))
+        self.assertEqual(2 * 2, self.lgr.estimate_variant_number([0x0061, 0x0062]))
 
-        for i in range(80):
-            self.lgr.add_variant([0x0062], [0x074D + i], 'disp')
+        self.lgr.add_cp([0x0063])
+        for i in range(10):
+            self.lgr.add_variant([0x0063], [0x074D + i], 'disp')
 
-        # 41: mean number of variants per character
-        self.assertEqual(int(math.log(MAX_NUMBER_GENERATED_VARIANTS, 41)),
-                         self.lgr.max_label_length())
-
-    def test_char_number(self):
-        self.assertEqual(self.lgr._char_number, 0)
-
-        self.lgr.add_cp([0x0061])
-        self.assertEqual(self.lgr._char_number, 1)
-
-        self.lgr.add_cp([0x0062, 0x0063])
-        self.assertEqual(self.lgr._char_number, 2)
-
-        self.lgr.add_range(0x0064, 0x0066)
-        self.assertEqual(self.lgr._char_number, 5)
+        self.assertEqual(11, self.lgr.estimate_variant_number([0x0063]))
+        self.assertEqual(2 * 2 * 11, self.lgr.estimate_variant_number([0x0061, 0x0062, 0x0063]))
 
 
 if __name__ == '__main__':

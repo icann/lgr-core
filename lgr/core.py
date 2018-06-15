@@ -132,10 +132,6 @@ class LGR(object):
         else:
             self.reference_manager = reference_manager
 
-        # Store these to get mean number of variants per character
-        self._char_number = 0
-        self._variant_number = 0
-
     def __getstate__(self):
         """
         Called when pickling an LGR instance.
@@ -364,8 +360,6 @@ class LGR(object):
         # Add code point to tag classes
         self._add_cp_to_tag_classes(cp_or_sequence, tags)
 
-        self._char_number += 1
-
     def check_cp(self, cp_or_sequence):
         """
         Check if a code point is present in LGR.
@@ -411,8 +405,6 @@ class LGR(object):
         char = self.repertoire.get_char(cp_or_sequence)
         self.repertoire.del_char(cp_or_sequence)
         self._del_cp_from_tag_classes(cp_or_sequence, char.tags)
-
-        self._char_number -= 1
 
     def add_range(self, first_cp, last_cp,
                   comment=None, ref=None,
@@ -547,8 +539,6 @@ class LGR(object):
         # Add code points to tag classes
         for cp in codepoints:
             self._add_cp_to_tag_classes(cp, tags)
-
-        self._char_number += len(codepoints)
 
     def del_range(self, first_cp, last_cp):
         """
@@ -741,8 +731,6 @@ class LGR(object):
         # Variant insertion went well, can store its type
         self.types.add(variant_type)
 
-        self._variant_number += 1
-
     def del_variant(self, cp_or_sequence, variant_cp,
                     when=None, not_when=None):
         """
@@ -775,8 +763,6 @@ class LGR(object):
                      variant_cp, cp_or_sequence, self)
 
         cp_or_sequence = self._check_convert_cp(cp_or_sequence)
-
-        self._variant_number -= 1
 
         return self.repertoire.del_variant(cp_or_sequence, variant_cp,
                                            when, not_when)
@@ -1106,7 +1092,7 @@ class LGR(object):
                          "to use this function")
             raise LGRApiException()
 
-        if len(label) > self.max_label_length():
+        if len(label) > PROTOCOL_LABEL_MAX_LENGTH:
             logger.warning('Label is too long')
             raise LGRApiInvalidParameter('label')
 
@@ -1193,31 +1179,21 @@ class LGR(object):
                                        in label_dispositions])
         return summary, label_dispositions
 
-    def max_label_length(self):
+    def estimate_variant_number(self, label):
         """
-        Compute and return the maximal label length accepted.
+        Given a label, return the estimated number of variants.
+
+        This function basically takes a label and return the maximum number of projected variants.
+
+        :param label: The label to compute the disposition of,
+                      as a sequence of code points.
+        :return: Estimated number of generated variants.
         """
-        # Try to estimate the number of generated variants using
-        # the mean number of variants per character.
-
-        if self._char_number == 0:
-            return 0
-
-        logger.debug('Variant number: %d - Char number: %s',
-                     self._variant_number, self._char_number)
-        mean_variants_per_character = round(float(self._variant_number) / self._char_number)
-        logger.debug('Mean number of variants per char: %s',
-                     mean_variants_per_character)
-
-        if mean_variants_per_character <= 1:
-            return PROTOCOL_LABEL_MAX_LENGTH
-
-        # Number of variants is:
-        # mean_variants_per_character ^ label length
-        computed_len = int(math.log(MAX_NUMBER_GENERATED_VARIANTS,
-                                    mean_variants_per_character))
-        logger.debug('Computed len: %s', computed_len)
-        return min(computed_len, PROTOCOL_LABEL_MAX_LENGTH)
+        (_, _, _, chars) = self._test_preliminary_eligibility(label, generate_chars=True)
+        variant_number = 1
+        for char in chars:
+            variant_number *= len(list(char.get_variants())) + 1  # Take into account original code point
+        return variant_number
 
     def generate_index_label(self, label):
         """
