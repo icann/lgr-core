@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import copy
 import logging
 from datetime import date
+from collections import OrderedDict
 
 from lgr.tools.compare.utils import compare_objects
 
@@ -158,11 +159,18 @@ def union_actions(lgr1, lgr2):
 
     # Union of actions:
     # Concat both action lists
+    # Need OrderedDict instead of sets to keep order
 
-    actions = list(set.union(set(lgr1.actions), set(lgr2.actions)))
-    actions_xml = lgr1.actions_xml + lgr2.actions_xml
+    actions = OrderedDict()
+    actions_xml = OrderedDict()
 
-    return actions, actions_xml
+    actions.update(OrderedDict.fromkeys(lgr1.actions))
+    actions.update(OrderedDict.fromkeys(lgr2.actions))
+
+    actions_xml.update(OrderedDict.fromkeys(lgr1.actions_xml))
+    actions_xml.update(OrderedDict.fromkeys(lgr2.actions_xml))
+
+    return list(actions.keys()), list(actions_xml.keys())
 
 
 def union_rules(lgr1, lgr2):
@@ -190,6 +198,11 @@ def union_rules(lgr1, lgr2):
     for rule_name in rules_lgr1 & rules_lgr2:
         rule_1 = lgr1.rules_xml[lgr1.rules.index(rule_name)]
         rule_2 = lgr2.rules_xml[lgr2.rules.index(rule_name)]
+
+        if rule_1 == rule_2:
+            rules_xml.append(rule_1)
+            rules.append(rule_name)
+            continue
 
         rule_1 = rule_1.replace(rule_name, rule_name + '_1')
         rule_2 = rule_2.replace(rule_name, rule_name + '_2')
@@ -236,6 +249,11 @@ def union_classes(lgr1, lgr2):
     for class_name in classes_lgr1 & classes_lgr2:
         class_1 = lgr1.classes_xml[lgr1.classes.index(class_name)]
         class_2 = lgr2.classes_xml[lgr2.classes.index(class_name)]
+
+        if class_1 == class_2:
+            classes_xml.append(class_1)
+            classes.append(class_name)
+            continue
 
         class_1 = class_1.replace(class_name, class_name + '_1')
         class_2 = class_2.replace(class_name, class_name + '_2')
