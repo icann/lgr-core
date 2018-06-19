@@ -1026,7 +1026,7 @@ class LGR(object):
                                    which triggered the disposition,
                                    -1 if the label is not in the LGR.
                      - log: Log of the disposition computation,
-                            empty if collect_log is True
+                            empty if collect_log is False
         """
         if not label:
             raise LGRApiInvalidParameter('label')
@@ -1649,9 +1649,8 @@ class LGR(object):
                                 self._unicode_database,
                                 char.cp,
                                 index):
-                rule_logger.debug("when rule '%s' does not apply "
-                                  "for label '%s'",
-                                  when, format_cp(char.cp))
+                rule_logger.info("when rule '%s' does not validate for code point '%s'",
+                                 when, format_cp(char.cp))
                 return False
         elif not_when is not None:
             rule = self.rules_lookup[not_when]
@@ -1661,9 +1660,8 @@ class LGR(object):
                             self._unicode_database,
                             char.cp,
                             index):
-                rule_logger.debug("not-when rule '%s' applies "
-                                  "for label '%s'",
-                                  not_when, format_cp(char.cp))
+                rule_logger.info("not-when rule '%s' validates for code point '%s'",
+                                 not_when, format_cp(char.cp))
                 return False
 
         return True
