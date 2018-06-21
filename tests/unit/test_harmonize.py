@@ -52,7 +52,7 @@ class TestHarmonize(unittest.TestCase):
         nepali = load_lgr('nepali-rz.xml')
         rz = load_lgr('rz-lgr.xml')
 
-        hindi_harmonized, nepali_harmonized, log = harmonize(hindi, nepali, rz, 'Latin')  # LGR written in latin script
+        hindi_harmonized, nepali_harmonized, log = harmonize(hindi, nepali, rz)
 
         self.assertEqual(len(hindi.repertoire) + 1, len(hindi_harmonized.repertoire))
         self.assertEqual(len(nepali.repertoire) + 1, len(nepali_harmonized.repertoire))
@@ -76,7 +76,7 @@ class TestHarmonize(unittest.TestCase):
         nepali = load_lgr('nepali-log.xml')
         rz = load_lgr('rz-lgr.xml')
 
-        hindi_harmonized, nepali_harmonized, (log_hindi, log_nepali) = harmonize(hindi, nepali, rz, 'Latin')  # LGR written in latin script
+        hindi_harmonized, nepali_harmonized, (log_hindi, log_nepali) = harmonize(hindi, nepali, rz)
 
         self.assertEqual(len(hindi.repertoire), len(hindi_harmonized.repertoire))
         self.assertEqual(len(nepali.repertoire), len(nepali_harmonized.repertoire))

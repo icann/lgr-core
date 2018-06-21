@@ -29,7 +29,6 @@ def main():
     parser.add_argument('-1', '--first', help='First LGR to harmonize', required=True)
     parser.add_argument('-2', '--second', help='Second LGR to harmonize', required=True)
     parser.add_argument('-z', '--root-zone', help='Rootzone LGR to infer variants from')
-    parser.add_argument('-s', '--script', help='Script to use in the rootzone')
     parser.add_argument('output', help='Output directory to place generated LGR')
 
     args = parser.parse_args()
@@ -56,9 +55,8 @@ def main():
     rz_lgr = None
     if args.root_zone:
         rz_lgr = _parse_lgr(args.root_zone)
-    script = args.script or None
 
-    first_h, second_h, (log_first, log_second) = harmonize(first_lgr, second_lgr, rz_lgr, script)
+    first_h, second_h, (log_first, log_second) = harmonize(first_lgr, second_lgr, rz_lgr)
 
     for lgr in (first_h, second_h):
         xml = serialize_lgr_xml(lgr)

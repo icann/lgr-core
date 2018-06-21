@@ -12,7 +12,7 @@ from lgr.populate import populate_lgr
 logger = logging.getLogger(__name__)
 
 
-def harmonize(lgr_1, lgr_2, rz_lgr=None, script=None, _copy=True):
+def harmonize(lgr_1, lgr_2, rz_lgr=None, _copy=True):
     """
     Harmonize 2 LGRs, using an optional related Rootzone LGR.
 
@@ -21,7 +21,6 @@ def harmonize(lgr_1, lgr_2, rz_lgr=None, script=None, _copy=True):
     :param lgr_1: First LGR. Will have its ranges expanded.
     :param lgr_2: Second LGR. Will have its ranges expanded.
     :param rz_lgr: Optional related Rootzone LGR.
-    :param script: Optional script to consider in `rz_lgr`.
     :param _copy: If False, update the input `lgr_1`, `lgr_2` parameters instead of doing a copy.
     :return: (h_lgr_1, h_lgr_2, (lgr_1_cp_review, lgr_2_cp_review)), with:
              - h_lgr_1: Harmonized first LGR.
@@ -42,12 +41,10 @@ def harmonize(lgr_1, lgr_2, rz_lgr=None, script=None, _copy=True):
 
     # New variants from RZ-LGR - harmonize each of the LGR with the RZ-LGR for the given script
     if rz_lgr is not None:
-        rz_lgr_script = deepcopy(rz_lgr)
-        for char in rz_lgr.repertoire:
-            if rz_lgr.unicode_database is not None and rz_lgr.unicode_database.get_script(char.cp[0]) != script:
-                rz_lgr_script.del_cp(char.cp)
-        harmonize(h_lgr_1, rz_lgr_script, _copy=False)
-        harmonize(h_lgr_2, rz_lgr_script, _copy=False)
+        rz_lgr_work = deepcopy(rz_lgr)
+        harmonize(h_lgr_1, rz_lgr_work, _copy=False)
+        rz_lgr_work = deepcopy(rz_lgr)
+        harmonize(h_lgr_2, rz_lgr_work, _copy=False)
 
     # Perform harmonization between the 2 LGRs
     lgr_1_repertoire = {c.cp for c in h_lgr_1.repertoire}
