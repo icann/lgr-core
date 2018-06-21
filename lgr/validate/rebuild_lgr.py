@@ -8,7 +8,7 @@ import copy
 
 from lgr.char import RangeChar
 from lgr.utils import format_cp
-from lgr.exceptions import LGRException, CharNotInScript
+from lgr.exceptions import LGRException, CharNotInScript, CharInvalidIdnaProperty
 
 logger = logging.getLogger(__name__)
 
@@ -112,8 +112,14 @@ def rebuild_lgr(lgr, options):
                               override_repertoire=False)
         except LGRException as exc:
             result['repertoire'].setdefault(char, {}).setdefault('errors', []).append(exc)
-            logger.error("Cannot add code point '%s'",
-                         format_cp(char.cp))
+            logger.error("Cannot add code point '%s'", format_cp(char.cp))
+            if not isinstance(exc, CharInvalidIdnaProperty):  # Cannot include non-IDNA valid code points
+                target_lgr.add_cp(char.cp,
+                                  comment=char.comment,
+                                  ref=char.references,
+                                  tag=char.tags,
+                                  when=char.when, not_when=char.not_when,
+                                  force=True)
 
         # Create variants
         for var in char.get_variants():
@@ -127,9 +133,14 @@ def rebuild_lgr(lgr, options):
                                        override_repertoire=True)
             except LGRException as exc:
                 result['repertoire'].setdefault(char, {}).setdefault('variants', {}).setdefault(var, []).append(exc)
-                logger.error("Cannot add variant '%s' to code point '%s'",
-                             format_cp(var.cp),
-                             format_cp(char.cp))
+                logger.error("Cannot add variant '%s' to code point '%s'", format_cp(var.cp), format_cp(char.cp))
+                if not isinstance(exc, CharInvalidIdnaProperty):  # Cannot include non-IDNA valid code points
+                    target_lgr.add_variant(char.cp,
+                                           variant_cp=var.cp,
+                                           variant_type=var.type,
+                                           when=var.when, not_when=var.not_when,
+                                           comment=var.comment, ref=var.references,
+                                           force=True)
 
     logger.info("Rebuilding LGR '%s done", lgr)
 
