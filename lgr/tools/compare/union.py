@@ -336,6 +336,11 @@ def union_lgrs(lgr1, lgr2):
                    tag=char.tags,
                    when=char.when, not_when=char.not_when)
 
+        for v in char.get_variants():
+            lgr.add_variant(char.cp, v.cp, variant_type=v.type,
+                            when=v.when, not_when=v.not_when,
+                            comment=v.comment)
+
     (actions, actions_xml) = union_actions(lgr1, lgr2)
     lgr.actions = copy.deepcopy(actions)
     lgr.actions_xml = actions_xml
