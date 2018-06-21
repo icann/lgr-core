@@ -56,17 +56,22 @@ def union_description(first, second):
     if first == second:
         return first
 
-    description_type = 'text/enriched'
-    value = """
-Original MIME-type for first description: '{0}'.
-{1}
+    all_html = all(d.description_type == 'text/html' for d in (first, second))
+    if all_html:
+        description_type = 'text/html'
+        value = """{first_value}\n{second_value}""".format(first_value=first.value, second_value=second.value)
+    else:
+        description_type = 'text/enriched'
+        value = """
+Original MIME-type for first description: '{first_type}':
+{first_value}
 
 ----
 
-Original MIME-type for second description: '{2}'.
-{3}
-""".format(first.description_type, first.value,
-           second.description_type, second.value)
+Original MIME-type for second description: '{second_type}'.
+{second_value}
+""".format(first_type=first.description_type, first_value=first.value,
+           second_type=second.description_type, second_value=second.value)
 
     return Description(value, description_type)
 
