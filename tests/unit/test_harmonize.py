@@ -61,9 +61,12 @@ class TestHarmonize(unittest.TestCase):
             char = lgr.get_char(cp)
             self.assertEqual(char.comment, 'Out-of-repertoire')
             variants = list(char.get_variants())
-            self.assertEqual(len(variants), 1)
-            self.assertEqual(variants[0].cp, (var_cp, ))
-            self.assertEqual(variants[0].type, 'blocked')
+            self.assertEqual(len(variants), 2)
+            variant_set = {(var.cp, var.type) for var in variants}
+            self.assertSetEqual(variant_set, {
+                ((var_cp, ), 'blocked'),
+                ((cp, ), 'blocked')  # Identity mapping for out-of-repertoire code points
+            })
 
             var_char = lgr.get_char(var_cp)
             variants = list(var_char.get_variants())
@@ -96,6 +99,39 @@ class TestHarmonize(unittest.TestCase):
             self.assertEqual(len(variants), 1)
             self.assertEqual(variants[0].cp, (var_cp, ))
             self.assertEqual(variants[0].type, 'blocked')
+
+    def test_identity_mappings(self):
+        a_c = load_lgr('a-c.xml')
+        c_e = load_lgr('c-e.xml')
+
+        a_c_harmonized, c_e_harmonized, _ = harmonize(a_c, c_e)
+
+        all_cp = {(0x0061, ), (0x0062, ), (0x0063, ), (0x0064, ), (0x0065, )}
+        for lgr, cp_list in ((a_c_harmonized, (0x0064, 0x0065)), (c_e_harmonized, (0x0061, 0x0062))):
+            for cp in cp_list:
+                char = lgr.get_char(cp)
+                variants = {var.cp for var in char.get_variants()}
+                self.assertSetEqual(variants, all_cp)
+                # Ensure identity mapping is present
+                id_mapping = char.get_variant((cp, ))
+                self.assertEqual(len(id_mapping), 1)
+                self.assertEqual(id_mapping[0].type, 'blocked')
+
+            for char in lgr.repertoire:
+                if char.cp[0] in cp_list:  # Skip newly added code points
+                    continue
+                variants = {var.cp for var in char.get_variants()}
+                # Ensure that already-present code points do not have identity mapping
+                self.assertNotIn(char.cp, variants)
+                # Ensure that already-present code points have new variants
+                self.assertSetEqual(variants, all_cp - {char.cp})
+
+        for lgr in (a_c_harmonized, c_e_harmonized):
+            c_variants = [c.cp for c in lgr.get_variants(0x0063)]
+            self.assertEqual(len(c_variants), 4)  # No identity mapping here
+            self.assertNotIn((0x0063, ), c_variants)
+            for cp in all_cp - {(0x0063, )}:
+                self.assertIn(cp, c_variants)
 
 
 if __name__ == '__main__':

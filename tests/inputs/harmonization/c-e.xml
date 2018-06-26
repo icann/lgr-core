@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='utf-8'?>
+<lgr xmlns="urn:ietf:params:xml:ns:lgr-1.0">
+  <meta>
+    <version>1</version>
+    <unicode-version>10.0.0</unicode-version>
+  </meta>
+  <data>
+    <char cp="0063">
+      <var cp="0064"/>
+      <var cp="0065"/>
+    </char>
+    <char cp="0064">
+      <var cp="0063"/>
+      <var cp="0065"/>
+    </char>
+    <char cp="0065">
+      <var cp="0063"/>
+      <var cp="0064"/>
+    </char>
+  </data>
+  <rules/>
+</lgr>
