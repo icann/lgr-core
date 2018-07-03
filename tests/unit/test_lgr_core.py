@@ -465,11 +465,11 @@ class TestLGRCore(unittest.TestCase):
             [0x0062, 0x0063, 0x0068]
         )
         invalid_labels = (
-            ([0x0060], [], [0x0060]),
-            ([0x0069], [], [0x0069]),
-            ([0x0062], [], [0x0062]),
-            ([0x0063], [], [0x0063]),
-            ([0x0061, 0x0062], [0x0061], [0x0062])
+            ([0x0060], [], [(0x0060, None)]),
+            ([0x0069], [], [(0x0069, None)]),
+            ([0x0062], [], [(0x0062, None)]),
+            ([0x0063], [], [(0x0063, None)]),
+            ([0x0061, 0x0062], [0x0061], [(0x0062, None)])
         )
 
         for label in valid_labels:
@@ -485,7 +485,7 @@ class TestLGRCore(unittest.TestCase):
         self.lgr.add_cp([0x0064])
 
         self.assertEqual(self.lgr._test_preliminary_eligibility([0x0062]),
-                         (False, [], [0x0062]))
+                         (False, [], [(0x0062, None)]))
         self.assertEqual(self.lgr._test_preliminary_eligibility([0x0061, 0x0062, 0x0063, 0x0064]),
                          (True, [0x0061, 0x0062, 0x0063, 0x0064], []))
 

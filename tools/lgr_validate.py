@@ -30,7 +30,7 @@ def check_label(lgr, label, generate_variants=False, merged_lgr=None, set_labels
 
     write_output("\nLabel: %s [%s]" % (label, format_cp(label_cp)))
 
-    (eligible, label_part, not_in_lgr, disp, _, _) = lgr.test_label_eligible(label_cp)
+    (eligible, label_parts, label_invalid_parts, disp, _, _) = lgr.test_label_eligible(label_cp)
     write_output("\tEligible: %s" % eligible)
     write_output("\tDisposition: %s" % disp)
 
@@ -78,8 +78,10 @@ def check_label(lgr, label, generate_variants=False, merged_lgr=None, set_labels
                 write_output("\tVariant %s [%s]" % (variant_u, format_cp(variant_cp)))
                 write_output("\t- Disposition: '%s'" % var_disp)
     else:
-        write_output("- Valid code points from label: %s" % u' '.join(u"{:04X}".format(cp) for cp in label_part))
-        write_output("- Invalid code points from label: %s" % u' '.join(u"{:04X}".format(cp) for cp in not_in_lgr))
+        write_output("- Valid code points from label: %s" % u' '.join(u"{:04X}".format(cp) for cp in label_parts))
+        if label_invalid_parts:
+            write_output("- Invalid code points from label: {}".format(' '.join("{:04X} ({})".format(cp, "not in repertoire" if rules is None else ','.join(rules))
+                                                                                for cp, rules in label_invalid_parts)))
 
 
 def main():

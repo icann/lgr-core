@@ -27,7 +27,7 @@ def check_label(lgr, label, invalid, test):
 
     logger.info("- Code points: %s", label_display)
 
-    (eligible, label_part, not_in_lgr, disp, action_idx, logs) = lgr.test_label_eligible(label_cp)
+    (eligible, label_parts, label_invalid_parts, disp, action_idx, logs) = lgr.test_label_eligible(label_cp)
     logger.info("- Eligible: %s", eligible)
     logger.info("- Disposition: %s", disp)
     is_default_action = action_idx > len(lgr.actions)
@@ -63,9 +63,10 @@ def check_label(lgr, label, invalid, test):
             logger.info("\t- Logs: %s", logs)
     else:
         logger.info("- Valid code points from label: %s",
-                    ' '.join("{:04X}".format(cp) for cp in label_part))
+                    ' '.join("{:04X}".format(cp) for cp in label_parts))
         logger.info("- Invalid code points from label: %s",
-                    ' '.join("{:04X}".format(cp) for cp in not_in_lgr))
+                    ' '.join("{:04X} ({})".format(cp, "not in repertoire" if rules is None else ','.join(rules)) for
+                             cp, rules in label_invalid_parts))
 
 
 def main():

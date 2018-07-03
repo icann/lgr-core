@@ -1014,13 +1014,13 @@ class LGR(object):
 
         :param label: The label to test, as an array of codepoints.
         :param collect_log: If False, do not collect rule processing log.
-        :return: (result, label_part, not_in_lgr, disposition, action_idx, log)
+        :return: (result, label_parts, label_invalid_parts, disposition, action_idx, log)
                  with:
 
                      - result: True if the label is eligible according to the LGR,
                                False otherwise.
-                     - label_part: List of the code points valid in the LGR.
-                     - not_in_lgr: List of code points not valid in the LGR.
+                     - label_parts: List of the code points valid in the LGR.
+                     - label_invalid_parts: List of code points not valid in the LGR.
                      - disposition: Disposition of the label.
                      - action_idx: Index of the action
                                    which triggered the disposition,
@@ -1039,12 +1039,12 @@ class LGR(object):
             rule_logger.addHandler(ch)
 
         # Start by testing presence of code points in LGR
-        (valid, label_part, not_in_lgr) = self._test_preliminary_eligibility(label)
+        (valid, label_parts, label_invalid_parts) = self._test_preliminary_eligibility(label)
         if not valid:
             rule_logger.error("Label '%s' is not in the LGR", format_cp(label))
             if collect_log:
                 rule_logger.removeHandler(ch)
-            return False, label_part, not_in_lgr, INVALID_DISPOSITION, -1, log_output.getvalue()
+            return False, label_parts, label_invalid_parts, INVALID_DISPOSITION, -1, log_output.getvalue()
 
         # Compute label disposition by analyzing reflexive mappings
         (disposition, action_idx) = self._test_label_disposition(label)
@@ -1222,7 +1222,7 @@ class LGR(object):
             logger.error('Label %s is not in LGR', format_cp(label))
             # If not result, there is at least on element in not_in_lgr.
             # See _test_preliminary_eligibility()
-            raise NotInLGR(not_in_lgr[0])
+            raise NotInLGR(not_in_lgr[0][0])
 
         index_label = []
         for char in chars:
@@ -1280,12 +1280,14 @@ class LGR(object):
 
         :param label: The label to test, as an array of codepoints.
         :param generate_chars: Return list of corresponding char objects.
-        :return: (result, label_part, not_in_lgr, chars), with:
+        :return: (result, label_parts, label_invalid_parts, chars), with:
 
                  * result: True if the label is eligible according to the LGR,
                            False otherwise.
-                 * label_part: List of the code points valid in the LGR.
-                 * not_in_lgr: List of code points not valid in the LGR.
+                 * label_parts: List of the code points valid in the LGR.
+                 * label_invalid_parts: List of (code point, rule_specs) not valid in the LGR, with:
+                    * rule_specs: None if code point is not in the repertoire, list of rule names that does not comply
+                                  for all characters starting with the code point.
                  * chars: List of the LGR chars included in label
                           (only if generate_chars=True).
         :raises RuleError: If rule is invalid.
@@ -1294,8 +1296,8 @@ class LGR(object):
         i = 0
         label_length = len(label)
 
-        label_part = []
-        not_in_lgr = []
+        label_parts = []
+        label_invalid_parts = []
 
         chars = []
 
@@ -1312,9 +1314,11 @@ class LGR(object):
                 rule_logger.warning("No character in LGR starting with '%s'",
                                     format_cp(cp))
                 result = False
-                not_in_lgr.append(cp)
+                label_invalid_parts.append((cp, None))
                 i += 1
                 continue
+
+            pending_rules_not_in_lgr = []
 
             valid = False
             for char in char_list:
@@ -1324,25 +1328,27 @@ class LGR(object):
 
                 # Test when/not-when rules:
                 if not self._test_context_rules(char, label, i):
+                    pending_rules_not_in_lgr.append(char.when or char.not_when)
                     continue
 
                 i += len(char)
                 valid = True
                 rule_logger.debug("Code point '%s' in LGR", format_cp(cp))
-                label_part += char.cp
+                label_parts += char.cp
                 chars.append(char)
                 break
 
             if not valid:
-                rule_logger.debug("Code point '%s' is not in LGR", format_cp(cp))
+                rule_logger.warning("Code point '%s' does not comply with contextual rules: %s",
+                                    format_cp(cp), ','.join(pending_rules_not_in_lgr))
                 result = False
-                not_in_lgr.append(cp)
+                label_invalid_parts.append((cp, pending_rules_not_in_lgr or None))
                 i += 1
 
         if not generate_chars:
-            return result, label_part, not_in_lgr
+            return result, label_parts, label_invalid_parts
         else:
-            return result, label_part, not_in_lgr, chars
+            return result, label_parts, label_invalid_parts, chars
 
     def _test_label_disposition(self, label):
         """
@@ -1549,6 +1555,7 @@ class LGR(object):
                 if not self._test_context_rules(var,
                                                 variant_label,
                                                 len(label_prefix)):
+                    rule_logger.debug("Variant %s is not in LGR", format_cp(var.cp))
                     continue
                 rule_logger.debug("Variant %s is valid", format_cp(var.cp))
 
