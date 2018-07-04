@@ -71,6 +71,7 @@ def _generate_indexes(lgr, labels, keep=False, quiet=False):
             label = primary['label']
             for (variant_cp,
                  variant_disp,
+                 variant_invalid_parts,
                  action_idx, _,
                  log) in lgr.compute_label_disposition(label_cp,
                                                        include_invalid=True,

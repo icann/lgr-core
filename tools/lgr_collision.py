@@ -27,7 +27,7 @@ def compute_label_index(lgr, label):
 def find_variants_to_block(lgr, label_ref, label):
     var_ref = [var for (var, _, _) in lgr._generate_label_variants(label_ref)]
 
-    for (variant_cp, disp, _, disp_set, _) in lgr.compute_label_disposition(label):
+    for (variant_cp, disp, _, _, disp_set, _) in lgr.compute_label_disposition(label):
         if variant_cp in var_ref:
             variant_u = cp_to_ulabel(variant_cp)
             write_output("Variant '%s' [%s] with disposition set '%s' "

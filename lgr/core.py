@@ -1074,13 +1074,12 @@ class LGR(object):
                                 disposition, which are normally eliminated
                                 during the generation process.
         :param collect_log: If False, do not collect rule processing log.
-        :return: Generator of (variant_cp, disp, action_idx, disp_set, log)
+        :return: Generator of (variant_cp, variant_invalid_parts, disp, action_idx, disp_set, log)
                  with:
-
                      - variant_cp: The code point sequence of a variant.
                      - disp: The disposition of the variant.
-                     - action_idx: The index of the action
-                                   which triggered the disposition.
+                     - variant_invalid_parts: List of code points not valid in the LGR.
+                     - action_idx: The index of the action which triggered the disposition.
                      - disp_set: The disposition set generated for this label.
                      - log: The log of the generation of the label,
                              empty if collect_log is True.
@@ -1116,7 +1115,7 @@ class LGR(object):
 
             # 8.3.  Determining a Disposition for a Label or Variant Label
             # Step 1
-            eligible, _, _, _, idx, _ = self.test_label_eligible(variant_cp)
+            eligible, _, variant_invalid_parts, _, idx, _ = self.test_label_eligible(variant_cp)
             if not eligible:
                 variant_disp = INVALID_DISPOSITION
             else:
@@ -1137,15 +1136,15 @@ class LGR(object):
             if (variant_disp != INVALID_DISPOSITION) or include_invalid:
                 if variant_cp == label:
                     # Skip original label, yield last
-                    original_label = variant_cp, variant_disp, idx, disp_set, log_output.getvalue()
+                    original_label = variant_cp, variant_disp, variant_invalid_parts, idx, disp_set, log_output.getvalue()
                     continue
-                yield variant_cp, variant_disp, idx, disp_set, log_output.getvalue()
+                yield variant_cp, variant_disp, variant_invalid_parts, idx, disp_set, log_output.getvalue()
 
         if not original_label:
             # TODO: already computed since label MUST be eligible
             rule_logger.debug('Add original label')
             (_, _, _, disposition, action_idx, log) = self.test_label_eligible(label, collect_log)
-            original_label = label, disposition, action_idx, set(), log
+            original_label = label, disposition, None, action_idx, set(), log
 
         yield original_label
 
@@ -1159,11 +1158,12 @@ class LGR(object):
         :param include_invalid: If True, also return variants with "invalid"
                                 disposition, which are normally eliminated
                                 during the generation process.
-        :return: Generator of (variant_cp, disp, action_idx, disp_set, log)
+        :return: Generator of (variant_cp, variant_invalid_parts, disp, action_idx, disp_set, log)
                  with:
 
                      - variant_cp: The code point sequence of a variant.
                      - disp: The disposition of the variant.
+                     - variant_invalid_parts: List of code points not valid in the LGR.
                      - action_idx: The index of the action
                                    which triggered the disposition.
                      - disp_set: The disposition set generated for this label.
@@ -1175,7 +1175,7 @@ class LGR(object):
         label_dispositions = list(self.compute_label_disposition(label,
                                                                  include_invalid=include_invalid))
 
-        summary = collections.Counter([disp for (_, disp, _, _, _)
+        summary = collections.Counter([disp for (_, disp, _, _, _, _)
                                        in label_dispositions])
         return summary, label_dispositions
 

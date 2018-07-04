@@ -45,12 +45,18 @@ def check_label(lgr, label, invalid, test):
         summary, labels = lgr.compute_label_disposition_summary(label_cp,
                                                                 include_invalid=invalid)
         logger.info("Summary: %s", summary)
-        for (variant_cp, var_disp, action_idx, disp_set, logs) in labels:
+        for (variant_cp, var_disp, variant_invalid_parts, action_idx, disp_set, logs) in labels:
             variant_u = cp_to_ulabel(variant_cp)
             variant_display = ' '.join("{:04X}".format(cp) for cp in variant_cp)
             logger.info("\tVariant '%s'", variant_u)
             logger.info("\t- Code points: %s", format_cp(variant_cp))
             logger.info("\t- Disposition: '%s'", var_disp)
+
+            if variant_invalid_parts:
+                logger.info("\t- Invalid code points from variant: %s",
+                            ' '.join(("{:04X} ({})".format(cp,
+                                                           "not in repertoire" if rules is None else ','.join(rules))
+                                      for cp, rules in variant_invalid_parts)))
 
             is_default_action = action_idx > len(lgr.actions)
             actual_index = action_idx if not is_default_action else action_idx - len(lgr.actions)
@@ -65,8 +71,8 @@ def check_label(lgr, label, invalid, test):
         logger.info("- Valid code points from label: %s",
                     ' '.join("{:04X}".format(cp) for cp in label_parts))
         logger.info("- Invalid code points from label: %s",
-                    ' '.join("{:04X} ({})".format(cp, "not in repertoire" if rules is None else ','.join(rules)) for
-                             cp, rules in label_invalid_parts))
+                    ' '.join(("{:04X} ({})".format(cp, "not in repertoire" if rules is None else ','.join(rules)) for
+                              cp, rules in label_invalid_parts)))
 
 
 def main():
