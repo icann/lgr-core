@@ -33,7 +33,7 @@ def _generate_variants(lgr, label):
         raise MissingLanguage('Cannot generate cross-scripts variants for LGR without languages')
 
     try:
-        for variant, variant_disp, _, _, _ in lgr.compute_label_disposition(label, include_invalid=True):
+        for variant, variant_disp, _, _, _, _ in lgr.compute_label_disposition(label, include_invalid=True):
             script_mapping = {}
             for var_cp in variant:
                 char = lgr.get_char(var_cp)

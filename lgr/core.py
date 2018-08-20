@@ -1077,6 +1077,7 @@ class LGR(object):
         :return: Generator of (variant_cp, variant_invalid_parts, disp, action_idx, disp_set, log)
                  with:
                      - variant_cp: The code point sequence of a variant.
+                     - variant_invalid_parts: List of code points not valid in the LGR.
                      - disp: The disposition of the variant.
                      - variant_invalid_parts: List of code points not valid in the LGR.
                      - action_idx: The index of the action which triggered the disposition.
