@@ -65,7 +65,7 @@ class TestHarmonize(unittest.TestCase):
             variant_set = {(var.cp, var.type) for var in variants}
             self.assertSetEqual(variant_set, {
                 ((var_cp, ), 'blocked'),
-                ((cp, ), 'blocked')  # Identity mapping for out-of-repertoire code points
+                ((cp, ), 'out-of-repertoire')  # Identity mapping for out-of-repertoire code points
             })
 
             var_char = lgr.get_char(var_cp)
@@ -115,7 +115,7 @@ class TestHarmonize(unittest.TestCase):
                 # Ensure identity mapping is present
                 id_mapping = char.get_variant((cp, ))
                 self.assertEqual(len(id_mapping), 1)
-                self.assertEqual(id_mapping[0].type, 'blocked')
+                self.assertEqual(id_mapping[0].type, 'out-of-repertoire')
 
             for char in lgr.repertoire:
                 if char.cp[0] in cp_list:  # Skip newly added code points
