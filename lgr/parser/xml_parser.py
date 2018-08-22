@@ -193,7 +193,9 @@ class XMLParser(LGRParser):
                 metadata.scopes.append(
                     Scope(child.text, child.get('type', None)))
             elif tag == DESCRIPTION_TAG:
-                metadata.description = Description(child.text,
+                # Seems to be an issue with CDATA/iterparse: https://bugs.launchpad.net/lxml/+bug/1788449
+                # For now, manually replace CRLF with LF
+                metadata.description = Description(child.text.replace('\r\n', '\n'),
                                                    child.get('type',
                                                              None))
             elif tag == REFERENCES_TAG:
