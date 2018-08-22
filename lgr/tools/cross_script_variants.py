@@ -28,9 +28,9 @@ def _generate_variants(lgr, label):
     unidb = lgr.unicode_database
     lgr_scripts = frozenset(lgr.metadata.get_scripts())
     if not lgr_scripts:
-        logger.error("Cannot generate cross-scripts variants "
-                     "for LGR without languages")
-        raise MissingLanguage('Cannot generate cross-scripts variants for LGR without languages')
+        logger.error("Cannot generate cross-scripts variants for LGR without languages")
+        raise MissingLanguage('Cannot generate cross-scripts variants for LGR without languages '
+                              'or with invalid language tags')
 
     try:
         for variant, variant_disp, _, _, _, _ in lgr.compute_label_disposition(label, include_invalid=True):
