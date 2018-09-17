@@ -35,7 +35,7 @@ class TestXmlSerializer(unittest.TestCase):
         self.assertEqual(version.text, '1.0')
         # LXML can return strings as bytestring in python2...
         # See https://mailman-mail5.webfaction.com/pipermail/lxml/2011-December/006239.html
-        self.assertEqual(u'' + version.get('comment'), 'First version')
+        self.assertEqual('' + version.get('comment'), 'First version')
 
         date = meta_node.find('date', namespaces=NSMAP)
         self.assertEqual(date.text, '2017-09-01')

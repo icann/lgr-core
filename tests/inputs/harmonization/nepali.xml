@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='utf-8'?>
+<lgr xmlns="urn:ietf:params:xml:ns:lgr-1.0">
+  <meta>
+    <version>1</version>
+    <unicode-version>6.3.0</unicode-version>
+  </meta>
+  <data>
+    <char cp="0061">
+      <var cp="0062" type="blocked"/>
+    </char>
+    <char cp="0062">
+      <var cp="0061" type="blocked"/>
+    </char>
+    <char cp="0063"/>
+    <char cp="0064"/>
+  </data>
+  <rules/>
+</lgr>

@@ -20,6 +20,7 @@ venv/
 # Cover testing
 .coverage
 cover/
+htmlcov/
 
 # Installer logs
 pip-log.txt
@@ -30,3 +31,7 @@ pip-delete-this-directory.txt
 
 # Documentation
 doc/_build/
+
+# Tox testing
+.tox/
+tests-out-*

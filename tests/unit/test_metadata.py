@@ -9,6 +9,7 @@ import unittest
 from lgr.metadata import Metadata, ReferenceManager
 from lgr.exceptions import (LGRFormatException,
                             ReferenceAlreadyExists,
+                            ReferenceInvalidId,
                             ReferenceNotDefined)
 
 
@@ -140,6 +141,17 @@ class TestReferenceManager(unittest.TestCase):
         self.assertRaises(ReferenceAlreadyExists,
                           self.manager.add_reference,
                           'The Unicode Standard 6.3', ref_id=0)
+
+    def test_add_reference_str(self):
+        ref_id = self.manager.add_reference('The Unicode Standard 1.1',
+                                            comment='A pretty old version',
+                                            ref_id='12_AB:34-C.D')
+        self.assertEqual(ref_id, '12_AB:34-C.D')
+
+    def test_add_reference_invalid(self):
+        self.assertRaises(ReferenceInvalidId,
+                          self.manager.add_reference,
+                          'The Unicode Standard 6.3', ref_id='a')
 
     def test_del_existing_reference(self):
         ref_id = self.manager.add_reference('The Unicode Standard 1.1',

@@ -12,6 +12,17 @@ from lgr.tools.diff_collisions import get_collisions
 logger = logging.getLogger(__name__)
 
 
+def _out_valid_label(lgr, label, eligible, label_invalid_parts, disp, action_idx):
+    yield "%s: %s\n" % (label, disp)
+    if not eligible and action_idx > 0:
+        yield " Rule %s: %s\n" % (action_idx, lgr.effective_actions[action_idx])
+    for cp_not_in_lgr, rules in label_invalid_parts:
+        yield " Code point {cp} {reason}\n".format(
+            cp="U+{:04X}".format(cp_not_in_lgr),
+            reason="not in repertoire" if rules is None else "does not comply with rules '{}'".format(','.join(rules))
+        )
+
+
 def annotate(lgr, labels_input):
     """
     Annotate a list of labels with their disposition.
@@ -22,8 +33,10 @@ def annotate(lgr, labels_input):
     for label, valid, error in read_labels(labels_input, lgr.unicode_database):
         if valid:
             label_cp = tuple([ord(c) for c in label])
-            disp = lgr.test_label_eligible(label_cp, collect_log=False)[3]
-            yield "%s: %s\n" % (label, disp)
+            (eligible, _, label_invalid_parts, disp, action_idx, _) = lgr.test_label_eligible(label_cp,
+                                                                                             collect_log=False)
+            for l in _out_valid_label(lgr, label, eligible, label_invalid_parts, disp, action_idx):
+                yield l
         else:
             yield "%s: %s\n" % (label, error)
 
@@ -52,14 +65,15 @@ def lgr_set_annotate(lgr, script_lgr, set_labels_input, labels_input):
     yield "# End of filtered set labels\n\n"
 
     for label, valid, error in read_labels(labels_input, script_lgr.unicode_database):
-        out = ''
         if not valid:
             out = error
+            yield "%s: %s\n" % (label, out)
         else:
             label_cp = tuple([ord(c) for c in label])
             # First, verify that a proposed label is valid by processing it with the Element LGR
             # corresponding to the script that was selected for the label in the application.
-            (eligible, _, _, disp, _, _) = script_lgr.test_label_eligible(label_cp, collect_log=False)
+            (eligible, _, label_invalid_parts, disp, action_idx, _) = script_lgr.test_label_eligible(label_cp,
+                                                                                                    collect_log=False)
             collision = ''
             if eligible:
                 # Second, process the now validated label against the common LGR to verify it does not collide
@@ -70,12 +84,11 @@ def lgr_set_annotate(lgr, script_lgr, set_labels_input, labels_input):
                 if len(indexes) > 0:
                     collision = 'Label collides with the LGR set labels'
 
-            # Third, now that the label is known to be valid, and not in collision, use the appropriate element LGR to
-            # generate all allocatable variants.
             out = disp
             if collision:
                 # TODO do we need to change disp to invalid???
                 out = '{} - {}'.format(disp, collision)
 
-        yield "%s: %s\n" % (label, out)
+            for l in _out_valid_label(lgr, label, eligible, label_invalid_parts, out, action_idx):
+                yield l
 

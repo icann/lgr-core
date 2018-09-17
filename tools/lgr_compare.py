@@ -1,4 +1,4 @@
-#!/bin/env python2
+#!/bin/env python
 # -*- coding: utf-8 -*-
 """
 lgr_compare.py - CLI tool to compare 2 LGRs
@@ -35,6 +35,8 @@ def main():
     parser.add_argument('action', metavar="ACTION",
                         help='Compare action (INTERSECT, UNION, DIFF)',
                         choices=['INTERSECT', 'UNION', 'DIFF'])
+    parser.add_argument('-g', '--generate', action='store_true',
+                        help='Generate a full dump (with identical elements as well)')
     parser.add_argument('-n1', '--name-first', metavar='NAME1', help="Merged LGR 1 name")
     parser.add_argument('-n2', '--name-second', metavar='NAME2', help="Merged LGR 2 name")
 
@@ -47,7 +49,7 @@ def main():
         logger.error("Cannot compare LGR with LGR sets")
         return
 
-    logger.warning('Please wait, this can take some time...\n')
+    logger.info('Please wait, this can take some time...\n')
 
     if len(args.first) > 1:
         if args.action in ['INTERSECT', 'UNION']:
@@ -94,9 +96,10 @@ def main():
             elif args.action == 'UNION':
                 lgr = union_lgrs(lgr1, lgr2)
 
-            print(serialize_lgr_xml(lgr, pretty_print=True))
+            print(serialize_lgr_xml(lgr, pretty_print=True, encoding='unicode', xml_declaration=False))
         elif args.action == 'DIFF':
-            print(diff_lgrs(lgr1, lgr2))
+            print(diff_lgrs(lgr1, lgr2, show_same=args.generate))
+
 
 if __name__ == '__main__':
     main()

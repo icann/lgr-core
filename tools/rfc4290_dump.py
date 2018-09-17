@@ -1,4 +1,4 @@
-#!/bin/env python2
+#!/bin/env python
 # -*- coding: utf-8 -*-
 """
 rfc4290_dump.py - Tool to parse a RFC4290 file and dump LGR on stdout
@@ -7,9 +7,8 @@ from __future__ import unicode_literals
 import sys
 import argparse
 import logging
-import os
 import io
-from lxml import etree
+
 
 def main():
     from lgr.parser.rfc4290_parser import RFC4290Parser
@@ -29,15 +28,13 @@ def main():
     rfc_parser = RFC4290Parser(args.file)
     lgr = rfc_parser.parse_document()
 
-    xml = serialize_lgr_xml(lgr, pretty_print=True)
     if args.output is not None:
+        xml = serialize_lgr_xml(lgr, pretty_print=True)
         with io.open(args.output, mode='wb') as output:
             output.write(xml)
     else:
-        print(xml)
+        print(serialize_lgr_xml(lgr, pretty_print=True, encoding='unicode', xml_declaration=False))
+
 
 if __name__ == '__main__':
-    # XXX: Add LGR module to PYTHONPATH
-    sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                 '..'))
     main()

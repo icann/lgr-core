@@ -1,4 +1,4 @@
-#!/bin/env python2
+#!/bin/env python
 # -*- coding: utf-8 -*-
 """
 lgr_validate.py - CLI tool which validate a label and generate its variants.
@@ -9,16 +9,16 @@ a label and generate its variants.
 from __future__ import unicode_literals
 
 import sys
-import codecs
 import argparse
 import logging
 import io
-from cStringIO import StringIO
+from io import StringIO
 
 from munidata import UnicodeDataVersionManager
 
+from lgr.utils import cp_to_ulabel
 from lgr.parser.xml_parser import XMLParser
-from lgr.tools.utils import write_output, merge_lgrs, read_labels
+from lgr.tools.utils import write_output, merge_lgrs, read_labels, get_stdin
 from lgr.tools.diff_collisions import get_collisions
 
 logger = logging.getLogger("lgr_validate")
@@ -30,7 +30,7 @@ def check_label(lgr, label, generate_variants=False, merged_lgr=None, set_labels
 
     write_output("\nLabel: %s [%s]" % (label, format_cp(label_cp)))
 
-    (eligible, label_part, not_in_lgr, disp, _, _) = lgr.test_label_eligible(label_cp)
+    (eligible, label_parts, label_invalid_parts, disp, _, _) = lgr.test_label_eligible(label_cp)
     write_output("\tEligible: %s" % eligible)
     write_output("\tDisposition: %s" % disp)
 
@@ -46,7 +46,7 @@ def check_label(lgr, label, generate_variants=False, merged_lgr=None, set_labels
                     logger.error('More than one collision, please check your LGR set labels')
                     return
                 elif len(indexes) > 0:
-                    collisions = indexes[indexes.keys()[0]]
+                    collisions = indexes[list(indexes.keys())[0]]
                     collision = None
                     collide_with = []
                     # retrieve label in collision list
@@ -74,12 +74,14 @@ def check_label(lgr, label, generate_variants=False, merged_lgr=None, set_labels
             write_output("Variants:")
             summary, labels = lgr.compute_label_disposition_summary(label_cp)
             for (variant_cp, var_disp, _, _, _) in labels:
-                variant_u = ''.join([unichr(c) for c in variant_cp])
+                variant_u = cp_to_ulabel(variant_cp)
                 write_output("\tVariant %s [%s]" % (variant_u, format_cp(variant_cp)))
                 write_output("\t- Disposition: '%s'" % var_disp)
     else:
-        write_output("- Valid code points from label: %s" % u' '.join(u"{:04X}".format(cp) for cp in label_part))
-        write_output("- Invalid code points from label: %s" % u' '.join(u"{:04X}".format(cp) for cp in not_in_lgr))
+        write_output("- Valid code points from label: %s" % u' '.join(u"{:04X}".format(cp) for cp in label_parts))
+        if label_invalid_parts:
+            write_output("- Invalid code points from label: {}".format(' '.join("{:04X} ({})".format(cp, "not in repertoire" if rules is None else ','.join(rules))
+                                                                                for cp, rules in label_invalid_parts)))
 
 
 def main():
@@ -121,7 +123,7 @@ def main():
             logger.error('Error while creating the merged LGR')
             return
 
-        with io.open(args.labels, 'r', encoding='utf-8') as set_labels_input:
+        with io.open(args.set_labels, 'r', encoding='utf-8') as set_labels_input:
             set_labels = StringIO(set_labels_input.read())
 
         script_lgr = None
@@ -153,28 +155,27 @@ def main():
             logger.error("Please check compliance with RNG.")
             return
 
-    label_input = codecs.getreader('utf8')(sys.stdin)
-
     filtered_set_labels = []
     if len(args.lgr_xml) > 1:
         write_output("# The following labels from the set labels are invalid\n")
         for label, valid, error in read_labels(set_labels, script_lgr.unicode_database):
             if not valid:
-                write_output.write("{}: {}\n".format(label, error))
+                write_output("{}: {}\n".format(label, error))
             else:
                 label_cp = tuple([ord(c) for c in label])
-                if not lgr._test_preliminary_eligibility(label_cp)[0]:
-                    write_output("%s: Not LGR Set\n" % label)
+                if not script_lgr._test_preliminary_eligibility(label_cp)[0]:
+                    write_output("%s: Not in LGR %s\n" % label, script_lgr)
                 else:
                     filtered_set_labels.append(label)
         write_output("# End of filtered set labels\n\n")
 
-    for label in label_input.read().splitlines():
+    for label in get_stdin().read().splitlines():
         if len(args.lgr_xml) > 1:
             check_label(script_lgr, label, args.variants,
                         merged_lgr=merged_lgr, set_labels=filtered_set_labels)
         else:
             check_label(lgr, label, args.variants)
+
 
 if __name__ == '__main__':
     main()

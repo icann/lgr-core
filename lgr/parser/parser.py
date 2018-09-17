@@ -5,6 +5,7 @@ parser.py - Base class for LGR parser.
 
 import os
 
+
 class LGRParser(object):
     """
     This class is intended to define a base class to be inherited by actual parser classses.

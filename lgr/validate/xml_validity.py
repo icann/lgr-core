@@ -5,7 +5,7 @@ xml_validity.py - Check that the resulting LGR serialized to XML is valid.
 from __future__ import unicode_literals
 
 import logging
-from cStringIO import StringIO
+from io import BytesIO
 
 logger = logging.getLogger(__name__)
 
@@ -29,18 +29,24 @@ def check_xml_validity(lgr, options):
 
     if 'rng_filepath' not in options:
         logger.warning("rng_filepath not in 'options' arguments, skipping")
-        return True
+        return True, {}
 
-    xml = StringIO(serialize_lgr_xml(lgr))
+    xml = BytesIO(serialize_lgr_xml(lgr))
     parser = XMLParser(xml)
+
+    result = {
+        'description': "Testing XML validity using RNG"
+    }
 
     validation_result = parser.validate_document(options['rng_filepath'])
     if validation_result is not None:
         logger.warning('RNG validation failed: XML error is')
         logger.warning(validation_result)
+        result['validation_result'] = validation_result
     else:
         logger.info('RNG validation OK')
+    result['rng_result'] = validation_result is None
 
     logger.info("Testing XML validity done")
 
-    return validation_result is None
+    return validation_result is None, result

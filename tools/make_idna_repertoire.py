@@ -1,4 +1,4 @@
-#!/bin/env python2
+#!/bin/env python
 # -*- coding: utf-8 -*-
 """
 make_idna_repertoire.py - Parse IDNA2008 table to create a repertoire.
@@ -10,7 +10,6 @@ from lxml import etree
 import sys
 import argparse
 import logging
-import os
 
 IDNATABLES_URL = "http://www.iana.org/assignments/idna-tables-{version}/idna-tables-{version}.xml"
 IDNATABLES_NS = "http://www.iana.org/assignments"
@@ -41,7 +40,11 @@ def make_idna_repertoire(version):
 
     # To keep '{}' when string-formatting
     namespace = "{{{0}}}".format(IDNATABLES_NS)
-    record_xpath = '{0}registry[@id="idna-tables-properties"]/{0}record'.format(namespace)
+    registry_id = "idna-tables-properties"
+    if list(map(int, version.split('.'))) <= [6, 0, 0]:
+        registry_id = "idna-tables-{}-properties".format(version)
+    record_xpath = '{0}registry[@id="{1}"]/{0}record'.format(namespace,
+                                                             registry_id)
 
     for record in registry.findall(record_xpath):
         codepoint = record.find(CODEPOINT_TAG).text
@@ -58,7 +61,7 @@ def make_idna_repertoire(version):
             # Single codepoint
             lgr.add_cp(int(codepoint, 16))
 
-    lgr_root = serialize_lgr_xml(lgr)
+    lgr_root = serialize_lgr_xml(lgr, pretty_print=True, encoding='unicode', xml_declaration=False)
     print(lgr_root)
 
 
@@ -75,8 +78,6 @@ def main():
 
     make_idna_repertoire(args.unicode)
 
+
 if __name__ == '__main__':
-    # XXX: Add LGR module to PYTHONPATH
-    sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                 '..'))
     main()

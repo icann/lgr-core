@@ -144,7 +144,7 @@ class Action(object):
 
     def __eq__(self, other):
         return (self.disp == other.disp)\
-            and (self.match == other.match)\
+               and (self.match == other.match)\
                and (self.not_match == other.not_match)\
                and (self.any_variant == other.any_variant)\
                and (self.all_variants == other.all_variants)\

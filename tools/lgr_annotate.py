@@ -1,4 +1,4 @@
-#!/bin/env python2
+#!/bin/env python
 # -*- coding: utf-8 -*-
 """
 lgr_annotate.py - Annotate a set of labels with disposition.
@@ -11,12 +11,11 @@ import sys
 import argparse
 import logging
 import io
-from cStringIO import StringIO
 
 from munidata import UnicodeDataVersionManager
 
 from lgr.parser.xml_parser import XMLParser
-from lgr.tools.utils import merge_lgrs, read_labels
+from lgr.tools.utils import merge_lgrs
 from lgr.tools.annotate import annotate, lgr_set_annotate
 
 logger = logging.getLogger("lgr_annotate")
@@ -61,10 +60,10 @@ def main():
             logger.error('Error while creating the merged LGR')
             return
 
-        set_labels = StringIO()
+        set_labels = io.StringIO()
         if args.set_labels:
             with io.open(args.set_labels, 'r', encoding='utf-8') as set_labels_input:
-                set_labels = StringIO(set_labels_input.read())
+                set_labels = io.StringIO(set_labels_input.read())
 
         script_lgr = None
         for lgr_s in lgr_set:

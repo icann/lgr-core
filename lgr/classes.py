@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import logging
 
+from lgr import text_type
 from lgr.exceptions import (LGRFormatException, RuleError)
 from lgr.utils import format_cp_collapsed
 
@@ -35,9 +36,9 @@ def set_to_rvalue(cp_set, as_set):
         if len(cp_set) == 0:
             # Empty set, we have to return empty string
             # because '[]' is an invalid REGEX
-            return unicode('')
+            return ''
         else:
-            return unicode(cp_set)
+            return text_type(cp_set)
 
 
 class Class(object):
@@ -50,7 +51,8 @@ class Class(object):
                  from_tag=None,
                  unicode_property=None,
                  codepoints=None,
-                 by_ref=None):
+                 by_ref=None,
+                 implicit=False):
         """
         Create a class.
 
@@ -61,6 +63,8 @@ class Class(object):
         :param unicode_property: Define a Unicode property-based class.
         :param codepoints: Initial sequence of code points.
         :param by_ref: Name of the referenced class.
+        :param implicit: If True, then class is implicitly defined
+                         (construct from code points' tags).
         """
         self.name = name
         self.comment = comment
@@ -69,6 +73,7 @@ class Class(object):
         self.unicode_property = unicode_property
         self.codepoints = set(codepoints or [])
         self.by_ref = by_ref
+        self.implicit = implicit
 
         if by_ref is not None:
             if name is not None:
@@ -101,6 +106,21 @@ class Class(object):
         if isinstance(cp, int):
             cp = [cp]
         self.codepoints.update(cp)
+
+    def del_codepoint(self, cp):
+        """
+        Delete (a) codepoint(s) from the set of codepoints.
+
+        :param cp: Code point(s) to delete. An integer or a sequence of code points.
+        """
+        if self.by_ref is not None:
+            logger.error("Cannot delete code point from a 'by-ref' class")
+            raise LGRFormatException(LGRFormatException.LGRFormatReason.BY_REF_AND_OTHER)
+
+        if isinstance(cp, int):
+            cp = [cp]
+        for c in cp:
+            self.codepoints.discard(c)
 
     def get_pattern(self, rules_lookup, classes_lookup, unicode_database,
                     is_look_behind=False, as_set=False):
