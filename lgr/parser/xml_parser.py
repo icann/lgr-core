@@ -13,6 +13,7 @@ Note:
 import logging
 from lxml import etree
 
+from lgr import text_type
 from lgr.core import LGR
 from lgr.metadata import (Metadata,
                           ReferenceManager,
@@ -217,7 +218,9 @@ class XMLParser(LGRParser):
                 metadata.scopes.append(
                     Scope(child.text, child.get('type', None)))
             elif tag == DESCRIPTION_TAG:
-                metadata.description = Description(child.text,
+                # Seems to be an issue with CDATA/iterparse: https://bugs.launchpad.net/lxml/+bug/1788449
+                # For now, manually replace CRLF with LF
+                metadata.description = Description(child.text.replace('\r\n', '\n'),
                                                    child.get('type',
                                                              None))
             elif tag == REFERENCES_TAG:
@@ -348,17 +351,17 @@ class XMLParser(LGRParser):
                 cls = self._parse_class(child)
                 self._lgr.add_class(cls, force=self.force_mode)
                 child = drop_ns(child)
-                self._lgr.classes_xml.append(etree.tostring(child))
+                self._lgr.classes_xml.append(etree.tostring(child, encoding=text_type))
             elif child.tag == RULE_TAG:
                 rule = self._parse_rule(child)
                 self._lgr.add_rule(rule, force=self.force_mode)
                 child = drop_ns(child)
-                self._lgr.rules_xml.append(etree.tostring(child))
+                self._lgr.rules_xml.append(etree.tostring(child, encoding=text_type))
             elif child.tag == ACTION_TAG:
                 action = self._parse_action(child)
                 self._lgr.add_action(action, force=self.force_mode)
                 child = drop_ns(child)
-                self._lgr.actions_xml.append(etree.tostring(child))
+                self._lgr.actions_xml.append(etree.tostring(child, encoding=text_type))
             else:
                 logger.warning("Unhandled '%s' element in <rules> section",
                                child.tag)

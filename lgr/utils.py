@@ -6,7 +6,30 @@ from __future__ import unicode_literals
 
 import logging
 
+from lgr import text_type, wide_unichr
+
 logger = logging.getLogger(__name__)
+
+
+def cp_to_ulabel(cp_or_sequence):
+    """
+    Convert a code point or code point sequence to the corresponding U-label.
+
+    :param cp_or_sequence: Code point/Code point sequence to convert to label.
+    :returns: Label composed of the `cp_or_sequence`.
+
+    >>> cp_to_ulabel(0x0061) == text_type('a')
+    True
+    >>> cp_to_ulabel([0x0061, 0x0062, 0x0063]) == text_type('abc')
+    True
+    >>> cp_to_ulabel(None) == text_type('None')
+    True
+    """
+    if cp_or_sequence is None:
+        return 'None'
+    if isinstance(cp_or_sequence, int):
+        cp_or_sequence = [cp_or_sequence]
+    return ''.join((wide_unichr(c) for c in cp_or_sequence))
 
 
 def cp_to_str(cp):
@@ -23,14 +46,14 @@ def format_cp(cp_or_sequence):
     :param cp_or_sequence: Code point/Code point sequence to format.
     :returns: Formatted code point or code point sequence as a string.
 
-    >>> format_cp(1)
-    u'U+0001'
-    >>> format_cp([1])
-    u'U+0001'
-    >>> format_cp([1,2,3])
-    u'U+0001 U+0002 U+0003'
-    >>> format_cp(None)
-    u'None'
+    >>> format_cp(1) == text_type('U+0001')
+    True
+    >>> format_cp([1]) == text_type('U+0001')
+    True
+    >>> format_cp([1,2,3]) == text_type('U+0001 U+0002 U+0003')
+    True
+    >>> format_cp(None) == text_type('None')
+    True
     """
     if cp_or_sequence is None:
         return 'None'
@@ -46,18 +69,18 @@ def format_cp_collapsed(cp_or_sequence):
     :param cp_or_sequence: Code point/Code point sequence to format.
     :returns: Formatted code point or code point sequence as a string.
 
-    >>> format_cp_collapsed(1)
-    u'U+0001'
-    >>> format_cp_collapsed([1])
-    u'U+0001'
-    >>> format_cp_collapsed([1,3])
-    u'U+0001 U+0003'
-    >>> format_cp_collapsed([1,2,3])
-    u'U+0001-U+0003'
-    >>> format_cp(None)
-    u'None'
-    >>> format_cp_collapsed([1,2,3,5,6,10,12,13,14,15])
-    u'U+0001-U+0003 U+0005 U+0006 U+000A U+000C-U+000F'
+    >>> format_cp_collapsed(1) == text_type('U+0001')
+    True
+    >>> format_cp_collapsed([1]) == text_type('U+0001')
+    True
+    >>> format_cp_collapsed([1,3]) == text_type('U+0001 U+0003')
+    True
+    >>> format_cp_collapsed([1,2,3]) == text_type('U+0001-U+0003')
+    True
+    >>> format_cp(None) == text_type('None')
+    True
+    >>> format_cp_collapsed([1,2,3,5,6,10,12,13,14,15]) == text_type('U+0001-U+0003 U+0005 U+0006 U+000A U+000C-U+000F')
+    True
     """
     if cp_or_sequence is None:
         return 'None'
@@ -169,6 +192,7 @@ def let_user_choose(first, second, separator='|'):
     if first == second:
         return first
     return '{0!s}{1!s}{2!s}'.format(first, separator, second)
+
 
 if __name__ == "__main__":
     import doctest

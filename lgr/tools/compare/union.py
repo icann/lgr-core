@@ -7,10 +7,10 @@ from __future__ import unicode_literals
 import copy
 import logging
 from datetime import date
+from collections import OrderedDict
 
-from lgr.tools.compare.utils import VariantProperties, compare_objects
+from lgr.tools.compare.utils import compare_objects
 
-from lgr.char import CharBase
 from lgr.core import LGR
 from lgr.metadata import Metadata, Version, Description, ReferenceManager
 from lgr.utils import let_user_choose
@@ -29,6 +29,9 @@ def union_version(first, second):
     if first is None:
         return second
     if second is None:
+        return first
+
+    if first == second:
         return first
 
     value = let_user_choose(first.value, second.value)
@@ -50,17 +53,25 @@ def union_description(first, second):
     if second is None:
         return first
 
-    description_type = 'text/enriched'
-    value = """
-Original MIME-type for first description: '{0}'.
-{1}
+    if first == second:
+        return first
+
+    all_html = all(d.description_type == 'text/html' for d in (first, second))
+    if all_html:
+        description_type = 'text/html'
+        value = """{first_value}\n{second_value}""".format(first_value=first.value, second_value=second.value)
+    else:
+        description_type = 'text/enriched'
+        value = """
+Original MIME-type for first description: '{first_type}':
+{first_value}
 
 ----
 
-Original MIME-type for second description: '{2}'.
-{3}
-""".format(first.description_type, first.value,
-           second.description_type, second.value)
+Original MIME-type for second description: '{second_type}'.
+{second_value}
+""".format(first_type=first.description_type, first_value=first.value,
+           second_type=second.description_type, second_value=second.value)
 
     return Description(value, description_type)
 
@@ -153,11 +164,18 @@ def union_actions(lgr1, lgr2):
 
     # Union of actions:
     # Concat both action lists
+    # Need OrderedDict instead of sets to keep order
 
-    actions = list(set.union(set(lgr1.actions), set(lgr2.actions)))
-    actions_xml = lgr1.actions_xml + lgr2.actions_xml
+    actions = OrderedDict()
+    actions_xml = OrderedDict()
 
-    return actions, actions_xml
+    actions.update(OrderedDict.fromkeys(lgr1.actions))
+    actions.update(OrderedDict.fromkeys(lgr2.actions))
+
+    actions_xml.update(OrderedDict.fromkeys(lgr1.actions_xml))
+    actions_xml.update(OrderedDict.fromkeys(lgr2.actions_xml))
+
+    return list(actions.keys()), list(actions_xml.keys())
 
 
 def union_rules(lgr1, lgr2):
@@ -185,6 +203,11 @@ def union_rules(lgr1, lgr2):
     for rule_name in rules_lgr1 & rules_lgr2:
         rule_1 = lgr1.rules_xml[lgr1.rules.index(rule_name)]
         rule_2 = lgr2.rules_xml[lgr2.rules.index(rule_name)]
+
+        if rule_1 == rule_2:
+            rules_xml.append(rule_1)
+            rules.append(rule_name)
+            continue
 
         rule_1 = rule_1.replace(rule_name, rule_name + '_1')
         rule_2 = rule_2.replace(rule_name, rule_name + '_2')
@@ -231,6 +254,11 @@ def union_classes(lgr1, lgr2):
     for class_name in classes_lgr1 & classes_lgr2:
         class_1 = lgr1.classes_xml[lgr1.classes.index(class_name)]
         class_2 = lgr2.classes_xml[lgr2.classes.index(class_name)]
+
+        if class_1 == class_2:
+            classes_xml.append(class_1)
+            classes.append(class_name)
+            continue
 
         class_1 = class_1.replace(class_name, class_name + '_1')
         class_2 = class_2.replace(class_name, class_name + '_2')
@@ -312,6 +340,11 @@ def union_lgrs(lgr1, lgr2):
                    #ref=char.references,
                    tag=char.tags,
                    when=char.when, not_when=char.not_when)
+
+        for v in char.get_variants():
+            lgr.add_variant(char.cp, v.cp, variant_type=v.type,
+                            when=v.when, not_when=v.not_when,
+                            comment=v.comment)
 
     (actions, actions_xml) = union_actions(lgr1, lgr2)
     lgr.actions = copy.deepcopy(actions)

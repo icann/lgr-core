@@ -2,6 +2,7 @@
 """
 lgr_stats.py - Compute some stats for an LGR.
 """
+from __future__ import unicode_literals
 
 import logging
 
@@ -17,21 +18,21 @@ def generate_stats(lgr):
     Given an LGR, generate the stats.
 
     :param lgr: The LGR to use.
-    :return: Dictionnary containing various stats.
+    :return: Dictionary containing various stats.
     """
     stats = {
         'codepoint_number': 0,
 
         'range_number': 0,
-        'largest_range': '',
+        'largest_range': None,
         'largest_range_len': 0,
 
         'sequence_number': 0,
-        'largest_sequence': '',
+        'largest_sequence': None,
         'largest_sequence_len': 0,
 
         'codepoints_with_variants': 0,
-        'variant_number': 0,
+        'mapping_number': 0,
         'variants_by_type': {},
         'largest_variant_set': 0,
 
@@ -52,14 +53,14 @@ def generate_stats(lgr):
             stats['range_number'] += 1
             if range_len > stats['largest_range_len']:
                 stats['largest_range_len'] = range_len
-                stats['largest_range'] = format_cp(char.cp)
+                stats['largest_range'] = char
         elif isinstance(char, CharSequence):
             stats['codepoint_number'] += 1
             stats['sequence_number'] += 1
             sequence_len = len(char.cp)
             if sequence_len > stats['largest_sequence_len']:
                 stats['largest_sequence_len'] = sequence_len
-                stats['largest_sequence'] = format_cp(char.cp)
+                stats['largest_sequence'] = char
         elif isinstance(char, Char):
             stats['codepoint_number'] += 1
 
@@ -70,11 +71,11 @@ def generate_stats(lgr):
                 stats['codepoints_by_tag'][t] = range_len
 
         variants = list(char.get_variants())
-        variants_len = len(variants)
-        stats['variant_number'] += variants_len
-        # Need to add 1 to number of variants to count original label.
-        stats['largest_variant_set'] = max(stats['largest_variant_set'], variants_len + 1)
-        if variants_len > 0:
+        # Original char might not be in the variants (no identity mapping)
+        variant_set_len = len(frozenset(v.cp for v in variants + ([char] if len(variants) > 0 else [])))
+        stats['mapping_number'] += len(frozenset(v.cp for v in variants))
+        stats['largest_variant_set'] = max(stats['largest_variant_set'], variant_set_len)
+        if variant_set_len > 0:
             stats['codepoints_with_variants'] += 1
 
         for var in variants:
@@ -84,8 +85,7 @@ def generate_stats(lgr):
                 stats['variants_by_type'][var.type] = 1
 
     if stats['codepoints_with_variants'] != 0:
-        stats['average_variants'] = \
-            stats['variant_number'] / stats['codepoints_with_variants']
+        stats['average_variants'] = round(stats['mapping_number'] / stats['codepoints_with_variants'], 1)
 
     return stats
 
@@ -98,9 +98,14 @@ def compute_stats(lgr, options):
     :param options: Not used.
     """
     stats = generate_stats(lgr)
+    result = {
+        'description': 'Generate stats',
+        'stats': stats
+    }
 
-    # General summary
-    output = """
+    if logger.isEnabledFor(logging.DEBUG):
+        # General summary
+        output = """
 General summary:
 \tNumber of code points: {codepoint_number}.
 
@@ -111,31 +116,31 @@ General summary:
 \tLargest sequence: {largest_sequence} (length: {largest_sequence_len}).
 """.format(**stats)
 
-    # Variants
-    output += """
+        # Variants
+        output += """
 Variants:
-\tTotal number of variants: {variant_number}.
+\tTotal number of variant mappings: {mapping_number}.
 \tAverage number of variants per code point: {average_variants}.
 \tLargest variant set: {largest_variant_set}.
 
 """.format(**stats)
 
-    for (variant_type, number) in stats['variants_by_type'].iteritems():
-        output += "\tNumber of variants for type '{0}': {1}.\n"\
-                .format(variant_type, number)
+        for (variant_type, number) in stats['variants_by_type'].items():
+            output += "\tNumber of variants for type '{0}': {1}.\n"\
+                    .format(variant_type, number)
 
-    # Tags
-    output += """
+        # Tags
+        output += """
 Tags:
 """
-    for (tag_name, number) in stats['codepoints_by_tag'].iteritems():
-        output += "\tNumber of code points for tag '{0}': {1}.\n"\
-                .format(tag_name, number)
+        for (tag_name, number) in stats['codepoints_by_tag'].items():
+            output += "\tNumber of code points for tag '{0}': {1}.\n"\
+                    .format(tag_name, number)
 
-    # Rules summary
-    output += "\nRules:\n"
-    output += "\tNumber of rules defined: {0}.\n".format(stats['rule_number'])
+        # Rules summary
+        output += "\nRules:\n"
+        output += "\tNumber of rules defined: {0}.\n".format(stats['rule_number'])
 
-    logger.info(output)
+        logger.debug(output)
 
-    return True
+    return True, result

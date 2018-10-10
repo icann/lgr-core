@@ -6,9 +6,9 @@ from __future__ import unicode_literals
 
 import logging
 
-from lgr.utils import format_cp
+from lgr.utils import format_cp, cp_to_ulabel
 from lgr.tools.utils import read_labels
-from lgr.exceptions import LGRException
+from lgr.exceptions import LGRException, MissingLanguage
 
 logger = logging.getLogger(__name__)
 
@@ -28,12 +28,12 @@ def _generate_variants(lgr, label):
     unidb = lgr.unicode_database
     lgr_scripts = frozenset(lgr.metadata.get_scripts())
     if not lgr_scripts:
-        logger.error("Cannot generate cross-scripts variants "
-                     "for LGR without languages")
-        raise Exception
+        logger.error("Cannot generate cross-scripts variants for LGR without languages")
+        raise MissingLanguage('Cannot generate cross-scripts variants for LGR without languages '
+                              'or with invalid language tags')
 
     try:
-        for variant, variant_disp, _, _, _ in lgr.compute_label_disposition(label):
+        for variant, variant_disp, _, _, _, _ in lgr.compute_label_disposition(label, include_invalid=True):
             script_mapping = {}
             for var_cp in variant:
                 char = lgr.get_char(var_cp)
@@ -80,10 +80,9 @@ def cross_script_variants(lgr, labels_input):
                                                                                     label)
                     label_displayed = True
                     found = True
-                yield "\t- Cross-variant {} ({}), disposition {}:\n".format(format_cp(variant),
-                                                                            ''.join([unichr(c) for c in variant]),
+                yield "\t- Cross-variant {} ({}), disposition {}:\n".format(format_cp(variant), cp_to_ulabel(variant),
                                                                             disp)
-                yield '\t\t+ ' + '\t\t+ '.join(["{} ({}): {}\n".format(format_cp(c), unichr(c), s) for c, s in script_mapping.items()])
+                yield '\t\t+ ' + '\t\t+ '.join(["{} ({}): {}\n".format(format_cp(c), cp_to_ulabel(c), s) for c, s in script_mapping.items()])
 
     if not found:
         yield 'No cross-script variants for input!'

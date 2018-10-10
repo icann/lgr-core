@@ -109,7 +109,9 @@ class CharInvalidContextRule(CharLGRException):
     """
     Raised when adding a char with invalid context rule(s).
     """
-    pass
+    def __init__(self, cp, rule=None):
+        super(CharInvalidContextRule, self).__init__(cp)
+        self.rule = rule
 
 
 class CharInvalidIdnaProperty(CharLGRException):
@@ -221,6 +223,15 @@ class ReferenceAlreadyExists(LGRException):
         self.ref_id = ref_id
 
 
+class ReferenceInvalidId(LGRException):
+    """
+    Raised when trying to create a reference invalid id.
+    """
+    def __init__(self, ref_id):
+        super(ReferenceInvalidId, self).__init__()
+        self.ref_id = ref_id
+
+
 class InvalidSymmetry(LGRException):
     """
     Raised when symmetry is not ensured.
@@ -239,6 +250,17 @@ class RuleError(LGRException):
 
     def __unicode__(self):
         return '<rule %s>: %s' % (self.rule_name, self.message)
+
+    __str__ = __unicode__
+
+
+class MissingLanguage(LGRException):
+    """
+    Raised when the LGR has no language while it is expected
+    """
+    def __init__(self, message):
+        super(MissingLanguage, self).__init__(message)
+        self.message = message
 
 
 class LGRInvalidLabelException(LGRException):

@@ -18,7 +18,7 @@ NSMAP = {None: LGR_NS}
 
 def serialize_lgr(lgr):
     """
-    Serialize an LGR structure to XML.
+    Serialize an LGR structure to LXML structure.
 
     :param lgr: LGR structure.
     :returns: XML root element.
@@ -42,12 +42,13 @@ def serialize_lgr_xml(lgr,
                       encoding='utf-8',
                       xml_declaration=True):
     """
+    Serialize the LGR into XML format.
 
     :param lgr: LGR structure
     :param pretty_print: If True, the output is prettyfied.
     :param encoding: Give the encoding of the output string.
     :param xml_declaration: If True, add the XML declaration.
-    :return: XML string
+    :return: XML string or bytes depending on encoding.
     """
     root = serialize_lgr(lgr)
     return etree.tostring(root,

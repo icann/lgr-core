@@ -13,7 +13,8 @@ from collections import OrderedDict
 
 from lgr.exceptions import (LGRFormatException,
                             ReferenceAlreadyExists,
-                            ReferenceNotDefined)
+                            ReferenceNotDefined,
+                            ReferenceInvalidId)
 from lgr.memoize import MethodAttributeMemoizer
 from lgr.utils import script_iso15924_to_unicode
 
@@ -38,14 +39,14 @@ def _validate_date(date, force):
     >>> _validate_date('2015-13-26', False) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
         ...
-    LGRFormatException
+    LGRFormatException:
     >>> _validate_date('2015', False) # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
         ...
-    LGRFormatException
+    LGRFormatException:
     """
 
-    # Date shoud be date-fullyear "-" date-month "-" date-mday
+    # Date should be date-fullyear "-" date-month "-" date-mday
     date_elements = date.split('-')
     if len(date_elements) == 3:
         try:
@@ -87,6 +88,12 @@ class Version(object):
     def __unicode__(self):
         return self.value
 
+    __str__ = __unicode__
+
+    def __eq__(self, other):
+        return (self.value == other.value) \
+               and (self.comment == other.comment)
+
 
 class Scope(object):
     """
@@ -101,6 +108,8 @@ class Scope(object):
 
     def __unicode__(self):
         return '{}: {}'.format(self.scope_type, self.value)
+
+    __str__ = __unicode__
 
     def __eq__(self, other):
         return (self.value == other.value) \
@@ -129,6 +138,10 @@ class Description(object):
             logger.warning("Description type '%s' is not a valid MIME type",
                            description_type)
         self.description_type = description_type
+
+    def __eq__(self, other):
+        return (self.value == other.value) \
+               and (self.description_type == other.description_type)
 
 
 class Metadata(object):
@@ -216,6 +229,7 @@ class Metadata(object):
         """
         # check all languages
         found_error = False
+        languages = list(languages)  # languages is iterator, so for-loop will exhaust it
         for language in languages:
             try:
                 if not rfc5646.check(language):
@@ -231,7 +245,7 @@ class Metadata(object):
             raise LGRFormatException(LGRFormatException.
                                      LGRFormatReason.INVALID_LANGUAGE_TAG)
         else:
-            self.languages = list(languages)
+            self.languages = languages
 
     def set_date(self, date, force=False):
         """
@@ -326,6 +340,8 @@ class ReferenceManager(OrderedDict):
     so if no ref_id is given, generate one int-based id, converted to string.
     """
 
+    REFERENCE_REGEX = r'^[\-_.:0-9A-Z]*$'
+
     def __init__(self, *args, **kwargs):
         super(ReferenceManager, self).__init__(*args, **kwargs)
         # Keep track of the next id to generate
@@ -363,7 +379,17 @@ class ReferenceManager(OrderedDict):
         >>> mgr.add_reference("Test Existing", ref_id=0) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         ...
-        ReferenceAlreadyExists
+        ReferenceAlreadyExists:
+        >>> mgr.add_reference("Test 2", ref_id='ABC-123') == 'ABC-123'
+        True
+        >>> mgr.add_reference("Test Existing Str", ref_id='ABC-123') # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+        ...
+        ReferenceAlreadyExists:
+        >>> mgr.add_reference("Test Invalid Id", ref_id='aBC') # doctest: +IGNORE_EXCEPTION_DETAIL
+        Traceback (most recent call last):
+        ...
+        ReferenceInvalidId:
         """
         # Construct reference object (simple dict)
         reference = {
@@ -377,6 +403,9 @@ class ReferenceManager(OrderedDict):
             if ref_id in self:
                 logger.error("Reference '%s' already exists", ref_id)
                 raise ReferenceAlreadyExists(ref_id)
+            if not re.match(self.REFERENCE_REGEX, str(ref_id)):
+                logger.error("Invalid reference id '%s'", ref_id)
+                raise ReferenceInvalidId(ref_id)
         else:
             # Compute next id
             next_id = self.next_id

@@ -5,9 +5,12 @@ utils - List of utility functions for tools.
 from __future__ import unicode_literals
 
 import logging
+import sys
+import codecs
 
+from lgr import text_type
+from lgr.utils import cp_to_ulabel
 from lgr.parser.xml_parser import XMLParser
-
 from lgr.tools.merge_set import merge_lgr_set
 
 logger = logging.getLogger(__name__)
@@ -17,14 +20,13 @@ def read_labels(input, unidb, do_raise=False, keep_commented=False):
     """
     Read a label file and format lines to get a list of correct labels
 
-    :param input: The name of the file containing the labels, as an iterator of Unicode strings.
+    :param input: Input label list as an iterator of Unicode strings.
     :param unidb: The UnicodeDatabase
     :param do_raise: Whether the label parsing exceptions are raised or not
     :param keep_commented: Whether commented labels are returned (still commented) or not
     :return: [(label, valid, error)]
     """
-    # Compute index label
-    labels = map(lambda x: x.strip(), input)
+    labels = [l.strip() for l in input]
 
     # remove comments
     for label in labels:
@@ -47,7 +49,7 @@ def read_labels(input, unidb, do_raise=False, keep_commented=False):
             if do_raise:
                 raise
             valid = False
-            error = unicode(ex)
+            error = text_type(ex)
         yield label, valid, error
 
 
@@ -85,11 +87,11 @@ def parse_single_cp_input(s):
     Traceback (most recent call last):
     ...
     ValueError: code point value must be in the range [0, U+10FFFF]
-    >>> parse_single_cp_input('U+')  # short
+    >>> parse_single_cp_input('U+')  # short # doctest: +IGNORE_EXCEPTION_DETAIL, +ELLIPSIS
     Traceback (most recent call last):
     ...
     ValueError: invalid literal for int() with base 16: ''
-    >>> parse_single_cp_input('0061 0062')  # too many values
+    >>> parse_single_cp_input('0061 0062')  # too many values # doctest: +IGNORE_EXCEPTION_DETAIL, +ELLIPSIS
     Traceback (most recent call last):
     ...
     ValueError: invalid literal for int() with base 16: '0061 0062'
@@ -139,7 +141,7 @@ def parse_codepoint_input(s):
     return [parse_single_cp_input(x) for x in s.split()]
 
 
-def parse_label_input(s, idna_decoder=lambda x: x.decode('idna'), as_cp=True):
+def parse_label_input(s, idna_decoder=lambda x: x.encode('utf-8').decode('idna'), as_cp=True):
     """
     Parses a label from user input, applying a bit of auto-detection smarts
 
@@ -175,19 +177,13 @@ def parse_label_input(s, idna_decoder=lambda x: x.decode('idna'), as_cp=True):
         if as_cp:
             return label_cp
         else:
-            return ''.join([unichr(c) for c in label_cp])
+            return cp_to_ulabel(label_cp)
     else:
         # treat as unicode
         if as_cp:
             return [ord(c) for c in s]
         else:
             return s
-
-
-def write_output(s, test=True):
-    if test:
-        print(s.encode('utf-8'))
-
 
 def merge_lgrs(input_lgrs, name=None, rng=None, unidb=None):
     """
@@ -227,3 +223,21 @@ def merge_lgrs(input_lgrs, name=None, rng=None, unidb=None):
         merged_lgr.unicode_database = unidb
 
     return merged_lgr, lgr_set
+
+# Helpers for CLI tools
+
+
+def write_output(s, test=True):
+    if test:
+        if sys.version_info.major > 2:
+            print(s)
+        else:
+            print(s.encode('utf-8'))
+
+
+def get_stdin():
+    if sys.version_info.major > 2:
+        # Python3 automagically convert to unicode
+        return sys.stdin
+    else:
+        return codecs.getreader('utf8')(sys.stdin)

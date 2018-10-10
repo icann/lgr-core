@@ -1,4 +1,4 @@
-#!/bin/env python2
+#!/bin/env python
 # -*- coding: utf-8 -*-
 """
 xml_dump.py - Tool to parse a XML file and dump LGR on stdout
@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import sys
 import argparse
 import logging
-import os
 import io
 
 
@@ -42,16 +41,13 @@ def main():
         for char in lgr.repertoire:
             print(char)
 
-    xml = serialize_lgr_xml(lgr,
-                            pretty_print=True)
     if args.output is not None:
+        xml = serialize_lgr_xml(lgr, pretty_print=True)
         with io.open(args.output, mode='wb') as output:
             output.write(xml)
     else:
-        print(xml)
+        print(serialize_lgr_xml(lgr, pretty_print=True, encoding='unicode', xml_declaration=False))
+
 
 if __name__ == '__main__':
-    # XXX: Add LGR module to PYTHONPATH
-    sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                 '..'))
     main()

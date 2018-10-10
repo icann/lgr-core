@@ -9,6 +9,7 @@ import types
 import math
 
 from lgr.char import Char, RangeChar
+from lgr.classes import TAG_CLASSNAME_PREFIX
 from lgr.core import LGR, MAX_NUMBER_GENERATED_VARIANTS, PROTOCOL_LABEL_MAX_LENGTH
 from lgr.exceptions import (CharAlreadyExists,
                             VariantAlreadyExists,
@@ -321,6 +322,16 @@ class TestLGRCore(unittest.TestCase):
         self.assertEqual(the_exception.reason,
                          LGRFormatException.LGRFormatReason.DUPLICATE_TAG)
 
+    def test_del_tag(self):
+        self.lgr.add_cp([0x0061], tag=['1'])
+        self.lgr.add_cp([0x0062], tag=['1', '2'])
+
+        self.lgr.del_tag('1')
+
+        self.assertNotIn(TAG_CLASSNAME_PREFIX + '1', self.lgr.classes_lookup)
+        self.assertEquals(self.lgr.get_char([0x0061]).tags, [])
+        self.assertEquals(self.lgr.get_char([0x0062]).tags, ['2'])
+
     def test_list_types(self):
         self.lgr.add_cp([0x0061])
         self.lgr.add_variant([0x0061], [0x0030], variant_type='BLOCK')
@@ -454,11 +465,11 @@ class TestLGRCore(unittest.TestCase):
             [0x0062, 0x0063, 0x0068]
         )
         invalid_labels = (
-            ([0x0060], [], [0x0060]),
-            ([0x0069], [], [0x0069]),
-            ([0x0062], [], [0x0062]),
-            ([0x0063], [], [0x0063]),
-            ([0x0061, 0x0062], [0x0061], [0x0062])
+            ([0x0060], [], [(0x0060, None)]),
+            ([0x0069], [], [(0x0069, None)]),
+            ([0x0062], [], [(0x0062, None)]),
+            ([0x0063], [], [(0x0063, None)]),
+            ([0x0061, 0x0062], [0x0061], [(0x0062, None)])
         )
 
         for label in valid_labels:
@@ -474,7 +485,7 @@ class TestLGRCore(unittest.TestCase):
         self.lgr.add_cp([0x0064])
 
         self.assertEqual(self.lgr._test_preliminary_eligibility([0x0062]),
-                         (False, [], [0x0062]))
+                         (False, [], [(0x0062, None)]))
         self.assertEqual(self.lgr._test_preliminary_eligibility([0x0061, 0x0062, 0x0063, 0x0064]),
                          (True, [0x0061, 0x0062, 0x0063, 0x0064], []))
 
@@ -493,21 +504,26 @@ class TestLGRCore(unittest.TestCase):
         self.assertEqual(self.lgr._test_label_disposition([0x0061, 0x0062]),
                          ('invalid', 0))
 
-    def test_label_length(self):
+    def test_estimate_variant_numbers(self):
         self.lgr.add_cp([0x0061])
+
+        self.assertEqual(1, self.lgr.estimate_variant_number([0x0061]))
+
         self.lgr.add_variant([0x0061], [0x0061], 'disp')
         self.lgr.add_cp([0x0062])
         self.lgr.add_variant([0x0062], [0x0062], 'disp')
 
-        self.assertEqual(PROTOCOL_LABEL_MAX_LENGTH,
-                         self.lgr.max_label_length())
+        self.assertEqual(2, self.lgr.estimate_variant_number([0x0061]))
+        self.assertEqual(2, self.lgr.estimate_variant_number([0x0062]))
+        self.assertEqual(2 * 2, self.lgr.estimate_variant_number([0x0061, 0x0062]))
 
-        for i in range(80):
-            self.lgr.add_variant([0x0062], [0x074D + i], 'disp')
+        self.lgr.add_cp([0x0063])
+        for i in range(10):
+            self.lgr.add_variant([0x0063], [0x074D + i], 'disp')
 
-        # 41: mean number of variants per character
-        self.assertEqual(int(math.log(MAX_NUMBER_GENERATED_VARIANTS, 41)),
-                         self.lgr.max_label_length())
+        self.assertEqual(11, self.lgr.estimate_variant_number([0x0063]))
+        self.assertEqual(2 * 2 * 11, self.lgr.estimate_variant_number([0x0061, 0x0062, 0x0063]))
+
 
 if __name__ == '__main__':
     import logging

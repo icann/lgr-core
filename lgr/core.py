@@ -7,8 +7,8 @@ from __future__ import unicode_literals
 import logging
 import collections
 import math
-from cStringIO import StringIO
 from collections import OrderedDict
+from io import StringIO
 
 from lgr.metadata import ReferenceManager, Metadata
 from lgr.char import Repertoire, CharSequence
@@ -20,6 +20,7 @@ from lgr.exceptions import (LGRApiInvalidParameter,
                             NotInRepertoire,
                             NotInLGR,
                             CharInvalidIdnaProperty,
+                            CharNotInScript,
                             RangeInvalidContextRule,
                             VariantInvalidContextRule,
                             ReferenceNotDefined,
@@ -28,6 +29,7 @@ from lgr.exceptions import (LGRApiInvalidParameter,
                             LGRApiException,
                             LGRException)
 from lgr.validate import validate_lgr
+from lgr.populate import populate_lgr
 from lgr.utils import (collapse_codepoints,
                        format_cp)
 
@@ -130,10 +132,6 @@ class LGR(object):
         else:
             self.reference_manager = reference_manager
 
-        # Store these to get mean number of variants per character
-        self._char_number = 0
-        self._variant_number = 0
-
     def __getstate__(self):
         """
         Called when pickling an LGR instance.
@@ -219,6 +217,18 @@ class LGR(object):
         self.repertoire.del_reference(ref_id)
         self.reference_manager.del_reference(ref_id)
 
+    def del_tag(self, tag_id):
+        """
+        Delete a tag from the LGR.
+        Iterate through the list of defined code points to remove the tag.
+        Note: WLE rules are not touched by this function, so any class using a 'from-tag=`tag_id`'
+        attribute will still be present after calling this method.
+
+        :param tag_id: The tag name.
+        """
+        self.repertoire.del_tag(tag_id)
+        self.classes_lookup.pop(TAG_CLASSNAME_PREFIX + tag_id, None)
+
     def add_cp(self, cp_or_sequence,
                comment=None, ref=None,
                tag=None,
@@ -271,7 +281,7 @@ class LGR(object):
         """
         logger.debug("Add cp '%s' to LGR '%s'", cp_or_sequence, self)
 
-        cp_or_sequence = self._check_convert_cp(cp_or_sequence, force)
+        cp_or_sequence = self._check_convert_cp(cp_or_sequence)
 
         if (not force) and (when is not None) and (not_when is not None):
             logger.error("Cannot add code point '%s' with both 'when' "
@@ -350,8 +360,6 @@ class LGR(object):
         # Add code point to tag classes
         self._add_cp_to_tag_classes(cp_or_sequence, tags)
 
-        self._char_number += 1
-
     def check_cp(self, cp_or_sequence):
         """
         Check if a code point is present in LGR.
@@ -368,8 +376,7 @@ class LGR(object):
         >>> lgr.check_cp([0x0061, 0x0062])
         False
         """
-        cp_or_sequence = self._check_convert_cp(cp_or_sequence,
-                                                force=True)
+        cp_or_sequence = self._check_convert_cp(cp_or_sequence)
         return cp_or_sequence in self.repertoire
 
     def del_cp(self, cp_or_sequence):
@@ -393,12 +400,11 @@ class LGR(object):
         """
         logger.debug("Delete cp '%s' from LGR '%s'", cp_or_sequence, self)
 
-        cp_or_sequence = self._check_convert_cp(cp_or_sequence,
-                                                force=True)
+        cp_or_sequence = self._check_convert_cp(cp_or_sequence)
 
+        char = self.repertoire.get_char(cp_or_sequence)
         self.repertoire.del_char(cp_or_sequence)
-
-        self._char_number -= 1
+        self._del_cp_from_tag_classes(cp_or_sequence, char.tags)
 
     def add_range(self, first_cp, last_cp,
                   comment=None, ref=None,
@@ -657,15 +663,13 @@ class LGR(object):
         >>> lgr.add_variant([0x0062], [0x0062]) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         ...
-        NotInLGR
+        NotInLGR:
         """
         logger.debug("Add variant '%s' for cp '%s' to LGR '%s'",
                      variant_cp, cp_or_sequence, self)
 
-        cp_or_sequence = self._check_convert_cp(cp_or_sequence,
-                                                force)
-        var_cp_or_sequence = self._check_convert_cp(variant_cp,
-                                                    force)
+        cp_or_sequence = self._check_convert_cp(cp_or_sequence)
+        var_cp_or_sequence = self._check_convert_cp(variant_cp)
 
         if (not force) and (when is not None) and (not_when is not None):
             logger.error("Cannot add variant '%s' to code point '%s' "
@@ -727,8 +731,6 @@ class LGR(object):
         # Variant insertion went well, can store its type
         self.types.add(variant_type)
 
-        self._variant_number += 1
-
     def del_variant(self, cp_or_sequence, variant_cp,
                     when=None, not_when=None):
         """
@@ -755,15 +757,12 @@ class LGR(object):
         >>> lgr.del_variant([0x0062], [0x0031]) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         ...
-        NotInLGR
+        NotInLGR:
         """
         logger.debug("Delete variant '%s' for cp '%s' from LGR '%s'",
                      variant_cp, cp_or_sequence, self)
 
-        cp_or_sequence = self._check_convert_cp(cp_or_sequence,
-                                                force=True)
-
-        self._variant_number -= 1
+        cp_or_sequence = self._check_convert_cp(cp_or_sequence)
 
         return self.repertoire.del_variant(cp_or_sequence, variant_cp,
                                            when, not_when)
@@ -792,9 +791,37 @@ class LGR(object):
         logger.debug("Get variant for cp '%s' from LGR '%s'",
                      cp_or_sequence, self)
 
-        cp_or_sequence = self._check_convert_cp(cp_or_sequence,
-                                                force=True)
+        cp_or_sequence = self._check_convert_cp(cp_or_sequence)
         return self.repertoire.get_variants(cp_or_sequence)
+
+    def get_variant(self, cp_or_sequence, var_cp):
+        """
+        Retrieve a specific variant of a given code point.
+
+        :param cp_or_sequence: Code point or sequence in the LGR.
+                               Can be either:
+
+                                   - An int (code point)
+                                   - A list (non-empty)
+        :param var_cp: The desired variant code point.
+        :returns: Generator of Variant objects.
+        :raises LGRApiInvalidParameter: If cp_or_sequence is empty list,
+                                        or non-supported input type.
+        :raises NotInLGR: If cp_or_sequence is not in the current LGR.
+
+        >>> lgr = LGR()
+        >>> lgr.add_cp([0x0061])
+        >>> lgr.add_variant([0x0061], [0x0062])
+        >>> lgr.add_variant([0x0061], [0x0063])
+        >>> variant = lgr.get_variant([0x0061], (0x0063, ))
+        >>> len(variant) == 1
+        True
+        """
+        logger.debug("Get variant for cp '%s' from LGR '%s'",
+                     cp_or_sequence, self)
+
+        cp_or_sequence = self._check_convert_cp(cp_or_sequence)
+        return self.repertoire.get_variant(cp_or_sequence, var_cp)
 
     def get_char(self, cp_or_sequence):
         """
@@ -820,8 +847,7 @@ class LGR(object):
         logger.debug("Get variant for cp '%s' from LGR '%s'",
                      cp_or_sequence, self)
 
-        cp_or_sequence = self._check_convert_cp(cp_or_sequence,
-                                                force=True)
+        cp_or_sequence = self._check_convert_cp(cp_or_sequence)
         return self.repertoire.get_char(cp_or_sequence)
 
     def check_range(self, first_cp, last_cp,
@@ -902,6 +928,9 @@ class LGR(object):
         >>> lgr.add_codepoints(range(0x0061, 0x007A))
         """
         logger.debug('Add code points to LGR %s', self)
+
+        if not codepoints:
+            return
 
         ranges = collapse_codepoints(codepoints)
         for (first_cp, last_cp) in ranges:
@@ -985,19 +1014,19 @@ class LGR(object):
 
         :param label: The label to test, as an array of codepoints.
         :param collect_log: If False, do not collect rule processing log.
-        :return: (result, label_part, not_in_lgr, disposition, action_idx, log)
+        :return: (result, label_parts, label_invalid_parts, disposition, action_idx, log)
                  with:
 
                      - result: True if the label is eligible according to the LGR,
                                False otherwise.
-                     - label_part: List of the code points valid in the LGR.
-                     - not_in_lgr: List of code points not valid in the LGR.
+                     - label_parts: List of the code points valid in the LGR.
+                     - label_invalid_parts: List of code points not valid in the LGR.
                      - disposition: Disposition of the label.
                      - action_idx: Index of the action
                                    which triggered the disposition,
                                    -1 if the label is not in the LGR.
                      - log: Log of the disposition computation,
-                            empty if collect_log is True
+                            empty if collect_log is False
         """
         if not label:
             raise LGRApiInvalidParameter('label')
@@ -1010,12 +1039,12 @@ class LGR(object):
             rule_logger.addHandler(ch)
 
         # Start by testing presence of code points in LGR
-        (valid, label_part, not_in_lgr) = self._test_preliminary_eligibility(label)
+        (valid, label_parts, label_invalid_parts) = self._test_preliminary_eligibility(label)
         if not valid:
             rule_logger.error("Label '%s' is not in the LGR", format_cp(label))
             if collect_log:
                 rule_logger.removeHandler(ch)
-            return False, label_part, not_in_lgr, "invalid", -1, log_output.getvalue()
+            return False, label_parts, label_invalid_parts, INVALID_DISPOSITION, -1, log_output.getvalue()
 
         # Compute label disposition by analyzing reflexive mappings
         (disposition, action_idx) = self._test_label_disposition(label)
@@ -1045,38 +1074,38 @@ class LGR(object):
                                 disposition, which are normally eliminated
                                 during the generation process.
         :param collect_log: If False, do not collect rule processing log.
-        :return: Generator of (variant_cp, disp, action_idx, disp_set, log)
+        :return: Generator of (variant_cp, variant_invalid_parts, disp, action_idx, disp_set, log)
                  with:
-
                      - variant_cp: The code point sequence of a variant.
+                     - variant_invalid_parts: List of code points not valid in the LGR.
                      - disp: The disposition of the variant.
-                     - action_idx: The index of the action
-                                   which triggered the disposition.
+                     - variant_invalid_parts: List of code points not valid in the LGR.
+                     - action_idx: The index of the action which triggered the disposition.
                      - disp_set: The disposition set generated for this label.
                      - log: The log of the generation of the label,
                              empty if collect_log is True.
         """
-        # Implements process described in 7. Processing a Label Against an LGR
+        # Implements process described in 8. Processing a Label Against an LGR
 
         if self._unicode_database is None:
             logger.error("You need to define the Unicode database "
                          "to use this function")
             raise LGRApiException()
 
-        if len(label) > self.max_label_length():
+        if len(label) > PROTOCOL_LABEL_MAX_LENGTH:
             logger.warning('Label is too long')
             raise LGRApiInvalidParameter('label')
 
         # Make sure the label is a sequence
         label = tuple(label)
 
-        # 7.2 Determining Variants for a Label
+        # 8.2 Determining Variants for a Label
         # Step 1 - 2 - 3
         variant_set = self._generate_label_variants(label)
 
         original_label = None
 
-        # Step 4 - 7.3.  Determining a Disposition for a Label or Variant Label
+        # Step 4 - 8.3.  Determining a Disposition for a Label or Variant Label
         for (variant_cp, disp_set, only_variants) in variant_set:
             # Configure log system to redirect logs to local attribute
             log_output = StringIO()
@@ -1085,28 +1114,38 @@ class LGR(object):
                 ch.setLevel(logging.DEBUG)
                 rule_logger.addHandler(ch)
 
-            (variant_disp, idx) = self._apply_actions(variant_cp,
-                                                      disp_set,
-                                                      only_variants)
+            # 8.3.  Determining a Disposition for a Label or Variant Label
+            # Step 1
+            eligible, _, variant_invalid_parts, _, idx, _ = self.test_label_eligible(variant_cp)
+            if not eligible:
+                variant_disp = INVALID_DISPOSITION
+            else:
+                # 8.3.  Determining a Disposition for a Label or Variant Label
+                # Step 2 - 3
+                (variant_disp, idx) = self._apply_actions(variant_cp,
+                                                          disp_set,
+                                                          only_variants)
 
-            if collect_log:
-                rule_logger.removeHandler(ch)
+                if collect_log:
+                    rule_logger.removeHandler(ch)
 
-            if variant_disp is None:
-                variant_disp = DEFAULT_DISPOSITION
+                if variant_disp is None:
+                    # 8.3.  Determining a Disposition for a Label or Variant Label
+                    # Step 4
+                    variant_disp = DEFAULT_DISPOSITION
 
             if (variant_disp != INVALID_DISPOSITION) or include_invalid:
                 if variant_cp == label:
                     # Skip original label, yield last
-                    original_label = variant_cp, variant_disp, idx, disp_set, log_output.getvalue()
+                    original_label = variant_cp, variant_disp, variant_invalid_parts, idx, disp_set, log_output.getvalue()
                     continue
-                yield variant_cp, variant_disp, idx, disp_set, log_output.getvalue()
+                yield variant_cp, variant_disp, variant_invalid_parts, idx, disp_set, log_output.getvalue()
 
         if not original_label:
             # TODO: already computed since label MUST be eligible
             rule_logger.debug('Add original label')
             (_, _, _, disposition, action_idx, log) = self.test_label_eligible(label, collect_log)
-            original_label = label, disposition, action_idx, set(), log
+            original_label = label, disposition, None, action_idx, set(), log
 
         yield original_label
 
@@ -1120,11 +1159,12 @@ class LGR(object):
         :param include_invalid: If True, also return variants with "invalid"
                                 disposition, which are normally eliminated
                                 during the generation process.
-        :return: Generator of (variant_cp, disp, action_idx, disp_set, log)
+        :return: Generator of (variant_cp, variant_invalid_parts, disp, action_idx, disp_set, log)
                  with:
 
                      - variant_cp: The code point sequence of a variant.
                      - disp: The disposition of the variant.
+                     - variant_invalid_parts: List of code points not valid in the LGR.
                      - action_idx: The index of the action
                                    which triggered the disposition.
                      - disp_set: The disposition set generated for this label.
@@ -1136,35 +1176,25 @@ class LGR(object):
         label_dispositions = list(self.compute_label_disposition(label,
                                                                  include_invalid=include_invalid))
 
-        summary = collections.Counter([disp for (_, disp, _, _, _)
+        summary = collections.Counter([disp for (_, disp, _, _, _, _)
                                        in label_dispositions])
         return summary, label_dispositions
 
-    def max_label_length(self):
+    def estimate_variant_number(self, label):
         """
-        Compute and return the maximal label length accepted.
+        Given a label, return the estimated number of variants.
+
+        This function basically takes a label and return the maximum number of projected variants.
+
+        :param label: The label to compute the disposition of,
+                      as a sequence of code points.
+        :return: Estimated number of generated variants.
         """
-        # Try to estimate the number of generated variants using
-        # the mean number of variants per character.
-
-        if self._char_number == 0:
-            return 0
-
-        logger.debug('Variant number: %d - Char number: %s',
-                     self._variant_number, self._char_number)
-        mean_variants_per_character = round(float(self._variant_number) / self._char_number)
-        logger.debug('Mean number of variants per char: %s',
-                     mean_variants_per_character)
-
-        if mean_variants_per_character <= 1:
-            return PROTOCOL_LABEL_MAX_LENGTH
-
-        # Number of variants is:
-        # mean_variants_per_character ^ label length
-        computed_len = int(math.log(MAX_NUMBER_GENERATED_VARIANTS,
-                                    mean_variants_per_character))
-        logger.debug('Computed len: %s', computed_len)
-        return min(computed_len, PROTOCOL_LABEL_MAX_LENGTH)
+        (_, _, _, chars) = self._test_preliminary_eligibility(label, generate_chars=True)
+        variant_number = 1
+        for char in chars:
+            variant_number *= len(list(char.get_variants())) + 1  # Take into account original code point
+        return variant_number
 
     def generate_index_label(self, label):
         """
@@ -1181,6 +1211,8 @@ class LGR(object):
         :param label: The label to compute the disposition of,
                       as a sequence of code points.
         :return: The index label, as a list.
+        :raises NotInLgr: If the label is not in the LGR
+                          (does not pass preliminary eligibility testing).
         :raises RuleError: If rule is invalid.
         """
         logger.debug("Generating index label for '%s'", format_cp(label))
@@ -1191,7 +1223,7 @@ class LGR(object):
             logger.error('Label %s is not in LGR', format_cp(label))
             # If not result, there is at least on element in not_in_lgr.
             # See _test_preliminary_eligibility()
-            raise NotInLGR(not_in_lgr[0])
+            raise NotInLGR(not_in_lgr[0][0])
 
         index_label = []
         for char in chars:
@@ -1233,6 +1265,26 @@ class LGR(object):
     def get_validation_result(self, policy=None, verbose=False):
         return self.metadata.error_policy.get_final_result(policy, verbose)
 
+    def get_tag_classes(self):
+        """
+        Return the list of "tag-classes" used in this LGR.
+
+        :return: {tag name -> class} mapping.
+        """
+        prefix_len = len(TAG_CLASSNAME_PREFIX)
+        out = {}
+        for clsname, clz in self.classes_lookup.items():
+            if clsname.startswith(TAG_CLASSNAME_PREFIX):
+                out[clsname[prefix_len:]] = clz
+        return out
+
+    def populate_variants(self):
+        """
+        Add missing variants code points and fix symmetry and transitivity
+        """
+        logger.debug('Populate LGR variants')
+        return populate_lgr(self)
+
     def _test_preliminary_eligibility(self, label, generate_chars=False):
         """
         Test label eligibility against an LGR.
@@ -1241,12 +1293,14 @@ class LGR(object):
 
         :param label: The label to test, as an array of codepoints.
         :param generate_chars: Return list of corresponding char objects.
-        :return: (result, label_part, not_in_lgr, chars), with:
+        :return: (result, label_parts, label_invalid_parts, chars), with:
 
                  * result: True if the label is eligible according to the LGR,
                            False otherwise.
-                 * label_part: List of the code points valid in the LGR.
-                 * not_in_lgr: List of code points not valid in the LGR.
+                 * label_parts: List of the code points valid in the LGR.
+                 * label_invalid_parts: List of (code point, rule_specs) not valid in the LGR, with:
+                    * rule_specs: None if code point is not in the repertoire, list of rule names that does not comply
+                                  for all characters starting with the code point.
                  * chars: List of the LGR chars included in label
                           (only if generate_chars=True).
         :raises RuleError: If rule is invalid.
@@ -1255,8 +1309,8 @@ class LGR(object):
         i = 0
         label_length = len(label)
 
-        label_part = []
-        not_in_lgr = []
+        label_parts = []
+        label_invalid_parts = []
 
         chars = []
 
@@ -1273,9 +1327,11 @@ class LGR(object):
                 rule_logger.warning("No character in LGR starting with '%s'",
                                     format_cp(cp))
                 result = False
-                not_in_lgr.append(cp)
+                label_invalid_parts.append((cp, None))
                 i += 1
                 continue
+
+            pending_rules_not_in_lgr = []
 
             valid = False
             for char in char_list:
@@ -1285,25 +1341,27 @@ class LGR(object):
 
                 # Test when/not-when rules:
                 if not self._test_context_rules(char, label, i):
+                    pending_rules_not_in_lgr.append(char.when or char.not_when)
                     continue
 
                 i += len(char)
                 valid = True
                 rule_logger.debug("Code point '%s' in LGR", format_cp(cp))
-                label_part += char.cp
+                label_parts += char.cp
                 chars.append(char)
                 break
 
             if not valid:
-                rule_logger.debug("Code point '%s' is not in LGR", format_cp(cp))
+                rule_logger.warning("Code point '%s' does not comply with contextual rules: %s",
+                                    format_cp(cp), ','.join(pending_rules_not_in_lgr))
                 result = False
-                not_in_lgr.append(cp)
+                label_invalid_parts.append((cp, pending_rules_not_in_lgr or None))
                 i += 1
 
         if not generate_chars:
-            return result, label_part, not_in_lgr
+            return result, label_parts, label_invalid_parts
         else:
-            return result, label_part, not_in_lgr, chars
+            return result, label_parts, label_invalid_parts, chars
 
     def _test_label_disposition(self, label):
         """
@@ -1331,7 +1389,7 @@ class LGR(object):
         # Store all disposition of reflexive mappings
         disp_set = set()
 
-        for i in xrange(len(label)):
+        for i in range(len(label)):
             cp = label[i]
             rule_logger.debug("Code point: '%s'", format_cp(cp))
 
@@ -1384,7 +1442,7 @@ class LGR(object):
 
         return self._apply_actions(label, disp_set, only_variants)
 
-    def _get_prefix_list(self, label, orig_label, label_prefix):
+    def _get_prefix_list(self, label, label_prefix):
         """
         Generate the list of characters with same prefix.
 
@@ -1393,8 +1451,6 @@ class LGR(object):
         the variants of a label.
 
         :param label: The label to generate the variants of.
-        :param orig_label: The full original label,
-                           used when evaluating when/not-when rules
         :param label_prefix: The prefix of the label.
         :return: list of valid prefix characters.
         """
@@ -1405,9 +1461,15 @@ class LGR(object):
             if not prefix.is_prefix_of(label):
                 continue
 
-            # Test when/not-when rules - Use original label
+            # Generate "prefixed label":
+            # label prefix + variant code point + label 'suffix'
+            # label suffix is obtained by removing
+            # the prefix code points from the label.
+            prefixed_label = label_prefix + prefix.cp + tuple(label[len(prefix):])
+
+            # Test when/not-when rules on prefixed_label
             if not self._test_context_rules(prefix,
-                                            orig_label,
+                                            prefixed_label,
                                             len(label_prefix)):
                 rule_logger.debug('No context rule')
                 continue
@@ -1464,7 +1526,7 @@ class LGR(object):
             return
 
         try:
-            same_prefix = self._get_prefix_list(label, orig_label, label_prefix)
+            same_prefix = self._get_prefix_list(label, label_prefix)
         except NotInLGR:
             rule_logger.debug('Char is not in LGR,'
                               'assume we are handling a sequence')
@@ -1506,6 +1568,7 @@ class LGR(object):
                 if not self._test_context_rules(var,
                                                 variant_label,
                                                 len(label_prefix)):
+                    rule_logger.debug("Variant %s is not in LGR", format_cp(var.cp))
                     continue
                 rule_logger.debug("Variant %s is valid", format_cp(var.cp))
 
@@ -1552,7 +1615,7 @@ class LGR(object):
         """
         Apply the defined action of an LGR to a label and its dispositions.
 
-        Implement 7.3 Determining a Disposition for a Label or Variant Label,
+        Implement 8.3 Determining a Disposition for a Label or Variant Label,
         step 1.
 
         :param label: The label to process, as a sequence of code points.
@@ -1606,9 +1669,8 @@ class LGR(object):
                                 self._unicode_database,
                                 char.cp,
                                 index):
-                rule_logger.debug("when rule '%s' does not apply "
-                                  "for label '%s'",
-                                  when, format_cp(char.cp))
+                rule_logger.info("when rule '%s' does not validate for code point '%s'",
+                                 when, format_cp(char.cp))
                 return False
         elif not_when is not None:
             rule = self.rules_lookup[not_when]
@@ -1618,14 +1680,13 @@ class LGR(object):
                             self._unicode_database,
                             char.cp,
                             index):
-                rule_logger.debug("not-when rule '%s' applies "
-                                  "for label '%s'",
-                                  not_when, format_cp(char.cp))
+                rule_logger.info("not-when rule '%s' validates for code point '%s'",
+                                 not_when, format_cp(char.cp))
                 return False
 
         return True
 
-    def _check_convert_cp(self, cp_or_sequence, force=False):
+    def _check_convert_cp(self, cp_or_sequence, assert_in_script=False):
         """
         Check validity of code point input.
 
@@ -1637,34 +1698,36 @@ class LGR(object):
 
                                    - An int (code point)
                                    - A list (non-empty)
-        :param force: If True, still convert the codepoint even if invalid.
-                      Note: This won't skip the IDNA check.
+        :param assert_in_script: If True, ensure that the added code point
+                                 is in one of the LGR's scripts.
         :returns: Input argument to internally used format.
         :raises LGRApiInvalidParameter: If cp_or_sequence is empty list,
                                         or non-supported input type.
         :raises CharInvalidIdnaProperty: If cp_or_sequence is or contains
                                          an invalid IDNA2008 code point.
+        :raises CharNotInScript: If cp_or_sequence is not in LGR's scripts.
+
         >>> from munidata.database import IDNADatabase
         >>> unidb = IDNADatabase('6.3.0')
         >>> lgr = LGR(unicode_database=unidb)
         >>> lgr._check_convert_cp([]) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
             ...
-        LGRApiInvalidParameter
+        LGRApiInvalidParameter:
         >>> lgr._check_convert_cp(0x0061) == [0x0061]
         True
         >>> lgr._check_convert_cp(dict()) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
             ...
-        LGRApiInvalidParameter
+        LGRApiInvalidParameter:
         >>> lgr._check_convert_cp(0) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
             ...
-        CharInvalidIdnaProperty
+        CharInvalidIdnaProperty:
         >>> lgr._check_convert_cp(3.14) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
             ...
-        LGRApiInvalidParameter
+        LGRApiInvalidParameter:
         """
         if isinstance(cp_or_sequence, int):
             # If input is unique code point as int,
@@ -1683,7 +1746,6 @@ class LGR(object):
                 raise LGRApiInvalidParameter('cp_or_sequence')
 
         if self.unicode_database is not None:
-            lgr_scripts = self.metadata.get_scripts()
             for cp in cp_or_sequence:
                 # Check IDNA properties - This check cannot be overridden
                 idna_prop = self.unicode_database.get_idna_prop(cp)
@@ -1691,19 +1753,40 @@ class LGR(object):
                     logger.error("Code point %s is not IDNA-valid",
                                  format_cp(cp))
                     raise CharInvalidIdnaProperty(cp)
-
-                # Check code point is in defined script - only warning
-                try:
-                    script = self.unicode_database.get_script(cp, alpha4=True)
-                    if len(lgr_scripts) > 0 and script not in lgr_scripts:
-                        logger.warning("Code point '%s' (script %s) "
-                                       "not in LGR script '%s'",
-                                       format_cp(cp), script, lgr_scripts)
-                except NotImplementedError:
-                    # get_script() not implemented in all munidata's databases.
-                    pass
+            in_script, _ = self.cp_in_script(cp_or_sequence)
+            if assert_in_script:
+                raise CharNotInScript(cp_or_sequence)
 
         return cp_or_sequence
+
+    def cp_in_script(self, codepoints):
+        """
+        Given a code point or code point sequence, return if the code point is in
+        one of the LGR's scripts and the code point script.
+
+        Assume the LGR has a proper unicode_database set.
+
+        :param codepoints: List of code points.
+        :return: (in_script, cp_script) with:
+                 - in_script: True if cp_or_sequence is in LGR's scripts, False otherwise.
+                 - cp_scripts: cp_or_sequence's scripts.
+        """
+        in_script = True
+        cp_scripts = set()
+        lgr_scripts = self.metadata.get_scripts()
+        for cp in codepoints:
+            try:
+                script = self.unicode_database.get_script(cp, alpha4=True)
+                cp_scripts.add(script)
+                if len(lgr_scripts) > 0 and script not in lgr_scripts:
+                    logger.debug("Code point '%s' (script %s) not in LGR script '%s'",
+                                 format_cp(cp), script, lgr_scripts)
+                    in_script = False
+            except NotImplementedError:
+                # get_script() not implemented in all munidata's databases.
+                pass
+
+        return in_script, cp_scripts
 
     def _insert_list(self, codepoints, comment=None,
                      ref=None, tag=None,
@@ -1725,7 +1808,7 @@ class LGR(object):
 
 
         >>> lgr = LGR()
-        >>> lgr.add_codepoints(range(0x0061, 0x007A))
+        >>> lgr._insert_list(range(0x0061, 0x007A))
         """
         logger.debug('Add code points to LGR %s', self)
 
@@ -1746,22 +1829,40 @@ class LGR(object):
 
     def _add_cp_to_tag_classes(self, cp_or_sequence, tags):
         """
-        Add a code point to a tag class.
+        Add a code point to tag classes.
 
         Tag classes are internal virtual classes used to list the code points
         by tags.
 
-        :param cp_or_sequence: Sequence of code point to add to the class.
+        :param cp_or_sequence: Sequence of code point to add to the classes.
         :param tags: List of tags associated to the code points.
         """
         for tag in tags:
             tag_classname = TAG_CLASSNAME_PREFIX + tag
             self.classes_lookup.setdefault(tag_classname,
                                            Class(name=tag,
-                                                 comment="Virtual class for tag %s" % tag)).add_codepoint(cp_or_sequence)
+                                                 comment="Virtual class for tag %s" % tag,
+                                                 implicit=True)).add_codepoint(cp_or_sequence)
+
+    def _del_cp_from_tag_classes(self, cp_or_sequence, tags):
+        """
+        Remove a code point from tag classes.
+
+        Tag classes are internal virtual classes used to list the code points
+        by tags.
+
+        :param cp_or_sequence: Sequence of code point to remove from the classes.
+        :param tags: List of tags associated to the code points.
+        """
+        for tag in tags:
+            tag_classname = TAG_CLASSNAME_PREFIX + tag
+            if tag_classname in self.classes_lookup:
+                self.classes_lookup[tag_classname].del_codepoint(cp_or_sequence)
 
     def __unicode__(self):
         return self.name
+
+    __str__ = __unicode__
 
 
 if __name__ == "__main__":

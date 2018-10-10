@@ -84,7 +84,7 @@ Note: ``Let user choose`` means that both values will be appended in the output.
 
 * Metadata
     - Version:
-        + Union: ``Let user choose``
+        + Union: ``Let user choose`` (unless equal)
         + Intersection: ``Let user choose``
         + Diff: Compare as string
     - Version comment:
@@ -104,7 +104,7 @@ Note: ``Let user choose`` means that both values will be appended in the output.
         + Intersection: Keep common scopes
         + Diff: Compare as list of strings
     - Description:
-        + Union: Concatenate both description
+        + Union: Concatenate both description (unless equal)
         + Intersection: ``Let user choose``
         + Diff: Compare as string
     - Description mimetag:

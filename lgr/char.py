@@ -3,14 +3,16 @@
 char.py - Definition of base classes for character objects.
 """
 from __future__ import unicode_literals
+
 import logging
 
+from lgr import text_type
 from lgr.exceptions import (CharAlreadyExists,
                             NotInLGR,
                             RangeAlreadyExists,
                             LGRFormatException,
                             VariantAlreadyExists)
-from lgr.utils import cp_to_str, format_cp
+from lgr.utils import cp_to_str, format_cp, cp_to_ulabel
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +67,9 @@ class Variant(object):
         self.references = ref if ref is not None else []
 
     def __unicode__(self):
-        return u''.join(unichr(c) for c in self.cp)
+        return cp_to_ulabel(self.cp)
+
+    __str__ = __unicode__
 
     def __repr__(self):
         return "<Variant: %s>" % ' '.join(cp_to_str(c) for c in self.cp)
@@ -123,8 +127,8 @@ class CharBase(object):
         >>> c.add_variant([10], 'BLOCKED')
         >>> (10, ) in c._variants
         True
-        >>> c._variants[(10,)][0].type
-        u'BLOCKED'
+        >>> c._variants[(10,)][0].type == text_type('BLOCKED')
+        True
         """
         assert len(cp_or_sequence), "there should be at least one char"
 
@@ -180,7 +184,9 @@ class CharBase(object):
         return hash(self.cp)
 
     def __unicode__(self):
-        return u''.join(unichr(c) for c in self.cp)
+        return cp_to_ulabel(self.cp)
+
+    __str__ = __unicode__
 
     def __repr__(self):
         return '<%s: %s>' % (self.__class__.__name__,
@@ -226,6 +232,14 @@ class CharBase(object):
             variants = self._variants[variant_cp]
             for var in variants:
                 yield var
+
+    def get_variant(self, var_cp):
+        """
+        Return a the variant marching the code point.
+
+        :returns: The required variant
+        """
+        return self._variants.get(var_cp, None)
 
     def get_reflexive_variants(self):
         """
@@ -329,9 +343,9 @@ class Repertoire(object):
         # This list MUST be kept in order!
         # Should this really be here?
         self.ranges = []
-        # Code point objects are indexed by their code point(s), as a tuple.
-        # So the key for a <char cp="1234"/> object is (1234,),
-        # and the key for a  <char cp="1234 5678"/> is (1234, 5678).
+        # Code point objects are indexed by their first code point, as an int.
+        # So the key for a <char cp="1234"/> object is 1234,
+        # and the key for a  <char cp="1234 5678"/> also is 1234.
         # The value stored is a list of CharBase objects.
         self._chardict = dict()
 
@@ -409,7 +423,7 @@ class Repertoire(object):
             char_list = self._chardict[index]
 
             # Reset last_cp once we have exhausted the range
-            if last_cp < index:
+            if last_cp is not None and last_cp < index:
                 last_cp = None
 
             for char in sorted(char_list, key=lambda c: len(c.cp)):
@@ -421,6 +435,29 @@ class Repertoire(object):
                     else:
                         last_cp = char.last_cp
 
+                yield char
+
+    def all_repertoire(self, include_sequences=True, include_ranges=True):
+        """
+        Return the whole content of the repertoire, unsorted.
+
+        :param include_sequences: If False CharSequence are excluded from output.
+        :param include_ranges: If False RangeChar are excluded from output.
+        :return: A generator that contains all Char elements of the repertoire.
+
+        >>> cd = Repertoire()
+        >>> char1 = cd.add_char([0x002B])
+        >>> char2 = cd.add_char([0x002A])
+        >>> seq = cd.add_char([0x002A, 0x002B])
+        >>> {char1, char2, seq} == set(cd.all_repertoire())
+        True
+        """
+        for char_list in self._chardict.values():
+            for char in char_list:
+                if isinstance(char, CharSequence) and not include_sequences:
+                    continue
+                if isinstance(char, RangeChar) and not include_ranges:
+                    continue
                 yield char
 
     def __len__(self):
@@ -467,7 +504,7 @@ class Repertoire(object):
         >>> cd.add_char([0x002A]) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         ...
-        CharAlreadyExists
+        CharAlreadyExists:
         """
         # Entries are keyed to the first code point of the `cp_or_sequence`
         # with values appended to a list.
@@ -498,7 +535,7 @@ class Repertoire(object):
         >>> cd.del_char([0x002B]) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         ...
-        NotInLGR
+        NotInLGR:
         """
         assert len(cp_or_sequence), "there should be at least one char"
 
@@ -540,7 +577,7 @@ class Repertoire(object):
         >>> cd.add_range(0x002A, 0x0030) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         ...
-        RangeAlreadyExists
+        RangeAlreadyExists:
         """
         assert first_cp < last_cp, "range must be defined in order"
 
@@ -578,7 +615,7 @@ class Repertoire(object):
         >>> cd.del_range(0x002A, 0x0030) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         ...
-        NotInLGR
+        NotInLGR:
         """
         assert first_cp < last_cp, "range must be defined in order"
 
@@ -713,6 +750,25 @@ class Repertoire(object):
         char = self.get_char(cp_or_sequence)
         return char.get_variants()
 
+    def get_variant(self, cp_or_sequence, var_cp):
+        """
+        Get a specific variant of a code point.
+
+        :param cp_or_sequence: Code point or code point sequence of the character
+                               to list the variant of.
+        :param var_cp: Variant code point to retrieve
+        :returns: Generator of Variants objects of a char.
+        :raises NotInRepertoire: If the code point does not exist.
+
+        >>> cd = Repertoire()
+        >>> _ = cd.add_char([0x002A])
+        >>> cd.add_variant([0x002A], [0x003A], 'BLOCK')
+        >>> cd.get_variant([0x002A], (0x003A, )) == [Variant((0x003A,), 'BLOCK')]
+        True
+        """
+        char = self.get_char(cp_or_sequence)
+        return char.get_variant(var_cp)
+
     def get_variant_sets(self):
         """
         Return the list of variants set contained in the repertoire.
@@ -759,13 +815,25 @@ class Repertoire(object):
 
         :param ref_id: The reference to remove.
         """
-        for cp_list in self._chardict.itervalues():
+        for cp_list in self._chardict.values():
             for char in cp_list:
                 if ref_id in char.references:
                     char.references.remove(ref_id)
                 for variant in char.get_variants():
                     if ref_id in variant.references:
                         variant.references.remove(ref_id)
+
+    def del_tag(self, tag_id):
+        """
+        Iterate through the repertoire to remove the tag tag_id
+        from the list of code point tags.
+
+        :param tag_id: The tag to remove.
+        """
+        for cp_list in self._chardict.values():
+            for char in cp_list:
+                if tag_id in char.tags:
+                    char.tags.remove(tag_id)
 
     def get_chars_from_prefix(self, cp, only_variants=False):
         """
@@ -824,7 +892,7 @@ class Repertoire(object):
         >>> cd._add_char(Char(0x002A)) # doctest: +IGNORE_EXCEPTION_DETAIL
         Traceback (most recent call last):
         ...
-        CharAlreadyExists
+        CharAlreadyExists:
         """
         idx = char.as_index()
         if idx in self._chardict and char in set(self._chardict[idx]):

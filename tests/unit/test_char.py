@@ -36,11 +36,7 @@ class TestVariant(unittest.TestCase):
         v2 = Variant([1], when='w-2')
         v3 = Variant([1], not_when='nw-1')
         v4 = Variant([1], not_when='nw-2')
-        v5 = Variant([1], when='w-1', not_when='nw-1')
-        v6 = Variant([1], when='w-2', not_when='nw-1')
-        v7 = Variant([1], when='w-1', not_when='nw-2')
-        v8 = Variant([1], when='w-2', not_when='nw-2')
-        variants = [v1, v2, v3, v4, v5, v6, v7, v8]
+        variants = [v1, v2, v3, v4]
         for (a, b) in itertools.product(variants, variants):
             if a is b:
                 # 'Memory' equality: a and b point to the same object.
@@ -52,11 +48,7 @@ class TestVariant(unittest.TestCase):
         v2 = Variant([1], when='w-2')
         v3 = Variant([1], not_when='nw-1')
         v4 = Variant([1], not_when='nw-2')
-        v5 = Variant([1], when='w-1', not_when='nw-1')
-        v6 = Variant([1], when='w-2', not_when='nw-1')
-        v7 = Variant([1], when='w-1', not_when='nw-2')
-        v8 = Variant([1], when='w-2', not_when='nw-2')
-        variants = [v1, v2, v3, v4, v5, v6, v7, v8]
+        variants = [v1, v2, v3, v4]
         for (a, b) in itertools.product(variants, variants):
             if a is b:
                 # 'Memory' equality: a and b point to the same object.
@@ -257,6 +249,20 @@ class TestChar(unittest.TestCase):
 
         self.assertEqual(variant_list, expected_output)
 
+    def test_get_variant(self):
+        c = Char(0x002A)
+        c.add_variant([0x0030], when='w1')
+        c.add_variant([0x0031], when='w2')
+        c.add_variant([0x0031], not_when='nw-1')
+
+        variant = c.get_variant((0x031, ))
+        expected_output = [
+            Variant((0x0031, ), when='w2'),
+            Variant((0x0031, ), not_when='nw-1')
+        ]
+
+        self.assertEqual(variant, expected_output)
+
 
 class TestRepertoire(unittest.TestCase):
 
@@ -456,6 +462,61 @@ class TestRepertoire(unittest.TestCase):
 
         self.assertEqual(list(self.cd), expected_output)
 
+    def test_all_repertoire(self):
+        self.cd.add_char([0x0010])
+        self.cd.add_range(0x0001, 0x0005)
+        self.cd.add_char([0x0000])
+        self.cd.add_char([0x0011, 0x0012])
+        self.cd.add_char([0x0013])
+
+        # Full output
+        expected_output = {
+            Char(0x0000),
+            RangeChar(0x0001, 0x0001, 0x0005),
+            RangeChar(0x0002, 0x0001, 0x0005),
+            RangeChar(0x0003, 0x0001, 0x0005),
+            RangeChar(0x0004, 0x0001, 0x0005),
+            RangeChar(0x0005, 0x0001, 0x0005),
+            Char(0x0010),
+            CharSequence([0x0011, 0x0012]),
+            Char(0x0013),
+        }
+        self.assertEqual(set(self.cd.all_repertoire()), expected_output)
+
+        # Exclude ranges
+        expected_output = {
+            Char(0x0000),
+            Char(0x0010),
+            CharSequence([0x0011, 0x0012]),
+            Char(0x0013),
+        }
+        self.assertEqual(set(self.cd.all_repertoire(include_ranges=False)),
+                         expected_output)
+
+        # Exclude sequences
+        expected_output = {
+            Char(0x0000),
+            RangeChar(0x0001, 0x0001, 0x0005),
+            RangeChar(0x0002, 0x0001, 0x0005),
+            RangeChar(0x0003, 0x0001, 0x0005),
+            RangeChar(0x0004, 0x0001, 0x0005),
+            RangeChar(0x0005, 0x0001, 0x0005),
+            Char(0x0010),
+            Char(0x0013),
+        }
+        self.assertEqual(set(self.cd.all_repertoire(include_sequences=False)),
+                         expected_output)
+
+        # Exclude ranges and sequences
+        expected_output = {
+            Char(0x0000),
+            Char(0x0010),
+            Char(0x0013),
+        }
+        self.assertEqual(set(self.cd.all_repertoire(include_ranges=False,
+                                                     include_sequences=False)),
+                         expected_output)
+
     def test_get_variants(self):
         self.cd.add_char([0x002A])
         self.cd.add_variant([0x002A], [0x0030])
@@ -497,6 +558,18 @@ class TestRepertoire(unittest.TestCase):
         self.assertEqual(self.cd.get_char([0x002A]).references, ['1'])
         self.assertEqual(list(self.cd.get_variants([0x002A]))[0].references, ['3'])
 
+    def test_del_tag(self):
+        self.cd.add_char([0x002A], tag=['1', '2'])
+        self.cd.add_char([0x002B], tag=['2', '3'])
+        self.cd.add_char([0x002C], tag=['3', '4'])
+        self.cd.del_tag('2')
+
+        self.assertEqual(self.cd.get_char([0x002A]).tags, ['1'])
+        self.assertEqual(self.cd.get_char([0x002B]).tags, ['3'])
+        self.assertEqual(self.cd.get_char([0x002C]).tags, ['3', '4'])
+
+        self.cd.del_tag('5')  # Assert that nothing breaks
+
     def test_get_chars_from_prefix(self):
         c1 = self.cd.add_char([0x002A])
         c2 = self.cd.add_char([0x002A, 0x002B])
@@ -534,6 +607,7 @@ class TestRepertoire(unittest.TestCase):
         self.assertSetEqual(variant_sets,
                             {((0x002A,), (0x002C,), (0x002F,)),
                              ((0x002B,), (0x002E,))})
+
 
 if __name__ == '__main__':
     import logging

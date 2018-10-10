@@ -9,7 +9,7 @@ import logging
 
 from picu.exceptions import PICUException
 
-from lgr.utils import format_cp
+from lgr.utils import format_cp, cp_to_ulabel
 from lgr.exceptions import LGRFormatException, RuleError
 
 logger = logging.getLogger(__name__)
@@ -121,7 +121,7 @@ class Rule(object):
         except (re.error, PICUException) as re_exc:
             rule_logger.error('Cannot get pattern for rule %s: %s',
                               self, re_exc)
-            raise RuleError(self.name, re_exc.message)
+            raise RuleError(self.name, re_exc)
 
         if len(pattern) == 0:
             # Pattern is empty, nothing will match
@@ -142,12 +142,12 @@ class Rule(object):
             regex = unicode_database.compile_regex(pattern)
         except (re.error, PICUException) as re_exc:
             rule_logger.error('Cannot compile regex: %s', re_exc)
-            raise RuleError(self.name, re_exc.message)
+            raise RuleError(self.name, re_exc)
 
         rule_logger.debug("Index: %d", index)
 
         # Convert label to U-format to be used in regex
-        label_u = ''.join(unichr(c) for c in label)
+        label_u = cp_to_ulabel(label)
 
         # Look for match. It is important to use "search" and not "match"
         # here, since a rule may not match at the beginning of a label.
