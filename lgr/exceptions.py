@@ -257,3 +257,91 @@ class LGRLabelCollisionException(LGRException):
     """
     def __init__(self):
         super(LGRLabelCollisionException, self).__init__()
+
+class ErrorPolicy(object):
+
+    test_desciption = dict(
+        parse_xml = 'The LGR table can be parsed succesfully',
+        validity_end_expiry = 'The "validity-end" element (if present) in the metadata section is in future time',
+        validity_start_end = 'The "validity-start" element in the metadata section is earlier in time than the "validity-end" element (if both are present)',
+        validity_started = 'The "validity-start" element (if present) in the metadata section is in past time',
+        metadata_description_type = 'The "type" attribute of the description element (if present) in the metadata section is a valid media type',
+        metadata_scope_type = 'The "type" attribute of the scope element (if present) in the metadata section has a valid value',
+        metadata_language = 'The value of each "language" element is a valid language tag as described in RFC5646',
+        metadata_version_integer = 'The value of the "version" element (if present) in the metadata section is the decimal representation of a positive integer',
+        data_variant_type = 'The value of the "type" attribute (if present) of each "variant" element is a non-empty value not starting with an underscore and not containing spaces',
+        explicit_unicode_version = 'The Unicode version is set in the "version" element in the metadata section',
+        valid_unicode_version = 'The Unicode version is a valid Unicode version 5.2.0 or higher',
+        codepoint_valid = 'All code points in the LGR are included in the given Unicode version',
+        char_ascending_order='All "char" elements are listed in ascending order of the "cp" attribute',
+        char_strict_ascending_order = 'All "char" elements are listed in strictly ascending order of the "cp" attribute',
+        ref_attribute_ascending = 'Reference identifiers given in the "ref" attribute are listed in ascending order (if all are integers)',
+        standard_dispositions = 'All dispositions are registered Standard Dispositions',
+        basic_symmetry = 'All variant relations are symmetric',
+        strict_symmetry = 'All variant relations are symmetric and agree in their "when" or "not-when" attributes',
+        basic_transitivity = 'All variant relations are transitive',
+        strict_transitivity = 'All variant relations are transitivity and agree in their "when" or "not-when" attributes',
+    );
+
+    def __init__(self):
+        self.test_result = dict()
+
+    def error(self, label):
+        self.add_test_result(label, False)
+
+    def tested(self, label):
+        self.add_test_result(label, True)
+
+    def add_test_result(self, test_label, success):
+        # Ignore successful result if the test case has already been run
+        if not success or test_label not in self.test_result:
+            self.test_result[test_label] = success
+
+    def get_final_result(self, policy=None, verbose=False):
+        """Calculate the validation result based on policy and test results.
+The final result will be:
+ - PASS if all test cases in the policy have been executed and any failed
+        test case has policy "IGNORE"
+ - WARN if all test cases have been executed, one or more failed test case has
+        policy "WARNING", and all other failed test cases has policy "IGNORE"
+ - FAIL otherwise"""
+        if policy is None:
+            if False in self.test_result.values():
+                return "FAIL"
+            return "PASS"
+
+        info = ""
+        got_warning = False
+        got_error = False
+        for test in policy:
+            desc = ErrorPolicy.test_desciption[test] if test in ErrorPolicy.test_desciption else test
+            if test not in self.test_result:
+                got_error = True
+                if verbose:
+                    info += "ERROR: " + desc + " - NOT EXECUTED\n"
+            elif not self.test_result[test]:
+                p = policy[test]
+                if p == "IGNORE":
+                    if verbose:
+                        info += "IGNORE: " + desc + " - NOK\n"
+                elif p == "WARNING":
+                    got_warning = True
+                    if verbose:
+                        info += "WARNING: " + desc + " - NOK\n"
+                else:
+                    got_error = True
+                    if verbose:
+                        info += "ERROR: " + desc + " - NOK\n"
+            else:
+                if verbose:
+                    info += "PASS: " + desc + " - OK\n"
+
+        if verbose:
+            info += "Validation result: "
+        if got_error:
+            info += "FAIL"
+        elif got_warning:
+            info += "WARN"
+        else:
+            info += "PASS"
+        return info

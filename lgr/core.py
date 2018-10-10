@@ -1221,6 +1221,18 @@ class LGR(object):
                 out.append(clsname[prefix_len:])
         return out
 
+    def add_test_result(self, label, result):
+        self.metadata.error_policy.add_test_result(label, result)
+
+    def notify_error(self, label):
+        self.metadata.error_policy.error(label)
+
+    def notify_tested(self, label):
+        self.metadata.error_policy.tested(label)
+
+    def get_validation_result(self, policy=None, verbose=False):
+        return self.metadata.error_policy.get_final_result(policy, verbose)
+
     def _test_preliminary_eligibility(self, label, generate_chars=False):
         """
         Test label eligibility against an LGR.

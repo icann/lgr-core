@@ -136,7 +136,7 @@ class Metadata(object):
     LGR metadata encapsulation object.
     """
 
-    def __init__(self):
+    def __init__(self, error_policy=None):
         self.version = None
         self.date = None
         self.languages = []
@@ -145,6 +145,10 @@ class Metadata(object):
         self.validity_end = None
         self.unicode_version = '6.3.0'
         self.description = None
+        if error_policy is None:
+            self.error_policy = ErrorPolicy()
+        else:
+            self.error_policy = error_policy
 
     # Note: This method is memoized since it is called very often during the
     # LGR._check_convert_cp(), which ensure the CP is part of the declared
@@ -188,13 +192,16 @@ class Metadata(object):
             if not rfc5646.check(language):
                 logger.log(logging.WARNING if force else logging.ERROR,
                            "Invalid language: '%s'", language)
+                self.error_policy.error("metadata_language")
                 if not force:
                     raise LGRFormatException(LGRFormatException.
                                              LGRFormatReason.INVALID_LANGUAGE_TAG)
+            self.error_policy.tested("metadata_language")
             self.languages.append(language)
         except UnicodeEncodeError:
             # Can't skip this one
             logger.error("Invalid non-ASCII language tag '%s'", language)
+            self.error_policy.error("metadata_language")
             raise LGRFormatException(LGRFormatException.
                                      LGRFormatReason.INVALID_LANGUAGE_TAG)
 

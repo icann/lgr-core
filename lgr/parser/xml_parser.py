@@ -37,7 +37,7 @@ from lgr.classes import (Class,
                          IntersectionClass,
                          DifferenceClass,
                          SymmetricDifferenceClass)
-from lgr.exceptions import LGRException
+from lgr.exceptions import LGRException, ErrorPolicy
 from lgr.utils import format_cp
 from lgr.parser.parser import LGRParser
 
@@ -104,6 +104,29 @@ class XMLParser(LGRParser):
                       'strip_cdata': False,
                       'remove_comments': True}
 
+    def __init__(self, *args, **kwargs):
+        if 'force_mode' in kwargs:
+            force_mode = kwargs['force_mode']
+            del kwargs['force_mode']
+        else:
+            force_mode = True
+
+        if 'error_policy' in kwargs:
+            error_policy = kwargs['error_policy']
+            del kwargs['error_policy']
+        else:
+            error_policy = ErrorPolicy()
+
+        super(XMLParser, self).__init__(*args, **kwargs)
+        self.force_mode = force_mode
+        self.error_policy = error_policy
+
+    def set_strict_mode(self, enabled=True):
+        self.force_mode = False if enabled else True
+
+    def set_error_policy(self, handler):
+        self.error_policy = handler
+
     def validate_document(self, rng_schema_path):
         # Construct the RelaxNG validator
         schema = etree.RelaxNG(file=rng_schema_path)
@@ -119,11 +142,13 @@ class XMLParser(LGRParser):
         if not schema.validate(doc):
             logger.warning("Validation of document '%s' failed",
                            self.source)
+            self.error_policy.error("schema")
             error_log = schema.error_log
             if len(error_log) == 0:
                 # Bug in LXML, see https://bugs.launchpad.net/lxml/+bug/1526522
                 error_log = "CANNOT VALIDATE XML"
 
+        self.error_policy.tested("schema")
         return error_log
 
     def unicode_version(self):
@@ -159,24 +184,24 @@ class XMLParser(LGRParser):
         if hasattr(self.source, "seek"):
             self.source.seek(0)
 
+        self.error_policy.tested("parse_xml")
         return self._lgr
 
     def _process_meta(self, elem):
         """
         Process the <meta> element of an LGR XML file.
         """
-        metadata = Metadata()
+        metadata = Metadata(self.error_policy)
         reference_manager = ReferenceManager()
-
         MAPPER = {
             DATE_TAG: lambda d: metadata.set_date(d,
-                                                  force=True),
+                                                  force=self.force_mode),
             VALIDITY_START_TAG: lambda d: metadata.set_validity_start(d,
-                                                                      force=True),
+                                                                      force=self.force_mode),
             VALIDITY_END_TAG: lambda d: metadata.set_validity_end(d,
-                                                                  force=True),
+                                                                  force=self.force_mode),
             UNICODE_VERSION_TAG: lambda d: metadata.set_unicode_version(d,
-                                                                        force=True),
+                                                                        force=self.force_mode),
         }
         for child in elem:
             tag = child.tag
@@ -187,7 +212,7 @@ class XMLParser(LGRParser):
                 metadata.version = Version(child.text,
                                            child.get('comment', None))
             elif tag == LANGUAGE_TAG:
-                metadata.add_language(child.text, force=True)
+                metadata.add_language(child.text, force=self.force_mode)
             elif tag == SCOPE_TAG:
                 metadata.scopes.append(
                     Scope(child.text, child.get('type', None)))
@@ -209,6 +234,7 @@ class XMLParser(LGRParser):
             else:
                 logger.warning("Unhandled '%s' element in <meta> section",
                                tag)
+                self.error_policy.error("parse_xml")
             child.clear()
 
         self._lgr = LGR(name=self.filename,
@@ -220,6 +246,11 @@ class XMLParser(LGRParser):
         """
         Process the <data> element of an LGR XML file.
         """
+
+        # It is RECOMMENDED to list all "char" elements in ascending order of
+        # the "cp" attribute. The below variable is used when verifying that.
+        previous_codepoint = []
+
         for child in elem:
             comment = child.get('comment', None)
             when = child.get('when', None)
@@ -234,14 +265,27 @@ class XMLParser(LGRParser):
             if child.tag == CHAR_TAG:
                 codepoint = [int(c, 16) for c in child.get('cp').split()]
 
+                if codepoint <= previous_codepoint:
+                    if previous_codepoint[0:len(codepoint)] == codepoint:
+                        # Not clear what order is to be recommended here
+                        self.error_policy.error('char_strict_ascending_order')
+                    else:
+                        logger.warning("cp attribute not in ascending order: '%s'",
+                                       child.get('cp'))
+                        self.error_policy.error('char_ascending_order')
+                previous_codepoint = codepoint
+
                 try:
                     self._lgr.add_cp(codepoint, comment=comment,
                                      ref=ref, tag=tag,
                                      when=when, not_when=not_when,
-                                     force=True)
+                                     force=self.force_mode)
                 except LGRException as exc:
                     logger.error("Cannot add code point '%s': %s",
                                  format_cp(codepoint), exc)
+                    self.error_policy.error("parse_xml")
+                    if not self.force_mode:
+                        raise
 
                 # Variants of char
                 for variant in child.iter(VARIANT_TAG):
@@ -261,13 +305,16 @@ class XMLParser(LGRParser):
                                               when=when, not_when=not_when,
                                               comment=comment,
                                               ref=ref,
-                                              force=True)
+                                              force=self.force_mode)
                     except LGRException as exc:
                         logger.error("Cannot add variant '%s' "
                                      "to code point '%s': %s",
                                      format_cp(var_codepoint),
                                      format_cp(codepoint),
                                      exc)
+                        self.error_policy.error("parse_xml")
+                        if not self.force_mode:
+                            raise
             elif child.tag == RANGE_TAG:
                 first_cp = int(child.get('first-cp'), 16)
                 last_cp = int(child.get('last-cp'), 16)
@@ -276,14 +323,20 @@ class XMLParser(LGRParser):
                     self._lgr.add_range(first_cp, last_cp, comment=comment,
                                         ref=ref, tag=tag,
                                         when=when, not_when=not_when,
-                                        force=True)
+                                        force=self.force_mode)
                 except LGRException as exc:
+                    self.error_policy.error("parse_xml")
                     logger.error("Cannot add range '%s-%s': %s",
                                  format_cp(first_cp),
                                  format_cp(last_cp),
                                  exc)
+                    if not self.force_mode:
+                        raise
 
             child.clear()
+
+        self.error_policy.tested('char_ascending_order')
+        self.error_policy.tested('char_strict_ascending_order')
 
     def _process_rules(self, elem):
         """
@@ -293,22 +346,23 @@ class XMLParser(LGRParser):
         for child in elem:
             if child.tag in COMBINATOR_TAGS + (CLASS_TAG, ):
                 cls = self._parse_class(child)
-                self._lgr.add_class(cls, force=True)
+                self._lgr.add_class(cls, force=self.force_mode)
                 child = drop_ns(child)
                 self._lgr.classes_xml.append(etree.tostring(child))
             elif child.tag == RULE_TAG:
                 rule = self._parse_rule(child)
-                self._lgr.add_rule(rule, force=True)
+                self._lgr.add_rule(rule, force=self.force_mode)
                 child = drop_ns(child)
                 self._lgr.rules_xml.append(etree.tostring(child))
             elif child.tag == ACTION_TAG:
                 action = self._parse_action(child)
-                self._lgr.add_action(action, force=True)
+                self._lgr.add_action(action, force=self.force_mode)
                 child = drop_ns(child)
                 self._lgr.actions_xml.append(etree.tostring(child))
             else:
                 logger.warning("Unhandled '%s' element in <rules> section",
                                child.tag)
+                self.error_policy.error("parse_xml")
             child.clear()
 
     def _parse_rule(self, elem):
@@ -377,6 +431,7 @@ class XMLParser(LGRParser):
                            count=count))
         else:
             logger.warning("Unhandled '%s' element in <rule> object", tag)
+            self.error_policy.error("parse_xml")
 
     def _parse_action(self, elem):
         """
@@ -436,6 +491,7 @@ class XMLParser(LGRParser):
                 cls.add_child(self._parse_class(child))
         else:
             logger.warning("Unhandled '%s' element in <class> object", tag)
+            self.error_policy.error("parse_xml")
 
         return cls
 
