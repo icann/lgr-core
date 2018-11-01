@@ -280,10 +280,10 @@ class LGRLabelCollisionException(LGRException):
     def __init__(self):
         super(LGRLabelCollisionException, self).__init__()
 
-class ErrorPolicy(object):
+class LGRFormatTestResults(object):
 
     test_desciption = dict(
-        parse_xml = 'The LGR table can be parsed succesfully',
+        parse_xml = 'The LGR table can be parsed successfully',
         validity_end_expiry = 'The "validity-end" element (if present) in the metadata section is in future time',
         validity_start_end = 'The "validity-start" element in the metadata section is earlier in time than the "validity-end" element (if both are present)',
         validity_started = 'The "validity-start" element (if present) in the metadata section is in past time',
@@ -321,12 +321,12 @@ class ErrorPolicy(object):
 
     def get_final_result(self, policy=None, verbose=False):
         """Calculate the validation result based on policy and test results.
-The final result will be:
- - PASS if all test cases in the policy have been executed and any failed
-        test case has policy "IGNORE"
- - WARN if all test cases have been executed, one or more failed test case has
-        policy "WARNING", and all other failed test cases has policy "IGNORE"
- - FAIL otherwise"""
+        The final result will be:
+         - PASS if all test cases in the policy have been executed and any failed
+                test case has policy "IGNORE"
+         - WARN if all test cases have been executed, one or more failed test case has
+                policy "WARNING", and all other failed test cases has policy "IGNORE"
+         - FAIL otherwise"""
         if policy is None:
             if False in self.test_result.values():
                 return "FAIL"
@@ -336,7 +336,7 @@ The final result will be:
         got_warning = False
         got_error = False
         for test in policy:
-            desc = ErrorPolicy.test_desciption[test] if test in ErrorPolicy.test_desciption else test
+            desc = LGRFormatTestResults.test_desciption.get(test, test)
             if test not in self.test_result:
                 got_error = True
                 if verbose:

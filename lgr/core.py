@@ -1254,16 +1254,16 @@ class LGR(object):
         return out
 
     def add_test_result(self, label, result):
-        self.metadata.error_policy.add_test_result(label, result)
+        self.metadata.rfc7940_checks.add_test_result(label, result)
 
     def notify_error(self, label):
-        self.metadata.error_policy.error(label)
+        self.metadata.rfc7940_checks.error(label)
 
     def notify_tested(self, label):
-        self.metadata.error_policy.tested(label)
+        self.metadata.rfc7940_checks.tested(label)
 
     def get_validation_result(self, policy=None, verbose=False):
-        return self.metadata.error_policy.get_final_result(policy, verbose)
+        return self.metadata.rfc7940_checks.get_final_result(policy, verbose)
 
     def get_tag_classes(self):
         """

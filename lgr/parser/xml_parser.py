@@ -38,7 +38,7 @@ from lgr.classes import (Class,
                          IntersectionClass,
                          DifferenceClass,
                          SymmetricDifferenceClass)
-from lgr.exceptions import LGRException, ErrorPolicy
+from lgr.exceptions import LGRException, LGRFormatTestResults
 from lgr.utils import format_cp
 from lgr.parser.parser import LGRParser
 
@@ -112,21 +112,21 @@ class XMLParser(LGRParser):
         else:
             force_mode = True
 
-        if 'error_policy' in kwargs:
-            error_policy = kwargs['error_policy']
-            del kwargs['error_policy']
+        if 'rfc7940_checks' in kwargs:
+            rfc7940_checks = kwargs['rfc7940_checks']
+            del kwargs['rfc7940_checks']
         else:
-            error_policy = ErrorPolicy()
+            rfc7940_checks = LGRFormatTestResults()
 
         super(XMLParser, self).__init__(*args, **kwargs)
         self.force_mode = force_mode
-        self.error_policy = error_policy
+        self.rfc7940_checks = rfc7940_checks
 
     def set_strict_mode(self, enabled=True):
         self.force_mode = False if enabled else True
 
-    def set_error_policy(self, handler):
-        self.error_policy = handler
+    def set_rfc7940_checks(self, handler):
+        self.rfc7940_checks = handler
 
     def validate_document(self, rng_schema_path):
         # Construct the RelaxNG validator
@@ -143,13 +143,13 @@ class XMLParser(LGRParser):
         if not schema.validate(doc):
             logger.warning("Validation of document '%s' failed",
                            self.source)
-            self.error_policy.error("schema")
+            self.rfc7940_checks.error("schema")
             error_log = schema.error_log
             if len(error_log) == 0:
                 # Bug in LXML, see https://bugs.launchpad.net/lxml/+bug/1526522
                 error_log = "CANNOT VALIDATE XML"
 
-        self.error_policy.tested("schema")
+        self.rfc7940_checks.tested("schema")
         return error_log
 
     def unicode_version(self):
@@ -185,14 +185,14 @@ class XMLParser(LGRParser):
         if hasattr(self.source, "seek"):
             self.source.seek(0)
 
-        self.error_policy.tested("parse_xml")
+        self.rfc7940_checks.tested("parse_xml")
         return self._lgr
 
     def _process_meta(self, elem):
         """
         Process the <meta> element of an LGR XML file.
         """
-        metadata = Metadata(self.error_policy)
+        metadata = Metadata(self.rfc7940_checks)
         reference_manager = ReferenceManager()
         MAPPER = {
             DATE_TAG: lambda d: metadata.set_date(d,
@@ -237,7 +237,7 @@ class XMLParser(LGRParser):
             else:
                 logger.warning("Unhandled '%s' element in <meta> section",
                                tag)
-                self.error_policy.error("parse_xml")
+                self.rfc7940_checks.error("parse_xml")
             child.clear()
 
         self._lgr = LGR(name=self.filename,
@@ -271,11 +271,11 @@ class XMLParser(LGRParser):
                 if codepoint <= previous_codepoint:
                     if previous_codepoint[0:len(codepoint)] == codepoint:
                         # Not clear what order is to be recommended here
-                        self.error_policy.error('char_strict_ascending_order')
+                        self.rfc7940_checks.error('char_strict_ascending_order')
                     else:
                         logger.warning("cp attribute not in ascending order: '%s'",
                                        child.get('cp'))
-                        self.error_policy.error('char_ascending_order')
+                        self.rfc7940_checks.error('char_ascending_order')
                 previous_codepoint = codepoint
 
                 try:
@@ -286,7 +286,8 @@ class XMLParser(LGRParser):
                 except LGRException as exc:
                     logger.error("Cannot add code point '%s': %s",
                                  format_cp(codepoint), exc)
-                    self.error_policy.error("parse_xml")
+                    self.rfc7940_checks.error('parse_xml')
+                    self.rfc7940_checks.error('codepoint_valid')
                     if not self.force_mode:
                         raise
 
@@ -315,7 +316,8 @@ class XMLParser(LGRParser):
                                      format_cp(var_codepoint),
                                      format_cp(codepoint),
                                      exc)
-                        self.error_policy.error("parse_xml")
+                        self.rfc7940_checks.error('parse_xml')
+                        self.rfc7940_checks.error('codepoint_valid')
                         if not self.force_mode:
                             raise
             elif child.tag == RANGE_TAG:
@@ -328,7 +330,8 @@ class XMLParser(LGRParser):
                                         when=when, not_when=not_when,
                                         force=self.force_mode)
                 except LGRException as exc:
-                    self.error_policy.error("parse_xml")
+                    self.rfc7940_checks.error('parse_xml')
+                    self.rfc7940_checks.error('codepoint_valid')
                     logger.error("Cannot add range '%s-%s': %s",
                                  format_cp(first_cp),
                                  format_cp(last_cp),
@@ -338,8 +341,8 @@ class XMLParser(LGRParser):
 
             child.clear()
 
-        self.error_policy.tested('char_ascending_order')
-        self.error_policy.tested('char_strict_ascending_order')
+        self.rfc7940_checks.tested('char_ascending_order')
+        self.rfc7940_checks.tested('char_strict_ascending_order')
 
     def _process_rules(self, elem):
         """
@@ -365,7 +368,7 @@ class XMLParser(LGRParser):
             else:
                 logger.warning("Unhandled '%s' element in <rules> section",
                                child.tag)
-                self.error_policy.error("parse_xml")
+                self.rfc7940_checks.error("parse_xml")
             child.clear()
 
     def _parse_rule(self, elem):
@@ -434,7 +437,7 @@ class XMLParser(LGRParser):
                            count=count))
         else:
             logger.warning("Unhandled '%s' element in <rule> object", tag)
-            self.error_policy.error("parse_xml")
+            self.rfc7940_checks.error("parse_xml")
 
     def _parse_action(self, elem):
         """
@@ -494,7 +497,7 @@ class XMLParser(LGRParser):
                 cls.add_child(self._parse_class(child))
         else:
             logger.warning("Unhandled '%s' element in <class> object", tag)
-            self.error_policy.error("parse_xml")
+            self.rfc7940_checks.error("parse_xml")
 
         return cls
 
@@ -502,7 +505,13 @@ class XMLParser(LGRParser):
         """
         Iterator used to incrementally parse the XML file.
         """
+        metadata_added = False
         for _, elem in context:
+            if not metadata_added and elem != META_TAG:
+                # If the optional "meta" element is not present,
+                # we still have to call _process_meta
+                self._process_meta({})
+                metadata_added = True
             if elem.tag == META_TAG:
                 logger.debug("Got 'meta' element")
                 self._process_meta(elem)
