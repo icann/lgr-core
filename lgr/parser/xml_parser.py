@@ -38,7 +38,8 @@ from lgr.classes import (Class,
                          IntersectionClass,
                          DifferenceClass,
                          SymmetricDifferenceClass)
-from lgr.exceptions import LGRException, LGRFormatTestResults
+from lgr.exceptions import (LGRException,
+                            LGRFormatTestResults)
 from lgr.utils import format_cp
 from lgr.parser.parser import LGRParser
 
@@ -112,21 +113,9 @@ class XMLParser(LGRParser):
         else:
             force_mode = True
 
-        if 'rfc7940_checks' in kwargs:
-            rfc7940_checks = kwargs['rfc7940_checks']
-            del kwargs['rfc7940_checks']
-        else:
-            rfc7940_checks = LGRFormatTestResults()
-
         super(XMLParser, self).__init__(*args, **kwargs)
         self.force_mode = force_mode
-        self.rfc7940_checks = rfc7940_checks
-
-    def set_strict_mode(self, enabled=True):
-        self.force_mode = False if enabled else True
-
-    def set_rfc7940_checks(self, handler):
-        self.rfc7940_checks = handler
+        self.rfc7940_checks = LGRFormatTestResults()
 
     def validate_document(self, rng_schema_path):
         # Construct the RelaxNG validator
@@ -507,9 +496,10 @@ class XMLParser(LGRParser):
         """
         metadata_added = False
         for _, elem in context:
-            if not metadata_added and elem != META_TAG:
-                # If the optional "meta" element is not present,
-                # we still have to call _process_meta
+            if not metadata_added and elem == DATA_TAG:
+                # The optional "meta" element is not present since it must
+                # preceed the required data element.
+                # However, we still have to call _process_meta
                 self._process_meta({})
                 metadata_added = True
             if elem.tag == META_TAG:

@@ -21,7 +21,7 @@ def main():
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='be verbose')
     parser.add_argument('-q', '--quiet', action='store_true',
-                        help='Be quiet (no log)')
+                        help='Be quiet (no details, no log)')
     parser.add_argument('-r', '--rng', metavar='RNG',
                         help='RelaxNG XML schema')
     parser.add_argument('-l', '--libs', metavar='LIBS',
@@ -81,25 +81,29 @@ def main():
         summary = lgr.validate(options)
         logger.info('Result of validation: %s', summary)
 
-    final_result = lgr.get_validation_result(dict(
-            validity_end_expiry="ERROR",
-            validity_start_end="ERROR",
-            validity_started="ERROR",
-            metadata_description_type="ERROR",
-            metadata_scope_type="ERROR",
-            metadata_language="ERROR",
-            metadata_version_integer="WARNING",
-            data_variant_type="ERROR",
-            codepoint_valid="ERROR",
-            char_ascending_order="WARNING",
-            char_strict_ascending_order="IGNORE",
-            ref_attribute_ascending="WARNING",
-            standard_dispositions="ERROR",
-            basic_symmetry="WARNING",
-            strict_symmetry="WARNING",
-            basic_transitivity="WARNING",
-            parse_xml="ERROR",
-        ), verbose=True)
+    policy = dict(
+        validity_end_expiry="ERROR",
+        validity_start_end="ERROR",
+        validity_started="ERROR",
+        metadata_description_type="ERROR",
+        metadata_scope_type="ERROR",
+        metadata_language="ERROR",
+        metadata_version_integer="WARNING",
+        data_variant_type="ERROR",
+        codepoint_valid="ERROR",
+        char_ascending_order="WARNING",
+        char_strict_ascending_order="IGNORE",
+        ref_attribute_ascending="WARNING",
+        standard_dispositions="ERROR",
+        basic_symmetry="WARNING",
+        strict_symmetry="WARNING",
+        basic_transitivity="WARNING",
+        parse_xml="ERROR",
+    )
+
+    full_report = not args.quiet
+
+    final_result = lgr.get_rfc7940_validation(policy, verbose=full_report)
 
     sys.stdout.write(final_result)
     sys.stdout.write("\n")

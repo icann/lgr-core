@@ -281,7 +281,9 @@ class LGRLabelCollisionException(LGRException):
         super(LGRLabelCollisionException, self).__init__()
 
 class LGRFormatTestResults(object):
-
+    """
+    Aggregator for results of test cases against RFC7940
+    """
     test_desciption = dict(
         parse_xml = 'The LGR table can be parsed successfully',
         validity_end_expiry = 'The "validity-end" element (if present) in the metadata section is in future time',
@@ -308,25 +310,63 @@ class LGRFormatTestResults(object):
     def __init__(self):
         self.test_result = dict()
 
-    def error(self, label):
-        self.add_test_result(label, False)
+    def error(self, test_label):
+        """
+        Notify that a test case has failed.
 
-    def tested(self, label):
-        self.add_test_result(label, True)
+        :param test_label: The label of the test case.
+        """
+        self.add_test_result(test_label, False)
+
+    def tested(self, test_label):
+        """
+        Notify that a test case has been executed.
+
+        The test case will be considered to have failed if error has been called
+        for the same test case; otherwise it will be considered to have
+        succeeded.
+
+        :param test_label: The label of the test case.
+        """
+        self.add_test_result(test_label, True)
 
     def add_test_result(self, test_label, success):
         # Ignore successful result if the test case has already been run
+        """
+        Notify that a test case has been executed.
+
+        The test case will be considered to have failed if error has been called
+        for the same test case or if the value of success is False; otherwise it
+        will be considered to have succeeded.
+
+        :param test_label: The label of the test case.
+        """
+
         if not success or test_label not in self.test_result:
             self.test_result[test_label] = success
 
     def get_final_result(self, policy=None, verbose=False):
-        """Calculate the validation result based on policy and test results.
+        """
+        Calculate the validation result based on policy and test results.
+
         The final result will be:
          - PASS if all test cases in the policy have been executed and any failed
                 test case has policy "IGNORE"
          - WARN if all test cases have been executed, one or more failed test case has
                 policy "WARNING", and all other failed test cases has policy "IGNORE"
-         - FAIL otherwise"""
+         - FAIL otherwise
+        If no policy is given, the result will be FAIL if any of the hitherto
+        run tests have failed, PASS otherwise.
+
+        :param policy: A dict. Each key is a string, which should be the label
+                       of a test case that has been run. The value shall be
+                       IGNORE if test case failure should be ignored,  WARNING
+                       if test case failure should give a warning, and ERROR
+                       if test case must succeed.
+        :param verbose: If False, return only validation as. Otherwise return a
+                        full report.
+        :return: The validation as a string.
+        """
         if policy is None:
             if False in self.test_result.values():
                 return "FAIL"

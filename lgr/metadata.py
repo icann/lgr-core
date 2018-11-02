@@ -12,6 +12,7 @@ import logging
 from collections import OrderedDict
 
 from lgr.exceptions import (LGRFormatException,
+                            LGRFormatTestResults,
                             ReferenceAlreadyExists,
                             ReferenceNotDefined,
                             ReferenceInvalidId)
@@ -159,7 +160,7 @@ class Metadata(object):
         self.unicode_version = '6.3.0'
         self.description = None
         if rfc7940_checks is None:
-            self.rfc7940_checks = ErrorPolicy()
+            self.rfc7940_checks = LGRFormatTestResults()
         else:
             self.rfc7940_checks = rfc7940_checks
 
