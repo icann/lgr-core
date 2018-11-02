@@ -62,6 +62,7 @@ def main():
     if lgr is None:
         logger.error("Error while parsing LGR file.")
         logger.error("Please check compliance with RNG.")
+        sys.stdout.write("FAIL\n")
         return
 
     options = {
@@ -99,6 +100,7 @@ def main():
         strict_symmetry="WARNING",
         basic_transitivity="WARNING",
         parse_xml="ERROR",
+        schema="ERROR",
     )
 
     full_report = not args.quiet

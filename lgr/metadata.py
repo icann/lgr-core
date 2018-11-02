@@ -206,16 +206,16 @@ class Metadata(object):
             if not rfc5646.check(language):
                 logger.log(logging.WARNING if force else logging.ERROR,
                            "Invalid language: '%s'", language)
-                self.rfc7940_checks.error("metadata_language")
+                self.rfc7940_checks.error('metadata_language')
                 if not force:
                     raise LGRFormatException(LGRFormatException.
                                              LGRFormatReason.INVALID_LANGUAGE_TAG)
-            self.rfc7940_checks.tested("metadata_language")
+            self.rfc7940_checks.tested('metadata_language')
             self.languages.append(language)
         except UnicodeEncodeError:
             # Can't skip this one
             logger.error("Invalid non-ASCII language tag '%s'", language)
-            self.rfc7940_checks.error("metadata_language")
+            self.rfc7940_checks.error('metadata_language')
             raise LGRFormatException(LGRFormatException.
                                      LGRFormatReason.INVALID_LANGUAGE_TAG)
 
@@ -319,6 +319,7 @@ class Metadata(object):
         if re.match(r'\d{1,}\.\d{1,}\.\d{1,}', unicode_version) is None:
             logger.log(logging.WARNING if force else logging.ERROR,
                        "Invalid Unicode version: '%s'", unicode_version)
+            self.rfc7940_checks.error('valid_unicode_version')
             if not force:
                 raise LGRFormatException(LGRFormatException.
                                          LGRFormatReason.

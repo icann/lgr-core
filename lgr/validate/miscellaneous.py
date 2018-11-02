@@ -5,6 +5,7 @@ miscellaneous.py - Perform miscellaneous rfc7940 compliance checks
 
 import logging
 import datetime
+import re
 
 import lgr.char as lgr_char
 
@@ -38,29 +39,35 @@ def check_lgr_data(lgr):
                 if ' ' in t or t == '' or t[0] == '_':
                     logging.error("Bad variant type '%s'", t)
                     success = False
-                    lgr.notify_error("data_variant_type")
-        lgr.notify_tested("data_variant_type")
+                    lgr.notify_error('data_variant_type')
+        lgr.notify_tested('data_variant_type')
 
     # Check that all chars exist in the given Unicode version
+    unidb_version = lgr.unicode_database.get_unicode_version()
+    if unidb_version == lgr.metadata.unicode_version:
+        lgr.notify_tested('valid_unicode_version')
+        # First add all code points to the set "to_check"
+        to_check = set()
+        for c in lgr.repertoire:
+            if isinstance(c, lgr_char.RangeChar):
+                to_check.update(range(c.first_cp, c.last_cp + 1))
+            else:
+                to_check.update(c.cp)
+                for v in c.get_variants():
+                    to_check.update(v.cp)
 
-    # First add all code points to the set "to_check"
-    to_check = set()
-    for c in lgr.repertoire:
-        if isinstance(c, lgr_char.RangeChar):
-            to_check.update(range(c.first_cp, c.last_cp + 1))
-        else:
-            to_check.update(c.cp)
-            for v in c.get_variants():
-                to_check.update(v.cp)
-
-    # Check that all code points in to_check are valid in our Unicode version
-    for cp in to_check:
-        prop = lgr.unicode_database.get_idna_prop(cp)
-        if prop not in VALID_IDNA_PROPERTY_VALUES:
-            logging.error("Invalid codepoint '%04X': %s", cp, prop)
-            success = False
-            lgr.notify_error('codepoint_valid')
-    lgr.notify_tested('codepoint_valid')
+        # Check that all code points are valid in our Unicode version
+        for cp in to_check:
+            prop = lgr.unicode_database.get_idna_prop(cp)
+            if prop not in VALID_IDNA_PROPERTY_VALUES:
+                logging.error("Invalid codepoint '%04X': %s", cp, prop)
+                success = False
+                lgr.notify_error('codepoint_valid')
+        lgr.notify_tested('codepoint_valid')
+    else:
+        logger.warning("Target Unicode version %s differs "
+                       "from UnicodeDatabase %s",
+                       lgr.metadata.unicode_version, unidb_version)
 
     # Check "ref" attribute:
     for c in lgr.repertoire:
@@ -92,10 +99,10 @@ def check_lgr_rules(lgr):
     for action in lgr.actions:
         disp = action.disp
         if not disp in STANDARD_DISPOSITIONS:
-            lgr.notify_error("standard_dispositions")
+            lgr.notify_error('standard_dispositions')
             success = False
             logging.error("Action element has non-standard disposition " + disp)
-    lgr.notify_tested("standard_dispositions")
+    lgr.notify_tested('standard_dispositions')
     return success
 
 def check_miscellaneous(lgr, options):

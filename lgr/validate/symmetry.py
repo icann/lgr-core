@@ -42,7 +42,7 @@ def check_symmetry(lgr, options):
                 # Variant is not defined in repertoire
                 logger.warning('CP %s: Variant %s is not in repertoire.',
                                format_cp(a.cp), format_cp(b.cp))
-                lgr.notify_error("basic_symmetry")
+                lgr.notify_error('basic_symmetry')
                 result['repertoire'].append({
                     'char': a,
                     'variant': b,
@@ -58,7 +58,7 @@ def check_symmetry(lgr, options):
                 success = False
                 logger.warning('CP %s should have CP %s in its variants.',
                                format_cp(b.cp), format_cp(a.cp))
-                lgr.notify_error("basic_symmetry")
+                lgr.notify_error('basic_symmetry')
                 continue
 
             # Now let's check if the reverse mappings agree in their
@@ -68,7 +68,7 @@ def check_symmetry(lgr, options):
                     if c.when == b.when and c.not_when == b.not_when:
                         break
             else:
-                lgr.notify_error("strict_symmetry")
+                lgr.notify_error('strict_symmetry')
                 logger.warning('CP %s should have CP %s in its strict variants.',
                                format_cp(b.cp), format_cp(a.cp))
                 result['repertoire'].append({
@@ -77,7 +77,7 @@ def check_symmetry(lgr, options):
                     'type': 'missing'
                 })
     logger.info("Symmetry test done")
-    lgr.notify_tested("basic_symmetry")
-    lgr.notify_tested("strict_symmetry")
+    lgr.notify_tested('basic_symmetry')
+    lgr.notify_tested('strict_symmetry')
 
     return success, result

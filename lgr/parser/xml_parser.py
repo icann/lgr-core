@@ -132,13 +132,13 @@ class XMLParser(LGRParser):
         if not schema.validate(doc):
             logger.warning("Validation of document '%s' failed",
                            self.source)
-            self.rfc7940_checks.error("schema")
+            self.rfc7940_checks.error('schema')
             error_log = schema.error_log
             if len(error_log) == 0:
                 # Bug in LXML, see https://bugs.launchpad.net/lxml/+bug/1526522
                 error_log = "CANNOT VALIDATE XML"
 
-        self.rfc7940_checks.tested("schema")
+        self.rfc7940_checks.tested('schema')
         return error_log
 
     def unicode_version(self):
@@ -174,7 +174,7 @@ class XMLParser(LGRParser):
         if hasattr(self.source, "seek"):
             self.source.seek(0)
 
-        self.rfc7940_checks.tested("parse_xml")
+        self.rfc7940_checks.tested('parse_xml')
         return self._lgr
 
     def _process_meta(self, elem):
@@ -193,11 +193,14 @@ class XMLParser(LGRParser):
             UNICODE_VERSION_TAG: lambda d: metadata.set_unicode_version(d,
                                                                         force=self.force_mode),
         }
+        unicode_version_tag_found = False
         for child in elem:
             tag = child.tag
             logger.debug("Got '%s' element", tag)
             if tag in MAPPER:
                 MAPPER[tag](child.text)
+                if tag == UNICODE_VERSION_TAG:
+                    unicode_version_tag_found = True
             elif tag == VERSION_TAG:
                 metadata.version = Version(child.text,
                                            child.get('comment', None))
@@ -226,9 +229,11 @@ class XMLParser(LGRParser):
             else:
                 logger.warning("Unhandled '%s' element in <meta> section",
                                tag)
-                self.rfc7940_checks.error("parse_xml")
+                self.rfc7940_checks.error('parse_xml')
             child.clear()
 
+        self.rfc7940_checks.add_test_result('explicit_unicode_version',
+                                            unicode_version_tag_found)
         self._lgr = LGR(name=self.filename,
                         metadata=metadata,
                         reference_manager=reference_manager,
@@ -426,7 +431,7 @@ class XMLParser(LGRParser):
                            count=count))
         else:
             logger.warning("Unhandled '%s' element in <rule> object", tag)
-            self.rfc7940_checks.error("parse_xml")
+            self.rfc7940_checks.error('parse_xml')
 
     def _parse_action(self, elem):
         """
@@ -486,7 +491,7 @@ class XMLParser(LGRParser):
                 cls.add_child(self._parse_class(child))
         else:
             logger.warning("Unhandled '%s' element in <class> object", tag)
-            self.rfc7940_checks.error("parse_xml")
+            self.rfc7940_checks.error('parse_xml')
 
         return cls
 
