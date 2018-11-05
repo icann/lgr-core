@@ -1,4 +1,4 @@
-#!env python
+#!/bin/env python
 # -*- coding: utf-8 -*-
 """
 rfc7940_validate.py - Check compliance with rfc7940.
