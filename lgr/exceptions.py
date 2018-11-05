@@ -363,8 +363,8 @@ class LGRFormatTestResults(object):
                        IGNORE if test case failure should be ignored,  WARNING
                        if test case failure should give a warning, and ERROR
                        if test case must succeed.
-        :param verbose: If False, return only validation as. Otherwise return a
-                        full report.
+        :param verbose: If False, return only validation as a string. Otherwise
+                        return a log with result of each test.
         :return: The validation as a string.
         """
         if policy is None:

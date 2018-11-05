@@ -1255,7 +1255,7 @@ class LGR(object):
 
     def get_rfc7940_validation(self, policy=None, verbose=False):
         """
-        Return a report on RFC7940 compliance.
+        Return the result of RFC7940 compliance checks.
 
         The validation will be "PASS", "WARN", or "FAIL". The validation result
         will be based on tests that have been performed prior to this call.
@@ -1278,8 +1278,8 @@ class LGR(object):
                        IGNORE if test case failure should be ignored,  WARNING
                        if test case failure should give a warning, and ERROR
                        if test case must succeed.
-        :param verbose: If False, return only validation as. Otherwise return a
-                        full report.
+        :param verbose: If False, return only validation as a string. Otherwise
+                        return a log with result of each test.
         :return: The validation as a string.
         """
         return self.metadata.rfc7940_checks.get_final_result(policy, verbose)
