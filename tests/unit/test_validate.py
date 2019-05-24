@@ -59,6 +59,7 @@ class TestSymmetry(unittest.TestCase):
         self.assertDictEqual(result, {'description': 'Testing symmetry',
                                       'repertoire': [{'char': self.lgr.get_char([0x0061]),
                                                       'variant': self.lgr.get_variant([0x0061], (0x0062, ))[0],
+                                                      'rule': None,
                                                       'type': 'not-in-repertoire'}]})
 
     def test_no_symmetric_in_variants(self):
@@ -72,9 +73,66 @@ class TestSymmetry(unittest.TestCase):
                          'CP U+0062 should have CP U+0061 in its variants.\n')
         self.assertFalse(success)
         self.assertDictEqual(result, {'description': 'Testing symmetry',
-                                      'repertoire': [{'char': self.lgr.get_variant([0x0061], (0x0062, ))[0],
-                                                      'variant': self.lgr.get_char([0x0061]),
-                                                      'type': 'missing'}]})
+                                      'repertoire': [{'char': self.lgr.get_char([0x0061]),
+                                                      'variant': self.lgr.get_variant([0x0061], (0x0062, ))[0],
+                                                      'rule': None,
+                                                      'type': 'missing-symmetric-variant'}]})
+
+    def test_no_symmetric_rule_when_in_variants(self):
+        self.lgr.add_cp([0x0061])
+        self.lgr.add_variant([0x0061], [0x0062], when='test-when')
+        self.lgr.add_cp([0x0062])
+        self.lgr.add_variant([0x0062], [0x0061])
+        success, result = check_symmetry(self.lgr, {})
+        log_content = self.log_output.getvalue()
+        self.assertGreater(len(log_content), 0)
+        self.assertEqual(log_content,
+                         'Variant CP U+0061 of CP U+0062 should have reverse contextual when rule test-when.\n')
+        self.assertFalse(success)
+        self.assertDictEqual(result, {'description': 'Testing symmetry',
+                                      'repertoire': [{'char': self.lgr.get_char([0x0061]),
+                                                      'variant': self.lgr.get_variant([0x0061], (0x0062, ))[0],
+                                                      'rule': 'test-when',
+                                                      'type': 'variant-contextual-rule-when-missing'}]})
+
+    def test_no_symmetric_rule_not_when_in_variants(self):
+        self.lgr.add_cp([0x0061])
+        self.lgr.add_variant([0x0061], [0x0062], not_when='test-not-when')
+        self.lgr.add_cp([0x0062])
+        self.lgr.add_variant([0x0062], [0x0061])
+        success, result = check_symmetry(self.lgr, {})
+        log_content = self.log_output.getvalue()
+        self.assertGreater(len(log_content), 0)
+        self.assertEqual(log_content,
+                         'Variant CP U+0061 of CP U+0062 should have reverse contextual not-when rule test-not-when.\n')
+        self.assertFalse(success)
+        self.assertDictEqual(result, {'description': 'Testing symmetry',
+                                      'repertoire': [{'char': self.lgr.get_char([0x0061]),
+                                                      'variant': self.lgr.get_variant([0x0061], (0x0062, ))[0],
+                                                      'rule': 'test-not-when',
+                                                      'type': 'variant-contextual-rule-not-when-missing'}]})
+
+    def test_no_symmetric_rule_in_variants_when_not_when(self):
+        self.lgr.add_cp([0x0061])
+        self.lgr.add_variant([0x0061], [0x0062], when='test-when')
+        self.lgr.add_cp([0x0062])
+        self.lgr.add_variant([0x0062], [0x0061], not_when='test-not-when')
+        success, result = check_symmetry(self.lgr, {})
+        log_content = self.log_output.getvalue()
+        self.assertGreater(len(log_content), 0)
+        self.assertEqual(log_content,
+                         'Variant CP U+0061 of CP U+0062 should have reverse contextual when rule test-when.\n'
+                         'Variant CP U+0062 of CP U+0061 should have reverse contextual not-when rule test-not-when.\n')
+        self.assertFalse(success)
+        self.assertDictEqual(result, {'description': 'Testing symmetry',
+                                      'repertoire': [{'char': self.lgr.get_char([0x0061]),
+                                                      'variant': self.lgr.get_variant([0x0061], (0x0062, ))[0],
+                                                      'rule': 'test-when',
+                                                      'type': 'variant-contextual-rule-when-missing'},
+                                                     {'char': self.lgr.get_char([0x0062]),
+                                                      'variant': self.lgr.get_variant([0x0062], (0x0061,))[0],
+                                                      'rule': 'test-not-when',
+                                                      'type': 'variant-contextual-rule-not-when-missing'}]})
 
     def test_symmetry_ok(self):
         self.lgr.add_cp([0x0061])

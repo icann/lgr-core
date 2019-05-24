@@ -185,6 +185,7 @@ def parse_label_input(s, idna_decoder=lambda x: x.encode('utf-8').decode('idna')
         else:
             return s
 
+
 def merge_lgrs(input_lgrs, name=None, rng=None, unidb=None):
     """
     Merge LGRs to create a LGR set
