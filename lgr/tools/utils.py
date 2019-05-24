@@ -5,8 +5,11 @@ utils - List of utility functions for tools.
 from __future__ import unicode_literals
 
 import logging
+import os
 import sys
 import codecs
+from io import BytesIO
+from six.moves.urllib import request as url_req, parse as url_parse
 
 from lgr import text_type
 from lgr.utils import cp_to_ulabel
@@ -242,3 +245,13 @@ def get_stdin():
         return sys.stdin
     else:
         return codecs.getreader('utf8')(sys.stdin)
+
+
+def download_file(source_url):
+    base_url = url_parse.urlparse(source_url).path
+    filename = os.path.basename(base_url)
+    with url_req.urlopen(source_url) as resp:
+        logger.debug("Retrieve %s at URL %s", filename, source_url)
+        data = BytesIO(resp.read())
+
+    return filename, data
