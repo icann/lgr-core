@@ -59,6 +59,7 @@ class TestSymmetry(unittest.TestCase):
         self.assertDictEqual(result, {'description': 'Testing symmetry',
                                       'repertoire': [{'char': self.lgr.get_char([0x0061]),
                                                       'variant': self.lgr.get_variant([0x0061], (0x0062, ))[0],
+                                                      'rule_type': None,
                                                       'rule': None,
                                                       'type': 'not-in-repertoire'}]})
 
@@ -75,6 +76,7 @@ class TestSymmetry(unittest.TestCase):
         self.assertDictEqual(result, {'description': 'Testing symmetry',
                                       'repertoire': [{'char': self.lgr.get_char([0x0061]),
                                                       'variant': self.lgr.get_variant([0x0061], (0x0062, ))[0],
+                                                      'rule_type': None,
                                                       'rule': None,
                                                       'type': 'missing-symmetric-variant'}]})
 
@@ -92,8 +94,9 @@ class TestSymmetry(unittest.TestCase):
         self.assertDictEqual(result, {'description': 'Testing symmetry',
                                       'repertoire': [{'char': self.lgr.get_char([0x0061]),
                                                       'variant': self.lgr.get_variant([0x0061], (0x0062, ))[0],
+                                                      'rule_type': 'when',
                                                       'rule': 'test-when',
-                                                      'type': 'variant-contextual-rule-when-missing'}]})
+                                                      'type': 'variant-contextual-rule-missing'}]})
 
     def test_no_symmetric_rule_not_when_in_variants(self):
         self.lgr.add_cp([0x0061])
@@ -109,8 +112,9 @@ class TestSymmetry(unittest.TestCase):
         self.assertDictEqual(result, {'description': 'Testing symmetry',
                                       'repertoire': [{'char': self.lgr.get_char([0x0061]),
                                                       'variant': self.lgr.get_variant([0x0061], (0x0062, ))[0],
+                                                      'rule_type': 'not-when',
                                                       'rule': 'test-not-when',
-                                                      'type': 'variant-contextual-rule-not-when-missing'}]})
+                                                      'type': 'variant-contextual-rule-missing'}]})
 
     def test_no_symmetric_rule_in_variants_when_not_when(self):
         self.lgr.add_cp([0x0061])
@@ -127,12 +131,14 @@ class TestSymmetry(unittest.TestCase):
         self.assertDictEqual(result, {'description': 'Testing symmetry',
                                       'repertoire': [{'char': self.lgr.get_char([0x0061]),
                                                       'variant': self.lgr.get_variant([0x0061], (0x0062, ))[0],
+                                                      'rule_type': 'when',
                                                       'rule': 'test-when',
-                                                      'type': 'variant-contextual-rule-when-missing'},
+                                                      'type': 'variant-contextual-rule-missing'},
                                                      {'char': self.lgr.get_char([0x0062]),
                                                       'variant': self.lgr.get_variant([0x0062], (0x0061,))[0],
+                                                      'rule_type': 'not-when',
                                                       'rule': 'test-not-when',
-                                                      'type': 'variant-contextual-rule-not-when-missing'}]})
+                                                      'type': 'variant-contextual-rule-missing'}]})
 
     def test_symmetry_ok(self):
         self.lgr.add_cp([0x0061])

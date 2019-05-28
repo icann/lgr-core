@@ -46,6 +46,7 @@ def check_symmetry(lgr, options):
                 result['repertoire'].append({
                     'char': a,
                     'variant': b,
+                    'rule_type': None,
                     'rule': None,
                     'type': 'not-in-repertoire'
                 })
@@ -86,6 +87,7 @@ def check_symmetry(lgr, options):
                 result['repertoire'].append({
                     'char': a,
                     'variant': b,
+                    'rule_type': None,
                     'rule': None,
                     'type': 'missing-symmetric-variant'
                 })
@@ -102,8 +104,9 @@ def check_symmetry(lgr, options):
                 result['repertoire'].append({
                     'char': a,
                     'variant': b,
+                    'rule_type': 'when',
                     'rule': b.when,
-                    'type': 'variant-contextual-rule-when-missing'
+                    'type': 'variant-contextual-rule-missing'
                 })
             elif b.not_when and b.not_when not in [r.not_when for r in reverse]:
                 success = False
@@ -112,8 +115,9 @@ def check_symmetry(lgr, options):
                 result['repertoire'].append({
                     'char': a,
                     'variant': b,
+                    'rule_type': 'not-when',
                     'rule': b.not_when,
-                    'type': 'variant-contextual-rule-not-when-missing'
+                    'type': 'variant-contextual-rule-missing'
                 })
     logger.info("Symmetry test done")
     lgr.notify_tested('basic_symmetry')
