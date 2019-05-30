@@ -8,7 +8,7 @@ import logging
 
 from lgr.utils import format_cp, cp_to_ulabel
 from lgr.tools.utils import read_labels
-from lgr.exceptions import LGRException, MissingLanguage
+from lgr.exceptions import LGRException, MissingLanguage, LGRCrossScriptMissingDataException
 
 logger = logging.getLogger(__name__)
 
@@ -58,11 +58,11 @@ def cross_script_variants(lgr, labels_input):
     if lgr.metadata is None:
         logger.error("Cannot generate cross-scripts variants "
                      "for LGR without metadata")
-        raise Exception
+        raise LGRCrossScriptMissingDataException("Metadata")
     if lgr.unicode_database is None:
         logger.error("Cannot generate cross-scripts variants "
                      "for LGR without unicode database attached")
-        raise Exception
+        raise LGRCrossScriptMissingDataException("Unicode Version")
     found = False
     for label, valid, error in read_labels(labels_input, lgr.unicode_database):
         if not valid:

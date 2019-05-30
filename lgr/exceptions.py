@@ -280,6 +280,16 @@ class LGRLabelCollisionException(LGRException):
     def __init__(self):
         super(LGRLabelCollisionException, self).__init__()
 
+
+class LGRCrossScriptMissingDataException(LGRException):
+    """
+    Raise when cross script variant cannot be computed due to missing data in LGR
+    """
+    def __init__(self, missing_part):
+        super(LGRCrossScriptMissingDataException, self).__init__()
+        self.missing_part = missing_part
+
+
 class LGRFormatTestResults(object):
     """
     Aggregator for results of test cases against RFC7940
