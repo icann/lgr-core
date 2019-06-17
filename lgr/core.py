@@ -1253,6 +1253,60 @@ class LGR(object):
                 out.append(clsname[prefix_len:])
         return out
 
+    def get_rfc7940_validation(self, policy=None, verbose=False):
+        """
+        Return the result of RFC7940 compliance checks.
+
+        The validation will be "PASS", "WARN", or "FAIL". The validation result
+        will be based on tests that have been performed prior to this call.
+        Each single test may either succeed or fail. Tests that have not been
+        performed will be assumed to have failed.
+
+        A policy may be given to control what tests should have been performed
+        and how to evaluate the result. The result will be:
+         - PASS if all test cases in the policy have been executed and any
+                failed test case has policy "IGNORE"
+         - WARN if all test cases have been executed, one or more failed test
+                case has policy "WARNING", and all other failed test cases has
+                policy "IGNORE"
+         - FAIL otherwise
+        If no policy is given, the result will be FAIL if any of the hitherto
+        run tests have failed, PASS otherwise.
+
+        :param policy: A dict. Each key is a string, which should be the label
+                       of a test case that has been run. The value shall be
+                       IGNORE if test case failure should be ignored,  WARNING
+                       if test case failure should give a warning, and ERROR
+                       if test case must succeed.
+        :param verbose: If False, return only validation as a string. Otherwise
+                        return a log with result of each test.
+        :return: The validation as a string.
+        """
+        return self.metadata.rfc7940_checks.get_final_result(policy, verbose)
+
+    def notify_error(self, test_label):
+        """
+        Notify that a test case against RFC7940 has failed.
+
+        Called during parsing or validation of the LGR table if a test case
+        is found to have failed.
+
+        :param test_label: The label of the test case.
+        """
+        self.metadata.rfc7940_checks.error(test_label)
+
+    def notify_tested(self, test_label):
+        """
+        Notify that a test case against RFC7940 has been executed.
+
+        Called during parsing or validation of the LGR table after a test case
+        has been thoroughly checked. If notify_error hasn't been called at least
+        once with the same label, the test will be assummed to have succeeded.
+
+        :param test_label: The label of the test case.
+        """
+        self.metadata.rfc7940_checks.tested(test_label)
+
     def get_tag_classes(self):
         """
         Return the list of "tag-classes" used in this LGR.
