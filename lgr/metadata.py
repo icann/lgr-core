@@ -12,6 +12,7 @@ import logging
 from collections import OrderedDict
 
 from lgr.exceptions import (LGRFormatException,
+                            LGRFormatTestResults,
                             ReferenceAlreadyExists,
                             ReferenceNotDefined,
                             ReferenceInvalidId)
@@ -149,7 +150,7 @@ class Metadata(object):
     LGR metadata encapsulation object.
     """
 
-    def __init__(self):
+    def __init__(self, rfc7940_checks=None):
         self.version = None
         self.date = None
         self.languages = []
@@ -158,6 +159,10 @@ class Metadata(object):
         self.validity_end = None
         self.unicode_version = '6.3.0'
         self.description = None
+        if rfc7940_checks is None:
+            self.rfc7940_checks = LGRFormatTestResults()
+        else:
+            self.rfc7940_checks = rfc7940_checks
 
     # Note: This method is memoized since it is called very often during the
     # LGR._check_convert_cp(), which ensure the CP is part of the declared
@@ -201,13 +206,16 @@ class Metadata(object):
             if not rfc5646.check(language):
                 logger.log(logging.WARNING if force else logging.ERROR,
                            "Invalid language: '%s'", language)
+                self.rfc7940_checks.error('metadata_language')
                 if not force:
                     raise LGRFormatException(LGRFormatException.
                                              LGRFormatReason.INVALID_LANGUAGE_TAG)
+            self.rfc7940_checks.tested('metadata_language')
             self.languages.append(language)
         except UnicodeEncodeError:
             # Can't skip this one
             logger.error("Invalid non-ASCII language tag '%s'", language)
+            self.rfc7940_checks.error('metadata_language')
             raise LGRFormatException(LGRFormatException.
                                      LGRFormatReason.INVALID_LANGUAGE_TAG)
 
@@ -311,6 +319,7 @@ class Metadata(object):
         if re.match(r'\d{1,}\.\d{1,}\.\d{1,}', unicode_version) is None:
             logger.log(logging.WARNING if force else logging.ERROR,
                        "Invalid Unicode version: '%s'", unicode_version)
+            self.rfc7940_checks.error('valid_unicode_version')
             if not force:
                 raise LGRFormatException(LGRFormatException.
                                          LGRFormatReason.

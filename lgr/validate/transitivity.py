@@ -64,10 +64,12 @@ def check_transitivity(lgr, options):
                     logger.warning("CP %s should have CP %s in its variants.",
                                    format_cp(a.cp),
                                    format_cp(c.cp))
+                    lgr.notify_error('basic_transitivity')
                     result['repertoire'].append({
                         'char': a,
                         'variant': c
                     })
     logger.info("Transitivity test done")
+    lgr.notify_tested('basic_transitivity')
 
     return success, result

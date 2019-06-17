@@ -14,6 +14,9 @@ from lgr.validate.rebuild_lgr import rebuild_lgr
 from lgr.validate.transitivity import check_transitivity
 from lgr.validate.conditional_variants import check_conditional_variants
 
+from lgr.validate.metadata import check_metadata
+from lgr.validate.miscellaneous import check_miscellaneous
+
 CHECKS = [
     check_xml_validity,
     check_symmetry,
@@ -21,6 +24,11 @@ CHECKS = [
     check_conditional_variants,
     rebuild_lgr,
     compute_stats
+]
+
+RFC7940_CHECKS = [
+    check_metadata,
+    check_miscellaneous
 ]
 
 logger = logging.getLogger(__name__)
@@ -39,9 +47,14 @@ def validate_lgr(lgr, options):
     :param options: Dictionary of options to the validation function.
     :return: Result of checks and summary as a list of (check function name, check results).
     """
+
     result = []
 
-    for check_function in CHECKS:
+    TO_RUN = CHECKS
+    if options.get('rfc7940'):
+        TO_RUN += RFC7940_CHECKS
+
+    for check_function in TO_RUN:
         try:
             valid, func_result = check_function(lgr, options)
             result.append((check_function.__name__, func_result))
