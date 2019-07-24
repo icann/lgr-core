@@ -20,12 +20,13 @@ PRIMARY = 'Primary'
 VARIANT = 'Variant'
 
 
-def _generate_indexes(lgr, labels, keep=False, quiet=False):
+def _generate_indexes(lgr, labels, tlds=None, keep=False, quiet=False):
     """
     Generate indexes based on labels provided in the list
 
     :param lgr: The current LGR
     :param labels: The list of labels, as a list of U-Labels.
+    :param labels: The list of TLDs
     :param keep: Do we keep labels without collision in the output
     :param quiet: If True, do not collect rule log.
 
@@ -37,29 +38,36 @@ def _generate_indexes(lgr, labels, keep=False, quiet=False):
 
     label_indexes = {}
     not_in_lgr = []
-    # Get the indexes and variants for all labels
-    for label in labels:
-        label_cp = tuple([ord(c) for c in label])
-        try:
-            label_index = lgr.generate_index_label(label_cp)
-        except NotInLGR:
-            not_in_lgr.append(label_cp)
-            continue
 
-        label_cp_out = format_cp(label_cp)
-        if label_index not in label_indexes:
-            label_indexes[label_index] = []
-        label_indexes[label_index].append({'label': label,
-                                           'bidi': "%s'%s'%s" % (LRI,
-                                                                 label,
-                                                                 PDI),
-                                           'cat': PRIMARY,
-                                           'cp': label_cp,
-                                           'cp_out': label_cp_out,
-                                           'disp': {label: '-'},
-                                           'rules': {label: '-'},
-                                           'action_idx': {label: '-'}
-                                           })
+    # Get the indexes and variants for all labels
+    def get_indexes(label_list, is_tld=False):
+        for label in label_list:
+            label_cp = tuple([ord(c) for c in label])
+            try:
+                label_index = lgr.generate_index_label(label_cp)
+            except NotInLGR:
+                not_in_lgr.append(label_cp)
+                continue
+
+            label_cp_out = format_cp(label_cp)
+            if label_index not in label_indexes:
+                label_indexes[label_index] = []
+            label_indexes[label_index].append({'label': label,
+                                               'bidi': "%s'%s'%s" % (LRI,
+                                                                     label,
+                                                                     PDI),
+                                               'cat': PRIMARY,
+                                               'cp': label_cp,
+                                               'cp_out': label_cp_out,
+                                               'disp': {label: '-'},
+                                               'rules': {label: '-'},
+                                               'action_idx': {label: '-'},
+                                               'tld': is_tld
+                                               })
+
+    get_indexes(labels)
+    if tlds:
+        get_indexes(tlds, is_tld=True)
 
     for (label_index, primaries) in deepcopy(label_indexes).items():
         # only get variants for collided labels (if not keep)
@@ -67,6 +75,10 @@ def _generate_indexes(lgr, labels, keep=False, quiet=False):
             del label_indexes[label_index]
             continue
         for primary in primaries:
+            if primary['tld']:
+                # do not use TLD as primary
+                # TODO is this ok?
+                continue
             label_cp = primary['cp']
             label = primary['label']
             for (variant_cp,
@@ -415,12 +427,13 @@ def diff(lgr_1, lgr_2, labels_input, show_collision=True,
                 yield output
 
 
-def collision(lgr, labels_input, show_dump=False, quiet=False):
+def collision(lgr, labels_input, tld_file, show_dump=False, quiet=False):
     """
     Show collisions in a list of labels for a given LGR
 
     :param lgr: The LGR object.
     :param labels_input: The file containing the labels
+    :param tld_file: The file containing the TLDs
     :param show_dump: Generate a full dump
     :param quiet: Do not print rules
     """
@@ -432,7 +445,6 @@ def collision(lgr, labels_input, show_dump=False, quiet=False):
         else:
             yield "Label {}: {}\n".format(label, error)
 
-    # get diff between labels and variants for the two LGR
     # only keep label without collision for a full dump
     label_indexes, not_in_lgr = _generate_indexes(lgr, labels, keep=show_dump,
                                                   quiet=quiet)

@@ -19,7 +19,7 @@ from lgr.tools.merge_set import merge_lgr_set
 logger = logging.getLogger(__name__)
 
 
-def read_labels(input, unidb, do_raise=False, keep_commented=False):
+def read_labels(input, unidb=None, do_raise=False, keep_commented=False, as_cp=False):
     """
     Read a label file and format lines to get a list of correct labels
 
@@ -27,6 +27,7 @@ def read_labels(input, unidb, do_raise=False, keep_commented=False):
     :param unidb: The UnicodeDatabase
     :param do_raise: Whether the label parsing exceptions are raised or not
     :param keep_commented: Whether commented labels are returned (still commented) or not
+    :param as_cp: If True, returns a list of code points per label. Otherwise, unicode string.
     :return: [(label, valid, error)]
     """
     labels = [l.strip() for l in input]
@@ -47,7 +48,10 @@ def read_labels(input, unidb, do_raise=False, keep_commented=False):
         valid = True
         # transform U-label and A-label in unicode strings
         try:
-            label = parse_label_input(label, unidb.idna_decode_label, False)
+            if unidb:
+                label = parse_label_input(label, idna_decoder=unidb.idna_decode_label, as_cp=as_cp)
+            else:
+                label = parse_label_input(label, as_cp=as_cp)
         except BaseException as ex:
             if do_raise:
                 raise
