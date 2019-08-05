@@ -38,8 +38,8 @@ from lgr.classes import (Class,
                          IntersectionClass,
                          DifferenceClass,
                          SymmetricDifferenceClass)
-from lgr.exceptions import (LGRException,
-                            LGRFormatTestResults)
+from lgr.exceptions import LGRException
+from lgr.rfc7940 import LGRFormatTestResults
 from lgr.utils import format_cp
 from lgr.parser.parser import LGRParser
 

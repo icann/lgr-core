@@ -12,10 +12,10 @@ import logging
 from collections import OrderedDict
 
 from lgr.exceptions import (LGRFormatException,
-                            LGRFormatTestResults,
                             ReferenceAlreadyExists,
                             ReferenceNotDefined,
                             ReferenceInvalidId)
+from lgr.rfc7940 import LGRFormatTestResults
 from lgr.memoize import MethodAttributeMemoizer
 from lgr.utils import script_iso15924_to_unicode
 
