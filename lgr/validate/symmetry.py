@@ -67,24 +67,6 @@ def check_symmetry(lgr, options):
                                format_cp(b.cp), format_cp(a.cp))
                 lgr.notify_error('basic_symmetry')
                 result['repertoire'].append({
-                    'char': b,
-                    'variant': a,
-                    'type': 'missing'
-                })
-                continue
-
-            # Now let's check if the reverse mappings agree in their
-            # "when" or "not-when" attributes
-            for c in lgr.get_variants(b.cp):
-                if c.cp == a.cp:
-                    if c.when == b.when and c.not_when == b.not_when:
-                        break
-            else:
-                success = False
-                lgr.notify_error('strict_symmetry')
-                logger.warning('CP %s should have CP %s in its strict variants.',
-                               format_cp(b.cp), format_cp(a.cp))
-                result['repertoire'].append({
                     'char': a,
                     'variant': b,
                     'rule_type': None,
@@ -95,6 +77,7 @@ def check_symmetry(lgr, options):
 
             if options and options.get('ignore_rules'):
                 continue
+
             # Variant is defined in repertoire and original character is in its variants,
             # let's see if variant and reverse variant have the same contextual rules
             if b.when and b.when not in [r.when for r in reverse]:
@@ -108,6 +91,7 @@ def check_symmetry(lgr, options):
                     'rule': b.when,
                     'type': 'variant-contextual-rule-missing'
                 })
+                lgr.notify_error('strict_symmetry')
             elif b.not_when and b.not_when not in [r.not_when for r in reverse]:
                 success = False
                 logger.warning('Variant CP %s of CP %s should have reverse contextual not-when rule %s.',
@@ -119,6 +103,8 @@ def check_symmetry(lgr, options):
                     'rule': b.not_when,
                     'type': 'variant-contextual-rule-missing'
                 })
+                lgr.notify_error('strict_symmetry')
+
     logger.info("Symmetry test done")
     lgr.notify_tested('basic_symmetry')
     lgr.notify_tested('strict_symmetry')

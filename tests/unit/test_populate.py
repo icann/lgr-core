@@ -86,7 +86,6 @@ class TestPopulate(unittest.TestCase):
         self.lgr.add_cp([0x0062])
         self.lgr.add_variant([0x0062], [0x0061])
         populate_lgr(self.lgr)
-        print(self.log_output.getvalue())
         log_content = self.log_output.getvalue()
         self.assertEqual("Update variant 'U+0061' of code point 'U+0062' for contextual rule when symmetry\n",
                          log_content)
