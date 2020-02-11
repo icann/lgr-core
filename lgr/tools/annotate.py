@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import logging
 
 from lgr.tools.utils import read_labels
-from lgr.tools.diff_collisions import get_collisions
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +49,8 @@ def lgr_set_annotate(lgr, script_lgr, set_labels_input, labels_input):
     :param set_labels_input: The labels in the lgr set.
     :param labels_input: The file containing the labels
     """
+    from lgr.tools.diff_collisions import get_collisions
+
     # First, we need to filter-out out-of-LGR labels from the set_labels_input:
     yield "# The following labels from the set labels are invalid\n"
     filtered_set = []
