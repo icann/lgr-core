@@ -46,7 +46,7 @@ def _generate_indexes(lgr, labels, tlds=None, keep=False, quiet=False):
                 label_index = lgr.generate_index_label(label_cp)
             except NotInLGR:
                 if is_tld:
-                    label += " (from TLD)"
+                    continue
                 not_in_lgr.append(label)
                 continue
 
