@@ -133,10 +133,12 @@ class Rule(object):
                 rule_logger.debug('Not a parameterized context rule')
                 # Pattern is not a parameterized context-rule, so set index to 0
                 index = 0
-            # Format anchor - Can be a sequence.
-            # Use old-style formatting, see note in matcher.AnchorMatcher
-            pattern = pattern % {'anchor': ''.join(map(lambda c: '\\x{{{:X}}}'.format(c),
-                                                       anchor))}
+                anchor = None
+            else:
+                # Format anchor - Can be a sequence.
+                # Use old-style formatting, see note in matcher.AnchorMatcher
+                pattern = pattern % {'anchor': ''.join(map(lambda c: '\\x{{{:X}}}'.format(c),
+                                                           anchor))}
         rule_logger.debug("Pattern for rule %s: '%s'", self, pattern)
         try:
             regex = unicode_database.compile_regex(pattern)

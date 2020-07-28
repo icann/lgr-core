@@ -1,5 +1,11 @@
 # Changelog for lgr-core
 
+## 2.0.1 (2019-08-01)
+### Improvements
+- Mark out-of-script codepoints as warnings instead of errors (Fixes #15).
+### Fixes
+- Fix processing of contextual rule without anchor (Fixes #14).
+
 ## 2.0.0 (2018-09-06)
 ### New features
 - Support of Python 3. Compatibility with python2 is preserved for this release.

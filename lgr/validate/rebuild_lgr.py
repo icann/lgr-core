@@ -77,7 +77,7 @@ def rebuild_lgr(lgr, options):
                     range_ok = False
                 in_script, _ = lgr.cp_in_script([cp])
                 if not in_script:
-                    result['repertoire'].setdefault(char, {}).setdefault('errors', []).append(CharNotInScript(cp))
+                    result['repertoire'].setdefault(char, {}).setdefault('warnings', []).append(CharNotInScript(cp))
                     range_ok = False
 
             if not range_ok:
@@ -100,7 +100,7 @@ def rebuild_lgr(lgr, options):
 
         in_script, _ = lgr.cp_in_script(char.cp)
         if not in_script:
-            result['repertoire'].setdefault(char, {}).setdefault('errors', []).append(CharNotInScript(char.cp))
+            result['repertoire'].setdefault(char, {}).setdefault('warnings', []).append(CharNotInScript(char.cp))
         # Insert code point
         try:
             target_lgr.add_cp(char.cp,
