@@ -1,5 +1,6 @@
 # Changelog for lgr-core
 
+## 2.0.1 (2019-08-01)
 ### New features
 - Add support for LGR validation:
     - Introduce the concept of test label. Each test label has a test (i.e. a predicate on LGR files) and a human readable description.
@@ -9,6 +10,10 @@
     - Add aggregation of test results in terms of successful test labels.
     - Add a method to calculate the validation result based on policy and test results.
     - Add an RFC 7940 validation tool.
+### Improvements
+- Mark out-of-script codepoints as warnings instead of errors (Fixes #15).
+### Fixes
+- Fix processing of contextual rule without anchor (Fixes #14).
 
 ## 2.0.0 (2018-09-06)
 ### New features
