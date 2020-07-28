@@ -92,6 +92,7 @@ The `tools` directory contains some tools to exercise the library.
   and Unicode version.
 * `rfcXXXX_dump.py` parses inputs in RFC XXXX format, and generate an XML LGR.
 * `one_per_line_dump.py` parses input in the "one per line" format, and generate an XML LGR.
+* `rfc7940_validate.py` takes an LGR and checks it for compliance with RFC 7940.
 
 Other tools are available to manipulate LGR files and labels:
 * `lgr_annotate.py` takes an LGR and a list of labels and output
