@@ -11,7 +11,7 @@ David Drouin and Marc Blanchet) and Wil Tan on an ICANN contract.
 
 ## License
 
-Copyright (c) 2015-2016 Internet Corporation for Assigned Names and
+Copyright (c) 2015-2020 Internet Corporation for Assigned Names and
 Numbers (“ICANN”). All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
