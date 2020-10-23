@@ -1587,6 +1587,13 @@ class LGR(object):
                         same_prefix = [cp]
                         break
 
+        for char in same_prefix[:]:
+            if isinstance(char, CharSequence):
+                # char is a sequence, if first code point of the sequence is in the LGR we need to consider it
+                for cp in self.repertoire.get_chars_from_prefix(label[0]):
+                    if len(cp) < len(char) and cp.is_prefix_of(label):
+                        same_prefix.append(cp)
+
         # Iterate through characters matching the start of the label
         for char in same_prefix:
             rule_logger.debug("Char %s", format_cp(char.cp))

@@ -442,13 +442,27 @@ class TestLGRCore(unittest.TestCase):
         self.assertEqual([], list(self.lgr._generate_label_variants([])))
         self.assertEqual([],
                          list(self.lgr._generate_label_variants([0x0061])))
-        self.assertEqual([((0x0062, ), frozenset(['reflexive']), True)],
+        self.assertEqual([((0x0062,), frozenset(['reflexive']), True)],
                          list(self.lgr._generate_label_variants([0x0062])))
         self.assertEqual(set([((0x0062, 0x0063), frozenset(['reflexive']), False),
                               ((0x0062, 0x0070), frozenset(['reflexive', 'type']), True),
-                          ]),
+                              ]),
                          set(self.lgr._generate_label_variants([0x0062,
                                                                 0x0063])))
+
+    def test_generate_variants_sequence_same_cp(self):
+        self.lgr.add_cp([0x05D9, 0x05D9])
+        self.lgr.add_cp([0X05F2])
+        self.lgr.add_cp([0x05D9])
+
+        self.lgr.add_variant([0x05D9, 0x05D9], [0x05F2])
+        self.lgr.add_variant([0x05F2], [0x05D9, 0x05D9])
+
+        self.assertEqual(set([((0x05F2, 0x05D9), frozenset(), False),
+                              ((0x05D9, 0x05D9, 0x05D9), frozenset(), False),
+                              ((0x05D9, 0x05F2), frozenset(), False)]),
+                         set(self.lgr._generate_label_variants([0x05D9, 0x05D9, 0x05D9])))
+
 
     def test_label_simple(self):
         self.lgr.add_cp([0x0061])
