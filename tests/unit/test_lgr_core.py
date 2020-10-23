@@ -4,13 +4,12 @@ test_lgr_core.py - Unit testing of LGR code module.
 """
 from __future__ import unicode_literals
 
-import unittest
 import types
-import math
+import unittest
 
 from lgr.char import Char, RangeChar
 from lgr.classes import TAG_CLASSNAME_PREFIX
-from lgr.core import LGR, MAX_NUMBER_GENERATED_VARIANTS, PROTOCOL_LABEL_MAX_LENGTH
+from lgr.core import LGR
 from lgr.exceptions import (CharAlreadyExists,
                             VariantAlreadyExists,
                             CharInvalidIdnaProperty,
@@ -251,7 +250,7 @@ class TestLGRCore(unittest.TestCase):
         self.lgr.add_variant([0x0061], [0x0062],
                              validating_repertoire=validation_lgr,
                              override_repertoire=True)
-        self.assertIn((0x0062, ), self.lgr.repertoire[0x0061]._variants)
+        self.assertIn((0x0062,), self.lgr.repertoire[0x0061]._variants)
 
     def test_get_variants(self):
         self.lgr.add_cp([0x0061])
@@ -396,16 +395,16 @@ class TestLGRCore(unittest.TestCase):
                          list(self.lgr._generate_label_variants([0x0063,
                                                                  0x0064])))
         self.assertEqual(set([((0x0071, 0x0063), frozenset(['type1']), False),
-                          ((0x0072, 0x0063), frozenset(['type2']), False)]),
+                              ((0x0072, 0x0063), frozenset(['type2']), False)]),
                          set(self.lgr._generate_label_variants([0x0062,
-                                                                 0x0063])))
+                                                                0x0063])))
         self.assertEqual(set([((0x0061, 0x0062), frozenset(), False),
                               ((0x0061, 0x0071), frozenset(['type1']), False),
                               ((0x0061, 0x0072), frozenset(['type2']), False),
                               ((0x0070, 0x0062), frozenset(['type0']), False),
                               ((0x0070, 0x0071), frozenset(['type0', 'type1']), True),
                               ((0x0070, 0x0072), frozenset(['type0', 'type2']), True),
-                          ]),
+                              ]),
                          set(self.lgr._generate_label_variants([0x0061,
                                                                 0x0062])))
         self.assertEqual(set([((0x0061, 0x0062, 0x0062), frozenset(), False),
@@ -426,7 +425,7 @@ class TestLGRCore(unittest.TestCase):
                               ((0x0070, 0x0072, 0x0062), frozenset(['type0', 'type2']), False),
                               ((0x0070, 0x0072, 0x0071), frozenset(['type0', 'type1', 'type2']), True),
                               ((0x0070, 0x0072, 0x0072), frozenset(['type0', 'type2']), True),
-                          ]),
+                              ]),
                          set(self.lgr._generate_label_variants([0x0061,
                                                                 0x0062,
                                                                 0x0062])))
@@ -541,5 +540,6 @@ class TestLGRCore(unittest.TestCase):
 
 if __name__ == '__main__':
     import logging
+
     logging.getLogger('lgr').addHandler(logging.NullHandler())
     unittest.main()

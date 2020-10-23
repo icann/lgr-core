@@ -33,7 +33,7 @@ def annotate(lgr, labels_input):
         if valid:
             label_cp = tuple([ord(c) for c in label])
             (eligible, _, label_invalid_parts, disp, action_idx, _) = lgr.test_label_eligible(label_cp,
-                                                                                             collect_log=False)
+                                                                                              collect_log=False)
             for l in _out_valid_label(lgr, label, eligible, label_invalid_parts, disp, action_idx):
                 yield l
         else:
@@ -74,7 +74,7 @@ def lgr_set_annotate(lgr, script_lgr, set_labels_input, labels_input):
             # First, verify that a proposed label is valid by processing it with the Element LGR
             # corresponding to the script that was selected for the label in the application.
             (eligible, _, label_invalid_parts, disp, action_idx, _) = script_lgr.test_label_eligible(label_cp,
-                                                                                                    collect_log=False)
+                                                                                                     collect_log=False)
             collision = ''
             if eligible:
                 # Second, process the now validated label against the common LGR to verify it does not collide
@@ -92,4 +92,3 @@ def lgr_set_annotate(lgr, script_lgr, set_labels_input, labels_input):
 
             for l in _out_valid_label(lgr, label, eligible, label_invalid_parts, out, action_idx):
                 yield l
-

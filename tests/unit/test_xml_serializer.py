@@ -31,20 +31,20 @@ class TestXmlSerializer(unittest.TestCase):
 
         _serialize_meta(self.lgr, meta_node)
 
-        version = meta_node.find('version', namespaces=NSMAP)
+        version = meta_node.find('version')
         self.assertEqual(version.text, '1.0')
         # LXML can return strings as bytestring in python2...
         # See https://mailman-mail5.webfaction.com/pipermail/lxml/2011-December/006239.html
         self.assertEqual('' + version.get('comment'), 'First version')
 
-        date = meta_node.find('date', namespaces=NSMAP)
+        date = meta_node.find('date')
         self.assertEqual(date.text, '2017-09-01')
 
-        description = meta_node.find('description', namespaces=NSMAP)
+        description = meta_node.find('description')
         self.assertEqual(description.text, 'The LGR description')
         self.assertEqual(description.get('type'), 'text/plain')
 
-        scopes = meta_node.findall('scope', namespaces=NSMAP)
+        scopes = meta_node.findall('scope')
         self.assertEqual(len(scopes), 1)
         self.assertEqual(scopes[0].text, '.')
         self.assertEqual(scopes[0].get('type'), 'domain')
@@ -59,10 +59,10 @@ class TestXmlSerializer(unittest.TestCase):
 
         _serialize_meta(self.lgr, meta_node)
 
-        version = meta_node.find('version', namespaces=NSMAP)
+        version = meta_node.find('version')
         self.assertEqual(version.text, '1.0 日本')
         self.assertEqual(version.get('comment'), 'First version (はじめて)')
 
-        description = meta_node.find('description', namespaces=NSMAP)
+        description = meta_node.find('description')
         self.assertEqual(description.text, 'The LGR description containing Unicode characters: ΘΞΠ')
         self.assertEqual(description.get('type'), 'text/plain')

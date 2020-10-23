@@ -104,7 +104,7 @@ Other tools are available to manipulate LGR files and labels:
   and test for collisions between labels and generated variants from the 2 LGR.
 * `lgr_merge_set.py` takes some LGRs and create a merged LGR from the provided set.
 * `lgr_check_harmonized` checks that variants code points from a list of LGRs are symmetric and transitive in each LGR,
-  and lsit missing variants from one LGR to another.
+  and list missing variants from one LGR to another.
 
 ## Testing and coverage
 
