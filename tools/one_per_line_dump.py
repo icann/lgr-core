@@ -5,7 +5,7 @@ one_per_line_dump.py - Tool to parse a "one codepoint per line" file and dump LG
 """
 from __future__ import unicode_literals
 
-from tools.utils import LgrDumpTool
+from lgr.tools.utils import LgrDumpTool
 
 
 def main():

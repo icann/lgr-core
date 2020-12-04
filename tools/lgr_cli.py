@@ -10,9 +10,8 @@ from __future__ import unicode_literals
 import logging
 
 from lgr import wide_unichr
-from lgr.tools.utils import write_output, get_stdin
+from lgr.tools.utils import write_output, get_stdin, LgrToolArgParser
 from lgr.utils import cp_to_ulabel
-from tools.utils import LgrToolArgParser
 
 logger = logging.getLogger("lgr_cli")
 

@@ -11,7 +11,7 @@ import io
 import logging
 
 from lgr.tools.annotate import annotate, lgr_set_annotate
-from tools.utils import LgrSetToolArgParser
+from lgr.tools.utils import LgrSetToolArgParser
 
 logger = logging.getLogger("lgr_annotate")
 

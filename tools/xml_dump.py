@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 
 import io
 
-from tools.utils import LgrToolArgParser
+from lgr.tools.utils import LgrToolArgParser
 
 
 def main():

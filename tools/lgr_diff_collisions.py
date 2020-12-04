@@ -11,8 +11,7 @@ import io
 import logging
 
 from lgr.tools.diff_collisions import diff, collision
-from lgr.tools.utils import write_output
-from tools.utils import LgrToolArgParser, parse_lgr
+from lgr.tools.utils import write_output, parse_lgr, LgrToolArgParser
 
 logger = logging.getLogger("lgr_diff_collision")
 

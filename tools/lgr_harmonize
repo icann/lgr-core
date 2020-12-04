@@ -10,9 +10,8 @@ import os
 
 from lgr.parser.xml_serializer import serialize_lgr_xml
 from lgr.tools.harmonize import harmonize
-from lgr.tools.utils import write_output
+from lgr.tools.utils import write_output, parse_lgr, LgrToolArgParser
 from lgr.utils import format_cp, cp_to_ulabel
-from tools.utils import LgrToolArgParser, parse_lgr
 
 logger = logging.getLogger("lgr_harmonize")
 
