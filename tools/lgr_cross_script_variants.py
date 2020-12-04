@@ -8,8 +8,7 @@ from __future__ import unicode_literals
 import logging
 
 from lgr.tools.cross_script_variants import cross_script_variants
-from lgr.tools.utils import merge_lgrs, write_output, get_stdin
-from tools.utils import LgrToolArgParser
+from lgr.tools.utils import merge_lgrs, write_output, get_stdin, LgrToolArgParser
 
 logger = logging.getLogger("lgr_cross_script_variants")
 

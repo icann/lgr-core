@@ -11,8 +11,7 @@ from lgr.parser.xml_serializer import serialize_lgr_xml
 from lgr.tools.compare import diff_lgrs, diff_lgr_sets
 from lgr.tools.compare import intersect_lgrs
 from lgr.tools.compare import union_lgrs
-from lgr.tools.utils import merge_lgrs
-from tools.utils import LgrToolArgParser, parse_lgr
+from lgr.tools.utils import merge_lgrs, parse_lgr, LgrToolArgParser
 
 logger = logging.getLogger("lgr_compare")
 

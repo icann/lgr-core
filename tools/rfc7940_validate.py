@@ -8,7 +8,7 @@ Parse an LGR XML file, and report rfc7940 compliance.
 import logging
 import sys
 
-from tools.utils import LgrToolArgParser
+from lgr.tools.utils import LgrToolArgParser
 
 logger = logging.getLogger("rfc7940_validate")
 

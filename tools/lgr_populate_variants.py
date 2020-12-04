@@ -8,7 +8,7 @@ from __future__ import unicode_literals
 import logging
 
 from lgr.parser.xml_serializer import serialize_lgr_xml
-from tools.utils import LgrToolArgParser, parse_lgr
+from lgr.tools.utils import parse_lgr, LgrToolArgParser
 
 logger = logging.getLogger("lgr_populate_variants")
 

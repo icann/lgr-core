@@ -11,9 +11,8 @@ from __future__ import unicode_literals
 import logging
 
 from lgr.tools.diff_collisions import get_collisions
-from lgr.tools.utils import write_output, read_labels, get_stdin
+from lgr.tools.utils import write_output, read_labels, get_stdin, LgrSetToolArgParser
 from lgr.utils import cp_to_ulabel
-from tools.utils import LgrSetToolArgParser
 
 logger = logging.getLogger("lgr_validate")
 

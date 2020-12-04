@@ -9,9 +9,8 @@ import io
 import logging
 
 from lgr.exceptions import NotInLGR
-from lgr.tools.utils import write_output, get_stdin
+from lgr.tools.utils import write_output, get_stdin, LgrToolArgParser
 from lgr.utils import format_cp, cp_to_ulabel
-from tools.utils import LgrToolArgParser
 
 logger = logging.getLogger("lgr_collision")
 
