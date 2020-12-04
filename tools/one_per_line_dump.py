@@ -4,26 +4,24 @@
 one_per_line_dump.py - Tool to parse a "one codepoint per line" file and dump LGR on stdout
 """
 from __future__ import unicode_literals
-import sys
-import argparse
-import logging
+
 import io
+
+from tools.utils import LgrToolArgParser
 
 
 def main():
     from lgr.parser.line_parser import LineParser
     from lgr.parser.xml_serializer import serialize_lgr_xml
 
-    parser = argparse.ArgumentParser(description='Parse and dump a "one codepoint per line" file')
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='be verbose')
+    parser = LgrToolArgParser(description='Parse and dump a "one codepoint per line" file')
+    parser.add_logging_args()
     parser.add_argument('-o', '--output', metavar='OUTPUT',
                         help='Optional output file')
     parser.add_argument('file', metavar='FILE')
 
     args = parser.parse_args()
-
-    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG if args.verbose else logging.INFO)
+    parser.setup_logger()
 
     parser = LineParser(args.file)
     lgr = parser.parse_document()

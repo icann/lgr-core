@@ -7,15 +7,12 @@ Can parse an LGR XML file, and make some checks/display some data.
 """
 from __future__ import unicode_literals
 
-import sys
-import argparse
 import logging
 
-from munidata import UnicodeDataVersionManager
-
 from lgr import wide_unichr
-from lgr.utils import cp_to_ulabel
 from lgr.tools.utils import write_output, get_stdin
+from lgr.utils import cp_to_ulabel
+from tools.utils import LgrToolArgParser
 
 logger = logging.getLogger("lgr_cli")
 
@@ -78,17 +75,10 @@ def check_label(lgr, label, invalid, test):
 def main():
     from lgr.parser.xml_parser import XMLParser
 
-    parser = argparse.ArgumentParser(description='LGR CLI')
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='be verbose')
-    parser.add_argument('-q', '--quiet', action='store_true',
-                        help='Be quiet (no log)')
-    parser.add_argument('-r', '--rng', metavar='RNG',
-                        help='RelaxNG XML schema')
+    parser = LgrToolArgParser(description='LGR CLI')
+    parser.add_common_args()
     parser.add_argument('-m', '--msr', metavar='MSR',
                         help='Validating repertoire')
-    parser.add_argument('-l', '--libs', metavar='LIBS',
-                        help='ICU libraries')
     parser.add_argument('-u', '--unicode', metavar='Unicode',
                         default='6.3.0', help='Unicode version')
     parser.add_argument('-t', '--test', action='store_true',
@@ -97,42 +87,20 @@ def main():
                         help='Enable label checking')
     parser.add_argument('-i', '--invalid', action='store_true',
                         help='Do not filter out "invalid" labels')
-    parser.add_argument('xml', metavar='XML')
+    parser.add_xml_meta()
     parser.add_argument('label', metavar='LABEL', nargs='?')
 
     args = parser.parse_args()
+    parser.setup_logger()
 
-    # "Disable" logging in test mode except if we ask to be verbose
-    log_level = logging.DEBUG if args.verbose else logging.INFO
-    if args.test and not args.verbose:
-        log_level = logging.ERROR
-    if args.quiet:
-        log_level = logging.CRITICAL
-    logging.basicConfig(stream=sys.stderr, level=log_level,
-                        format="%(levelname)s:%(name)s [%(filename)s:%(lineno)s] %(message)s")
-
-    lgr_parser = XMLParser(args.xml)
-
-    unidb = None
-    if args.libs is not None:
-        libpath, i18n_libpath, libver = args.libs.split('#')
-        manager = UnicodeDataVersionManager()
-        unidb = manager.register(None, libpath, i18n_libpath, libver)
-
-    if args.rng is not None:
-        validation_result = lgr_parser.validate_document(args.rng)
-        if validation_result is not None:
-            logger.error('Errors for RNG validation: %s', validation_result)
+    unidb = parser.get_unidb()
 
     msr = None
     if args.msr is not None:
         msr_parser = XMLParser(args.msr)
         msr = msr_parser.parse_document()
 
-    if unidb is not None:
-        lgr_parser.unicode_database = unidb
-
-    lgr = lgr_parser.parse_document()
+    lgr = parser.parse_lgr()
     if lgr is None:
         logger.error("Error while parsing LGR file.")
         logger.error("Please check compliance with RNG.")

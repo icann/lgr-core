@@ -5,17 +5,13 @@ lgr_collision.py - Small CLI tool to test collisions of labels.
 """
 from __future__ import unicode_literals
 
-import sys
-import argparse
-import logging
 import io
+import logging
 
-from munidata import UnicodeDataVersionManager
-
-from lgr.parser.xml_parser import XMLParser
 from lgr.exceptions import NotInLGR
-from lgr.utils import format_cp, cp_to_ulabel
 from lgr.tools.utils import write_output, get_stdin
+from lgr.utils import format_cp, cp_to_ulabel
+from tools.utils import LgrToolArgParser
 
 logger = logging.getLogger("lgr_collision")
 
@@ -31,13 +27,13 @@ def find_variants_to_block(lgr, label_ref, label):
         if variant_cp in var_ref:
             variant_u = cp_to_ulabel(variant_cp)
             write_output("Variant '%s' [%s] with disposition set '%s' "
-                         "should be blocked (current disposition :%s)" % (variant_u, format_cp(variant_cp), disp_set, disp))
+                         "should be blocked (current disposition :%s)" % (
+                         variant_u, format_cp(variant_cp), disp_set, disp))
 
 
 def main():
-    parser = argparse.ArgumentParser(description='LGR Collision')
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='be verbose')
+    parser = LgrToolArgParser(description='LGR Collision')
+    parser.add_common_args()
     parser.add_argument('-g', '--generate', action='store_true',
                         help='Generate variants')
     parser.add_argument('-l', '--libs', metavar='LIBS',
@@ -45,22 +41,13 @@ def main():
     parser.add_argument('-s', '--set', metavar='SET FILE',
                         help='Filepath to the set of reference labels',
                         required=True)
-    parser.add_argument('xml', metavar='XML')
+    parser.add_xml_meta()
 
     args = parser.parse_args()
 
-    log_level = logging.DEBUG if args.verbose else logging.INFO
-    logging.basicConfig(stream=sys.stdout, level=log_level)
+    parser.setup_logger()
 
-    lgr_parser = XMLParser(args.xml)
-
-    libpath, i18n_libpath, libver = args.libs.split('#')
-    manager = UnicodeDataVersionManager()
-    unidb = manager.register(None, libpath, i18n_libpath, libver)
-
-    lgr_parser.unicode_database = unidb
-
-    lgr = lgr_parser.parse_document()
+    lgr = parser.parse_lgr()
     if lgr is None:
         logger.error("Error while parsing LGR file.")
         logger.error("Please check compliance with RNG.")
@@ -90,7 +77,8 @@ def main():
             ref_label_disp = format_cp(ref_label_cp)
             ref_label_u = cp_to_ulabel(ref_label_cp)
 
-            write_output("Collision for label '%s' [%s] with '%s' [%s]" % (label, label_disp, ref_label_u, ref_label_disp))
+            write_output(
+                "Collision for label '%s' [%s] with '%s' [%s]" % (label, label_disp, ref_label_u, ref_label_disp))
             if args.generate:
                 find_variants_to_block(lgr, ref_label_cp, label_cp)
         else:
