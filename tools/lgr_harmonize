@@ -5,56 +5,35 @@ lgr_harmonized.py - CLI tool to perform LGR harmonization
 """
 from __future__ import unicode_literals
 
-import argparse
 import logging
-import sys
 import os
 
-from munidata import UnicodeDataVersionManager
-
-from lgr.parser.xml_parser import XMLParser
 from lgr.parser.xml_serializer import serialize_lgr_xml
-from lgr.utils import format_cp, cp_to_ulabel
-from lgr.tools.utils import write_output
 from lgr.tools.harmonize import harmonize
+from lgr.tools.utils import write_output
+from lgr.utils import format_cp, cp_to_ulabel
+from tools.utils import LgrToolArgParser, parse_lgr
 
 logger = logging.getLogger("lgr_harmonize")
 
 
 def main():
-    parser = argparse.ArgumentParser(description='LGR Harmonize CLI')
-    parser.add_argument('-v', '--verbose', action='store_true', help='be verbose')
-    parser.add_argument('-r', '--rng', metavar='RNG', help='RelaxNG XML schema')
-    parser.add_argument('-l', '--libs', metavar='LIBS', help='ICU libraries', required=True)
+    parser = LgrToolArgParser(description='LGR Harmonize CLI')
+    parser.add_common_args()
     parser.add_argument('-1', '--first', help='First LGR to harmonize', required=True)
     parser.add_argument('-2', '--second', help='Second LGR to harmonize', required=True)
     parser.add_argument('-z', '--root-zone', help='Rootzone LGR to infer variants from')
     parser.add_argument('output', help='Output directory to place generated LGR')
 
     args = parser.parse_args()
+    parser.setup_logger()
 
-    log_level = logging.DEBUG if args.verbose else logging.INFO
-    logging.basicConfig(stream=sys.stderr, level=log_level)
+    unidb = parser.get_unidb()
 
-    libpath, i18n_libpath, libver = args.libs.split('#')
-    manager = UnicodeDataVersionManager()
-    unidb = manager.register(None, libpath, i18n_libpath, libver)
-
-    # Parse both lgrs
-    def _parse_lgr(filepath):
-        parser = XMLParser(filepath)
-        parser.unicode_database = unidb
-        if args.rng is not None:
-            validation_result = parser.validate_document(args.rng)
-            if validation_result is not None:
-                logger.error('Errors for RNG validation of LGR file %s: %s',
-                             filepath, validation_result)
-        return parser.parse_document()
-
-    first_lgr, second_lgr = _parse_lgr(args.first), _parse_lgr(args.second)
+    first_lgr, second_lgr = parse_lgr(args.first, args.rng, unidb), parse_lgr(args.second, args.rng, unidb)
     rz_lgr = None
     if args.root_zone:
-        rz_lgr = _parse_lgr(args.root_zone)
+        rz_lgr = parse_lgr(args.root_zone, args.rng, unidb)
 
     first_h, second_h, (log_first, log_second) = harmonize(first_lgr, second_lgr, rz_lgr)
 

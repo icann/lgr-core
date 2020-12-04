@@ -5,27 +5,22 @@ lgr_compare.py - CLI tool to compare 2 LGRs
 """
 from __future__ import unicode_literals
 
-import argparse
 import logging
-import sys
 
+from lgr.parser.xml_serializer import serialize_lgr_xml
 from lgr.tools.compare import diff_lgrs, diff_lgr_sets
 from lgr.tools.compare import intersect_lgrs
 from lgr.tools.compare import union_lgrs
-
-from lgr.parser.xml_parser import XMLParser
-from lgr.parser.xml_serializer import serialize_lgr_xml
 from lgr.tools.utils import merge_lgrs
+from tools.utils import LgrToolArgParser, parse_lgr
 
 logger = logging.getLogger("lgr_compare")
 
 
 def main():
-    parser = argparse.ArgumentParser(description='LGR Compare CLI')
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='be verbose')
-    parser.add_argument('-r', '--rng', metavar='RNG',
-                        help='RelaxNG XML schema')
+    parser = LgrToolArgParser(description='LGR Compare CLI')
+    parser.add_logging_args()
+    parser.add_rng_arg()
     parser.add_argument('-1', '--first', metavar='LGR1', action='append',
                         help='First LGR or LGR set if used multiple times',
                         required=True)
@@ -41,9 +36,7 @@ def main():
     parser.add_argument('-n2', '--name-second', metavar='NAME2', help="Merged LGR 2 name")
 
     args = parser.parse_args()
-
-    log_level = logging.DEBUG if args.verbose else logging.INFO
-    logging.basicConfig(stream=sys.stderr, level=log_level)
+    parser.setup_logger()
 
     if (len(args.first) == 1 and len(args.second) > 1) or (len(args.second) == 1 and len(args.first) > 1):
         logger.error("Cannot compare LGR with LGR sets")
@@ -66,25 +59,12 @@ def main():
 
         print(diff_lgr_sets(merged_lgr_1, merged_lgr_2, lgr_set_1, lgr_set_2))
     else:
-        lgr1_parser = XMLParser(args.first[0])
-        lgr2_parser = XMLParser(args.second[0])
-
-        if args.rng is not None:
-            validation_result = lgr1_parser.validate_document(args.rng)
-            if validation_result is not None:
-                logger.error('Errors for RNG validation of first LGR: %s',
-                             validation_result)
-            validation_result = lgr2_parser.validate_document(args.rng)
-            if validation_result is not None:
-                logger.error('Errors for RNG validation of second LGR: %s',
-                             validation_result)
-
-        lgr1 = lgr1_parser.parse_document()
+        lgr1 = parse_lgr(args.first[0], args.rng)
+        lgr2 = parse_lgr(args.second[0], args.rng)
         if lgr1 is None:
             logger.error("Error while parsing first LGR file.")
             logger.error("Please check compliance with RNG.")
             return
-        lgr2 = lgr2_parser.parse_document()
         if lgr2 is None:
             logger.error("Error while parsing second LGR file.")
             logger.error("Please check compliance with RNG.")

@@ -8,18 +8,14 @@ a label and generate its variants.
 """
 from __future__ import unicode_literals
 
-import sys
-import argparse
-import logging
 import io
+import logging
 from io import StringIO
 
-from munidata import UnicodeDataVersionManager
-
-from lgr.utils import cp_to_ulabel
-from lgr.parser.xml_parser import XMLParser
-from lgr.tools.utils import write_output, merge_lgrs, read_labels, get_stdin
 from lgr.tools.diff_collisions import get_collisions
+from lgr.tools.utils import write_output, merge_lgrs, read_labels, get_stdin
+from lgr.utils import cp_to_ulabel
+from tools.utils import LgrToolArgParser, parse_lgr
 
 logger = logging.getLogger("lgr_validate")
 
@@ -80,18 +76,14 @@ def check_label(lgr, label, generate_variants=False, merged_lgr=None, set_labels
     else:
         write_output("- Valid code points from label: %s" % u' '.join(u"{:04X}".format(cp) for cp in label_parts))
         if label_invalid_parts:
-            write_output("- Invalid code points from label: {}".format(' '.join("{:04X} ({})".format(cp, "not in repertoire" if rules is None else ','.join(rules))
-                                                                                for cp, rules in label_invalid_parts)))
+            write_output("- Invalid code points from label: {}".format(
+                ' '.join("{:04X} ({})".format(cp, "not in repertoire" if rules is None else ','.join(rules))
+                         for cp, rules in label_invalid_parts)))
 
 
 def main():
-    parser = argparse.ArgumentParser(description='LGR Validate CLI')
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='be verbose')
-    parser.add_argument('-r', '--rng', metavar='RNG',
-                        help='RelaxNG XML schema')
-    parser.add_argument('-l', '--libs', metavar='LIBS',
-                        help='ICU libraries', required=True)
+    parser = LgrToolArgParser(description='LGR Validate CLI')
+    parser.add_common_args()
     parser.add_argument('-g', '--variants', action='store_true',
                         help='Generate variants')
     parser.add_argument('-x', '--lgr-xml', metavar='LGR_XML', action='append', required=True,
@@ -100,15 +92,11 @@ def main():
                         help='If LGR is a set, the script used to validate input labels')
     parser.add_argument('-f', '--set-labels', metavar='SET_LABELS',
                         help='If LGR is a set, the file containing the label of the LGR set')
+
     args = parser.parse_args()
+    parser.add_logging_args()
 
-    log_level = logging.DEBUG if args.verbose else logging.WARNING
-    logging.basicConfig(stream=sys.stdout, level=log_level)
-
-    libpath, i18n_libpath, libver = args.libs.split('#')
-    manager = UnicodeDataVersionManager()
-    unidb = manager.register(None, libpath, i18n_libpath, libver)
-
+    unidb = parser.get_unidb()
     if len(args.lgr_xml) > 1:
         if not args.lgr_script:
             logger.error('For LGR set, lgr script is required')
@@ -141,15 +129,7 @@ def main():
             logger.error('Cannot find script %s in any of the LGR provided as input', args.lgr_script)
             return
     else:
-        lgr_parser = XMLParser(args.lgr_xml[0])
-        lgr_parser.unicode_database = unidb
-
-        if args.rng is not None:
-            validation_result = lgr_parser.validate_document(args.rng)
-            if validation_result is not None:
-                logger.error('Errors for RNG validation: %s', validation_result)
-
-        lgr = lgr_parser.parse_document()
+        lgr = parse_lgr(args.lgr_mxml[0], args.rng, unidb)
         if lgr is None:
             logger.error("Error while parsing LGR file.")
             logger.error("Please check compliance with RNG.")

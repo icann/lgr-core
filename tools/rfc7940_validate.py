@@ -5,60 +5,27 @@ rfc7940_validate.py - Check compliance with rfc7940.
 
 Parse an LGR XML file, and report rfc7940 compliance.
 """
-import sys
-import argparse
 import logging
+import sys
 
-import lgr
-import munidata
+from tools.utils import LgrToolArgParser
 
 logger = logging.getLogger("rfc7940_validate")
 
-def main():
-    from lgr.parser.xml_parser import XMLParser
 
-    parser = argparse.ArgumentParser(description='check rfc7940 compliance')
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='be verbose')
-    parser.add_argument('-q', '--quiet', action='store_true',
-                        help='Be quiet (no details, no log)')
-    parser.add_argument('-r', '--rng', metavar='RNG',
-                        help='RelaxNG XML schema')
-    parser.add_argument('-l', '--libs', metavar='LIBS',
-                        help='ICU libraries')
+def main():
+    parser = LgrToolArgParser(description='check rfc7940 compliance')
+    parser.add_common_args()
     parser.add_argument('-u', '--unicode', metavar='Unicode',
                         default='6.3.0', help='Unicode version')
     parser.add_argument('-t', '--test', action='store_true',
                         help='Enable automatic test mode')
-    parser.add_argument('xml', metavar='XML')
+    parser.add_xml_meta()
 
     args = parser.parse_args()
+    parser.setup_logger()
 
-    # "Disable" logging in test mode except if we ask to be verbose
-    log_level = logging.DEBUG if args.verbose else logging.INFO
-    if args.test and not args.verbose:
-        log_level = logging.ERROR
-    if args.quiet:
-        log_level = logging.CRITICAL
-    logging.basicConfig(stream=sys.stderr, level=log_level,
-                        format="%(levelname)s:%(name)s [%(filename)s:%(lineno)s] %(message)s")
-
-    lgr_parser = XMLParser(args.xml, force_mode=False)
-
-    unidb = None
-    if args.libs is not None:
-        libpath, i18n_libpath, libver = args.libs.split('#')
-        manager = munidata.UnicodeDataVersionManager()
-        unidb = manager.register(None, libpath, i18n_libpath, libver)
-
-    if unidb is not None:
-        lgr_parser.unicode_database = unidb
-
-    try:
-        lgr = lgr_parser.parse_document()
-    except:
-        lgr = None
-
+    lgr = parser.parse_lgr()
     if lgr is None:
         logger.error("Error while parsing LGR file.")
         logger.error("Please check compliance with RNG.")
@@ -69,14 +36,11 @@ def main():
         'unicode_version': args.unicode,
         'rfc7940': True
     }
-    if unidb is not None:
-        options['unidb'] = unidb
+    if parser.get_unidb() is not None:
+        options['unidb'] = parser.get_unidb()
 
     if args.rng is not None:
         options['rng_filepath'] = args.rng
-        validation_result = lgr_parser.validate_document(args.rng)
-        if validation_result is not None:
-            logger.error('Errors for RNG validation: %s', validation_result)
 
     if not args.test:
         summary = lgr.validate(options)
@@ -109,6 +73,7 @@ def main():
 
     sys.stdout.write(final_result)
     sys.stdout.write("\n")
+
 
 if __name__ == '__main__':
     main()

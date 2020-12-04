@@ -7,28 +7,22 @@ Take a LGR and a label list in a file, output label list with disposition.
 """
 from __future__ import unicode_literals
 
-import sys
-import argparse
-import logging
 import io
+import logging
 
-from munidata import UnicodeDataVersionManager
-
-from lgr.parser.xml_parser import XMLParser
-from lgr.tools.utils import merge_lgrs
 from lgr.tools.annotate import annotate, lgr_set_annotate
+from lgr.tools.utils import merge_lgrs
+from tools.utils import LgrToolArgParser, parse_lgr
 
 logger = logging.getLogger("lgr_annotate")
 
 
+def add_xml_set_args(parser):
+
+
 def main():
-    parser = argparse.ArgumentParser(description='LGR Annotate CLI')
-    parser.add_argument('-v', '--verbose', action='store_true',
-                        help='be verbose')
-    parser.add_argument('-r', '--rng', metavar='RNG',
-                        help='RelaxNG XML schema')
-    parser.add_argument('-l', '--libs', metavar='LIBS',
-                        help='ICU libraries', required=True)
+    parser = LgrToolArgParser(description='LGR Annotate CLI')
+    parser.add_common_args()
     parser.add_argument('-o', '--output', metavar='OUTPUT_FILE',
                         help='File path to output the annotated labels',
                         required=True)
@@ -39,15 +33,11 @@ def main():
     parser.add_argument('-f', '--set-labels', metavar='SET_LABELS',
                         help='If LGR is a set, the file containing the label of the LGR set')
     parser.add_argument('labels', metavar='LABELS', help='File path to the reference labels to annotate')
+
     args = parser.parse_args()
+    parser.setup_logger()
 
-    log_level = logging.DEBUG if args.verbose else logging.INFO
-    logging.basicConfig(stream=sys.stdout, level=log_level)
-
-    libpath, i18n_libpath, libver = args.libs.split('#')
-    manager = UnicodeDataVersionManager()
-    unidb = manager.register(None, libpath, i18n_libpath, libver)
-
+    unidb = parser.get_unidb()
     if len(args.lgr_xml) > 1:
         if not args.lgr_script:
             logger.error('For LGR set, lgr script is required')
@@ -80,15 +70,7 @@ def main():
             logger.error('Cannot find script %s in any of the LGR provided as input', args.lgr_script)
             return
     else:
-        lgr_parser = XMLParser(args.lgr_xml[0])
-        lgr_parser.unicode_database = unidb
-
-        if args.rng is not None:
-            validation_result = lgr_parser.validate_document(args.rng)
-            if validation_result is not None:
-                logger.error('Errors for RNG validation: %s', validation_result)
-
-        lgr = lgr_parser.parse_document()
+        lgr = parse_lgr(args.lgr_mxml[0], args.rng, unidb)
         if lgr is None:
             logger.error("Error while parsing LGR file.")
             logger.error("Please check compliance with RNG.")
