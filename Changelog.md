@@ -1,5 +1,18 @@
 # Changelog for lgr-core
 
+## 3.0.0 (2020-12-04)
+### New features
+- Add a way to provide a list of TLDs to collision tool
+- Add new collision tool API with simplified output
+- Stop support for python 2.7
+### Improvements
+- Improve collision tool output
+### Fixes
+- Handle contextual rules symmetry when populating variants
+- Fix symmetry validator to keep consistency with conditional variants validator
+- Fix memory leak with logs not correctly flushed
+- Fix variant generation with sequences
+
 ## 2.0.1 (2019-08-01)
 ### New features
 - Add support for LGR validation:
