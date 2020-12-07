@@ -6,22 +6,16 @@ from __future__ import unicode_literals
 
 import unittest
 import logging
-import os
 
-from lgr.parser.xml_parser import XMLParser
 from lgr.tools.harmonize import harmonize
-
-
-def load_lgr(name):
-    parser = XMLParser(os.path.join(os.path.dirname(__file__), '..', 'inputs', 'harmonization', name))
-    return parser.parse_document()
+from tests.unit.utils import load_lgr
 
 
 class TestHarmonize(unittest.TestCase):
 
     def test_case_1(self):
-        hindi = load_lgr('hindi.xml')
-        nepali = load_lgr('nepali.xml')
+        hindi = load_lgr('harmonization', 'hindi.xml')
+        nepali = load_lgr('harmonization', 'nepali.xml')
 
         hindi_harmonized, nepali_harmonized, log = harmonize(hindi, nepali)
 
@@ -48,9 +42,9 @@ class TestHarmonize(unittest.TestCase):
         self.assertEqual(nepali_harmonized.get_variant(0x0064, (0x0063, ))[0].type, 'blocked')
 
     def test_case_2(self):
-        hindi = load_lgr('hindi-rz.xml')
-        nepali = load_lgr('nepali-rz.xml')
-        rz = load_lgr('rz-lgr.xml')
+        hindi = load_lgr('harmonization', 'hindi-rz.xml')
+        nepali = load_lgr('harmonization', 'nepali-rz.xml')
+        rz = load_lgr('harmonization', 'rz-lgr.xml')
 
         hindi_harmonized, nepali_harmonized, log = harmonize(hindi, nepali, rz)
 
@@ -75,9 +69,9 @@ class TestHarmonize(unittest.TestCase):
             self.assertEqual(variants[0].type, 'blocked')
 
     def test_case_3(self):
-        hindi = load_lgr('hindi-log.xml')
-        nepali = load_lgr('nepali-log.xml')
-        rz = load_lgr('rz-lgr.xml')
+        hindi = load_lgr('harmonization', 'hindi-log.xml')
+        nepali = load_lgr('harmonization', 'nepali-log.xml')
+        rz = load_lgr('harmonization', 'rz-lgr.xml')
 
         hindi_harmonized, nepali_harmonized, (log_hindi, log_nepali) = harmonize(hindi, nepali, rz)
 
@@ -88,8 +82,8 @@ class TestHarmonize(unittest.TestCase):
         self.assertEqual(log_nepali, {(0x007A, )})
 
     def test_lgr_with_range(self):
-        a_z = load_lgr('a-z-range.xml')
-        a_b = load_lgr('a-b.xml')
+        a_z = load_lgr('harmonization', 'a-z-range.xml')
+        a_b = load_lgr('harmonization', 'a-b.xml')
 
         a_z_harmonized, a_b_harmonized, _ = harmonize(a_z, a_b)
 
@@ -101,8 +95,8 @@ class TestHarmonize(unittest.TestCase):
             self.assertEqual(variants[0].type, 'blocked')
 
     def test_identity_mappings(self):
-        a_c = load_lgr('a-c.xml')
-        c_e = load_lgr('c-e.xml')
+        a_c = load_lgr('harmonization', 'a-c.xml')
+        c_e = load_lgr('harmonization', 'c-e.xml')
 
         a_c_harmonized, c_e_harmonized, _ = harmonize(a_c, c_e)
 
