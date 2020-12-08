@@ -16,7 +16,7 @@
     <data>
         <char cp="0061" ref="0" when="match">
             <var cp="0062" type="blocked"/>
-            <var cp="0063" type="invalid"/>
+            <var cp="0063" type="activated"/>
         </char>
         <char cp="0062" ref="0" when="match">
             <var cp="0061" type="blocked" when="test"/>

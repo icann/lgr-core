@@ -12,16 +12,16 @@
     </meta>
     <data>
         <char cp="0061" ref="0">
-            <var cp="0062" type="blocked"/>
+            <var cp="0062" type="allocatable"/>
             <var cp="0063" type="activated"/>
         </char>
         <char cp="0062" ref="0">
-            <var cp="0061" type="blocked"/>
+            <var cp="0061" type="blocked" when="test"/>
             <var cp="0063" type="blocked"/>
         </char>
         <char cp="0063" ref="0">
-            <var cp="0061" type="blocked"/>
-            <var cp="0062" type="allocatable"/>
+            <var cp="0061" type="optionally-allocatable"/>
+            <var cp="0062" type="unknown"/>
         </char>
         <char cp="0153">
             <var cp="006F 0065" type="blocked"/>

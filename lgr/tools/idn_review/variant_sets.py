@@ -38,6 +38,7 @@ class VariantData:
 
 
 class VariantReport:
+    VARIANT_TYPES_ORDER = ['activated', 'allocatable', 'optionally-allocatable', 'blocked']
 
     def __init__(self, idn_table_char: Char, reference_lgr_char: Char,
                  idn_table_var_data: VariantData, reference_lgr_var_data: VariantData,
@@ -128,6 +129,17 @@ class VariantReport:
                 return (VariantSetsResult.MANUAL_CHECK.value,
                         "Variant condition rules are mismatched. The IDN Table misses the rule. "
                         "If the rule is not needed for the proper variant index calculation, then this is ok")
+        else:
+            try:
+                if cls.VARIANT_TYPES_ORDER.index(idn_var.type) < cls.VARIANT_TYPES_ORDER.index(ref_var.type):
+                    return (VariantSetsResult.REVIEW.value,
+                            "Variant type in the IDN Table is less conservative comparing to the Reference LGR")
+                else:
+                    return (VariantSetsResult.NOTE.value,
+                            "Variant types are mismatched. "
+                            "IDN Table is more conservative comparing to the Reference LGR")
+            except ValueError:
+                return VariantSetsResult.REVIEW.value, "Unknown variant type"
 
 
 class VariantSetsReport:
