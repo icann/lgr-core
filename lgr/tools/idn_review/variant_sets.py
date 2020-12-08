@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 class VariantSetsResult(AutoName):
     MATCH = auto()
+    NOTE = auto()
     REVIEW = auto()
     MANUAL_CHECK = auto()
 
@@ -39,19 +40,27 @@ class VariantData:
 class VariantReport:
 
     def __init__(self, idn_table_char: Char, reference_lgr_char: Char,
-                 idn_table_var_data: VariantData, reference_lgr_var_data: VariantData):
+                 idn_table_var_data: VariantData, reference_lgr_var_data: VariantData,
+                 idn_table_repertoire: Repertoire):
         self.idn_table_char = idn_table_char
         self.reference_lgr_char = reference_lgr_char
         self.idn_table_var_data = idn_table_var_data
         self.reference_lgr_var_data = reference_lgr_var_data
+        self.idn_table_repertoire = idn_table_repertoire
 
     def to_dict(self) -> Dict:
         dest_char = self.idn_table_var_data.fwd or self.reference_lgr_var_data.fwd
+        in_repertoire = (self.reference_lgr_var_data.fwd and
+                         self.reference_lgr_var_data.fwd.cp in self.idn_table_repertoire and
+                         self.reference_lgr_var_data.rev[0] and
+                         self.reference_lgr_var_data.rev[0].cp in self.idn_table_repertoire)
         result_fwd, remark_fwd = self.get_result_and_remark(self.idn_table_var_data.fwd,
-                                                            self.reference_lgr_var_data.fwd)
+                                                            self.reference_lgr_var_data.fwd,
+                                                            in_repertoire)
         # TODO rev is a list, handle conditional variants
         result_rev, remark_rev = self.get_result_and_remark(self.idn_table_var_data.rev[0],
-                                                            self.reference_lgr_var_data.rev[0])
+                                                            self.reference_lgr_var_data.rev[0],
+                                                            in_repertoire)
         return {
             'source_cp': " ".join("U+%04X" % c for c in self.idn_table_char.cp),
             'source_glyph': str(self.idn_table_char),
@@ -89,9 +98,11 @@ class VariantReport:
         return None  # should not happen
 
     @staticmethod
-    def get_result_and_remark(idn_var: Variant, ref_var: Variant) -> Tuple[auto, str]:
+    def get_result_and_remark(idn_var: Variant, ref_var: Variant, in_idn_repertoire: bool) -> Tuple[auto, str]:
         if not idn_var:
-            return VariantSetsResult.REVIEW.value, "Variant member exists in the reference LGR"
+            if in_idn_repertoire:
+                return VariantSetsResult.REVIEW.value, "Variant member exists in the reference LGR"
+            return VariantSetsResult.NOTE.value, "Not applicable"
         if idn_var.type == ref_var.type:
             if idn_var == ref_var:
                 return VariantSetsResult.MATCH.value, "Exact match (including type, conditional variant rule)"
@@ -124,11 +135,11 @@ class VariantSetsReport:
             reference_lgr_vars = {}
             try:
                 idn_table_char: Char = self.idn_repertoire.get_char(cp)
+                relevant_repertoire.add(cp)
             except NotInLGR:
                 idn_table_char = None
             try:
                 reference_lgr_char: Char = self.reference_lgr_repertoire.get_char(cp)
-                relevant_repertoire.add(cp)
             except NotInLGR:
                 reference_lgr_char = None
             if idn_table_char:
@@ -140,17 +151,18 @@ class VariantSetsReport:
             for var_cp in idn_table_vars.keys() - reference_lgr_vars.keys():
                 variant_reports.append(
                     VariantReport(idn_table_char, reference_lgr_char, idn_table_vars[var_cp],
-                                  VariantData.none()).to_dict())
+                                  VariantData.none(), self.idn_repertoire).to_dict())
 
             for var_cp in reference_lgr_vars.keys() - idn_table_vars.keys():
                 variant_reports.append(
                     VariantReport(idn_table_char, reference_lgr_char, VariantData.none(),
-                                  reference_lgr_vars[var_cp]).to_dict())
+                                  reference_lgr_vars[var_cp], self.idn_repertoire).to_dict())
 
             for var_cp in idn_table_vars.keys() & reference_lgr_vars.keys():
                 variant_reports.append(
                     VariantReport(idn_table_char, reference_lgr_char,
-                                  idn_table_vars[var_cp], reference_lgr_vars[var_cp]).to_dict())
+                                  idn_table_vars[var_cp], reference_lgr_vars[var_cp],
+                                  self.idn_repertoire).to_dict())
 
         return variant_reports, tuple(sorted(relevant_repertoire))
 
