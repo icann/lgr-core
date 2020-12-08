@@ -41,14 +41,17 @@ class VariantReport:
 
     def __init__(self, idn_table_char: Char, reference_lgr_char: Char,
                  idn_table_var_data: VariantData, reference_lgr_var_data: VariantData,
-                 idn_table_repertoire: Repertoire):
+                 idn_variant_set_missing: bool, idn_table_repertoire: Repertoire):
         self.idn_table_char = idn_table_char
         self.reference_lgr_char = reference_lgr_char
         self.idn_table_var_data = idn_table_var_data
         self.reference_lgr_var_data = reference_lgr_var_data
+        self.idn_variant_set_missing = idn_variant_set_missing
         self.idn_table_repertoire = idn_table_repertoire
 
     def to_dict(self) -> Dict:
+        # XXX: reference_lgr_char == None is not handled
+        src_char = self.idn_table_char or self.reference_lgr_char
         dest_char = self.idn_table_var_data.fwd or self.reference_lgr_var_data.fwd
         in_repertoire = (self.reference_lgr_var_data.fwd and
                          self.reference_lgr_var_data.fwd.cp in self.idn_table_repertoire and
@@ -56,14 +59,16 @@ class VariantReport:
                          self.reference_lgr_var_data.rev[0].cp in self.idn_table_repertoire)
         result_fwd, remark_fwd = self.get_result_and_remark(self.idn_table_var_data.fwd,
                                                             self.reference_lgr_var_data.fwd,
+                                                            self.idn_variant_set_missing,
                                                             in_repertoire)
         # TODO rev is a list, handle conditional variants
         result_rev, remark_rev = self.get_result_and_remark(self.idn_table_var_data.rev[0],
                                                             self.reference_lgr_var_data.rev[0],
+                                                            self.idn_variant_set_missing,
                                                             in_repertoire)
         return {
-            'source_cp': " ".join("U+%04X" % c for c in self.idn_table_char.cp),
-            'source_glyph': str(self.idn_table_char),
+            'source_cp': " ".join("U+%04X" % c for c in src_char.cp),
+            'source_glyph': str(src_char),
             'dest_cp': " ".join("U+%04X" % c for c in dest_char.cp),
             'dest_glyph': str(dest_char),
             'fwd_type_idn': self.get_variant_type(self.idn_table_var_data.fwd),
@@ -88,21 +93,31 @@ class VariantReport:
         return variant.type or '' if variant else ''
 
     def check_var_symmetry(self):
+        if self.idn_table_var_data.fwd and self.reference_lgr_var_data:
+            return (self.idn_table_var_data.rev[0] and
+                    self.idn_table_var_data.fwd.type == self.idn_table_var_data.rev[0].type and
+                    self.reference_lgr_var_data.rev[0] and
+                    self.reference_lgr_var_data.fwd.type == self.reference_lgr_var_data.rev[0].type)
         if self.idn_table_var_data.fwd:
             return (self.idn_table_var_data.rev[0] and
                     self.idn_table_var_data.fwd.type == self.idn_table_var_data.rev[0].type)
-        if self.reference_lgr_var_data:
+        if self.reference_lgr_var_data.fwd:
             return (self.reference_lgr_var_data.rev[0] and
                     self.reference_lgr_var_data.fwd.type == self.reference_lgr_var_data.rev[0].type)
 
         return None  # should not happen
 
-    @staticmethod
-    def get_result_and_remark(idn_var: Variant, ref_var: Variant, in_idn_repertoire: bool) -> Tuple[auto, str]:
+    @classmethod
+    def get_result_and_remark(cls, idn_var: Variant, ref_var: Variant,
+                              idn_variant_set_missing: bool, in_idn_repertoire: bool) -> Tuple[auto, str]:
+        if idn_variant_set_missing:
+            return VariantSetsResult.REVIEW.value, "Variant set exists in the reference LGR"
+
         if not idn_var:
             if in_idn_repertoire:
                 return VariantSetsResult.REVIEW.value, "Variant member exists in the reference LGR"
             return VariantSetsResult.NOTE.value, "Not applicable"
+
         if idn_var.type == ref_var.type:
             if idn_var == ref_var:
                 return VariantSetsResult.MATCH.value, "Exact match (including type, conditional variant rule)"
@@ -130,7 +145,12 @@ class VariantSetsReport:
         idn_reversed_variants = {}
         lgr_reversed_variants = {}
         relevant_repertoire = set()
-        for cp in set(self.idn_table_variant_set) | set(self.reference_lgr_variant_set):
+
+        if not self.idn_table_variant_set and not self.same_repertoire():
+            # XXX case not handled: missing variant sets but repertoires are not the same
+            return
+
+        for cp in sorted(set(self.idn_table_variant_set) | set(self.reference_lgr_variant_set)):
             idn_table_vars = {}
             reference_lgr_vars = {}
             try:
@@ -148,21 +168,12 @@ class VariantSetsReport:
                 reference_lgr_vars = self.get_variant_data(self.reference_lgr_repertoire, reference_lgr_char,
                                                            lgr_reversed_variants)
 
-            for var_cp in idn_table_vars.keys() - reference_lgr_vars.keys():
-                variant_reports.append(
-                    VariantReport(idn_table_char, reference_lgr_char, idn_table_vars[var_cp],
-                                  VariantData.none(), self.idn_repertoire).to_dict())
-
-            for var_cp in reference_lgr_vars.keys() - idn_table_vars.keys():
-                variant_reports.append(
-                    VariantReport(idn_table_char, reference_lgr_char, VariantData.none(),
-                                  reference_lgr_vars[var_cp], self.idn_repertoire).to_dict())
-
-            for var_cp in idn_table_vars.keys() & reference_lgr_vars.keys():
+            for var_cp in idn_table_vars.keys() | reference_lgr_vars.keys():
                 variant_reports.append(
                     VariantReport(idn_table_char, reference_lgr_char,
-                                  idn_table_vars[var_cp], reference_lgr_vars[var_cp],
-                                  self.idn_repertoire).to_dict())
+                                  idn_table_vars.get(var_cp, VariantData.none()),
+                                  reference_lgr_vars.get(var_cp, VariantData.none()),
+                                  len(self.idn_table_variant_set) == 0, self.idn_repertoire).to_dict())
 
         return variant_reports, tuple(sorted(relevant_repertoire))
 
@@ -208,21 +219,24 @@ class VariantSetsReport:
             'report': sorted(var_report, key=lambda x: x['dest_cp'])
         }
 
+    def same_repertoire(self):
+        """
+        Check if all code points from the reference LGR variant sets are in IDN table repertoire
+        """
+        for cp in self.reference_lgr_variant_set:
+            if cp not in self.idn_repertoire:
+                return False
+        return True
+
 
 def generate_variant_sets_report(idn_table: LGR, reference_lgr: LGR) -> List[Dict]:
     idn_table_variant_sets = {s[0]: s for s in idn_table.repertoire.get_variant_sets()}
     reference_lgr_variant_sets = {s[0]: s for s in reference_lgr.repertoire.get_variant_sets()}
 
     reports = []
-    for set_id in idn_table_variant_sets.keys() - reference_lgr_variant_sets.keys():
-        idn_table_variant_set = idn_table_variant_sets[set_id]
-
-    for set_id in reference_lgr_variant_sets.keys() - idn_table_variant_sets.keys():
-        reference_lgr_variant_set = reference_lgr_variant_sets[set_id]
-
-    for set_id in idn_table_variant_sets.keys() & reference_lgr_variant_sets.keys():
-        idn_table_variant_set = idn_table_variant_sets[set_id]
-        reference_lgr_variant_set = reference_lgr_variant_sets[set_id]
+    for set_id in idn_table_variant_sets.keys() | reference_lgr_variant_sets.keys():
+        idn_table_variant_set = idn_table_variant_sets.get(set_id, ())
+        reference_lgr_variant_set = reference_lgr_variant_sets.get(set_id, ())
         report = VariantSetsReport(set_id, idn_table_variant_set, reference_lgr_variant_set, idn_table.repertoire,
                                    reference_lgr.repertoire).to_dict()
         reports.append(report)

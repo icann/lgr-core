@@ -184,6 +184,74 @@ class Test(TestCase):
             ]
         }, self.report_oe])
 
+    def test_generate_variant_sets_missing(self):
+        idn = load_lgr('idn_table_review/variant_sets', 'variant_sets_missing.xml')
+
+        result = generate_variant_sets_report(idn, self.ref)
+
+        self.assertCountEqual(result, [{
+            'set_number': (97,),
+            'idn_table': (),
+            'ref_lgr': ((97,), (98,), (99,)),
+            'relevant_idn_table_repertoire': ((97,), (98,), (99,)),
+            'symmetry_check': True,
+            'transitivity_check': True,
+            'report': [
+                {
+                    'source_cp': 'U+0061',
+                    'source_glyph': 'a',
+                    'dest_cp': 'U+0062',
+                    'dest_glyph': 'b',
+                    'fwd_type_idn': '',
+                    'fwd_type_ref': 'blocked',
+                    'reverse': True,
+                    'rev_type_idn': '',
+                    'rev_type_ref': 'blocked',
+                    'dest_in_idn': False,
+                    'dest_in_ref': True,
+                    'symmetric': True,
+                    'result_fwd': 'REVIEW',
+                    'result_rev': 'REVIEW',
+                    'remark_fwd': 'Variant set exists in the reference LGR',
+                    'remark_rev': 'Variant set exists in the reference LGR'
+                }, {
+                    'source_cp': 'U+0061',
+                    'source_glyph': 'a',
+                    'dest_cp': 'U+0063',
+                    'dest_glyph': 'c',
+                    'fwd_type_idn': '',
+                    'fwd_type_ref': 'invalid',
+                    'reverse': True,
+                    'rev_type_idn': '',
+                    'rev_type_ref': 'blocked',
+                    'dest_in_idn': False,
+                    'dest_in_ref': True,
+                    'symmetric': False,
+                    'result_fwd': 'REVIEW',
+                    'result_rev': 'REVIEW',
+                    'remark_fwd': 'Variant set exists in the reference LGR',
+                    'remark_rev': 'Variant set exists in the reference LGR'
+                }, {
+                    'source_cp': 'U+0062',
+                    'source_glyph': 'b',
+                    'dest_cp': 'U+0063',
+                    'dest_glyph': 'c',
+                    'fwd_type_idn': '',
+                    'fwd_type_ref': 'blocked',
+                    'reverse': True,
+                    'rev_type_idn': '',
+                    'rev_type_ref': 'allocatable',
+                    'dest_in_idn': False,
+                    'dest_in_ref': True,
+                    'symmetric': False,
+                    'result_fwd': 'REVIEW',
+                    'result_rev': 'REVIEW',
+                    'remark_fwd': 'Variant set exists in the reference LGR',
+                    'remark_rev': 'Variant set exists in the reference LGR'
+                }
+            ]
+        }, self.report_oe])
+
     def test_generate_variant_sets_missing_variant_members(self):
         idn = load_lgr('idn_table_review/variant_sets', 'variant_sets_missing_variant_members.xml')
 
