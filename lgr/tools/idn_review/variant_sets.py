@@ -19,15 +19,20 @@ logger = logging.getLogger(__name__)
 
 class VariantSetsResult(AutoName):
     MATCH = auto()
-    NOTE = auto()
+    REVIEW = auto()
 
 
 class VariantData:
+    NONE = (None, None, False)
 
-    def __init__(self, fwd: Variant, rev: Variant, in_lgr: bool):
+    def __init__(self, fwd: Variant, rev: List[Variant], in_lgr: bool):
         self.fwd = fwd
         self.rev = rev
         self.in_lgr = in_lgr
+
+    @classmethod
+    def none(cls):
+        return cls(None, [None], False)
 
 
 class VariantReport:
@@ -40,11 +45,12 @@ class VariantReport:
         self.reference_lgr_var_data = reference_lgr_var_data
 
     def to_dict(self) -> Dict:
+        dest_char = self.idn_table_var_data.fwd or self.reference_lgr_var_data.fwd
         return {
             'source_cp': " ".join("U+%04X" % c for c in self.idn_table_char.cp),
             'source_glyph': str(self.idn_table_char),
-            'dest_cp': " ".join("U+%04X" % c for c in self.idn_table_var_data.fwd.cp),
-            'dest_glyph': str(self.idn_table_var_data.fwd),
+            'dest_cp': " ".join("U+%04X" % c for c in dest_char.cp),
+            'dest_glyph': str(dest_char),
             'fwd_type_idn': self.get_variant_type(self.idn_table_var_data.fwd),
             'fwd_type_ref': self.get_variant_type(self.reference_lgr_var_data.fwd),
             'reverse': self.idn_table_var_data.rev is not None,
@@ -55,24 +61,40 @@ class VariantReport:
             'dest_in_idn': self.idn_table_var_data.in_lgr,
             'dest_in_ref': self.reference_lgr_var_data.in_lgr,
             # TODO rev is a list, handle conditional variants
-            'symmetric': self.idn_table_var_data.rev and self.idn_table_var_data.fwd.type == self.idn_table_var_data.rev[0].type,
+            'symmetric': self.check_var_symmetry(),
             'result_fwd': self.get_result(self.idn_table_var_data.fwd, self.reference_lgr_var_data.fwd),
-            'result_rev': self.get_result(self.idn_table_var_data.rev, self.reference_lgr_var_data.rev),
+            # TODO rev is a list, handle conditional variants
+            'result_rev': self.get_result(self.idn_table_var_data.rev[0], self.reference_lgr_var_data.rev[0]),
             'remark_fwd': self.get_remark(self.idn_table_var_data.fwd, self.reference_lgr_var_data.fwd),
-            'remark_rev': self.get_remark(self.idn_table_var_data.rev, self.reference_lgr_var_data.rev)
+            # TODO rev is a list, handle conditional variants
+            'remark_rev': self.get_remark(self.idn_table_var_data.rev[0], self.reference_lgr_var_data.rev[0])
         }
 
     @staticmethod
     def get_variant_type(variant: Variant):
         return variant.type or '' if variant else ''
 
+    def check_var_symmetry(self):
+        if self.idn_table_var_data.fwd:
+            return (self.idn_table_var_data.rev[0] and
+                    self.idn_table_var_data.fwd.type == self.idn_table_var_data.rev[0].type)
+        if self.reference_lgr_var_data:
+            return (self.reference_lgr_var_data.rev[0] and
+                    self.reference_lgr_var_data.fwd.type == self.reference_lgr_var_data.rev[0].type)
+
+        return None  # should not happen
+
     @staticmethod
     def get_result(idn_var, ref_var) -> str:
+        if not idn_var:
+            return VariantSetsResult.REVIEW.name
         if idn_var == ref_var:
             return VariantSetsResult.MATCH.name
 
     @staticmethod
     def get_remark(idn_var, ref_var) -> str:
+        if not idn_var:
+            return "Variant member exists in the reference LGR"
         if idn_var == ref_var:
             return "Exact match (including type, conditional variant rule)"
 
@@ -112,11 +134,13 @@ class VariantSetsReport:
 
             for var_cp in idn_table_vars.keys() - reference_lgr_vars.keys():
                 variant_reports.append(
-                    VariantReport(idn_table_char, reference_lgr_char, idn_table_vars[var_cp], None).to_dict())
+                    VariantReport(idn_table_char, reference_lgr_char, idn_table_vars[var_cp],
+                                  VariantData.none()).to_dict())
 
             for var_cp in reference_lgr_vars.keys() - idn_table_vars.keys():
                 variant_reports.append(
-                    VariantReport(idn_table_char, reference_lgr_char, None, reference_lgr_vars[var_cp]).to_dict())
+                    VariantReport(idn_table_char, reference_lgr_char, VariantData.none(),
+                                  reference_lgr_vars[var_cp]).to_dict())
 
             for var_cp in idn_table_vars.keys() & reference_lgr_vars.keys():
                 variant_reports.append(
@@ -164,7 +188,7 @@ class VariantSetsReport:
             'relevant_idn_table_repertoire': relevant_repertoire,
             'symmetry_check': symmetry_ok,
             'transitivity_check': transitivity_ok,
-            'report': var_report
+            'report': sorted(var_report, key=lambda x: x['dest_cp'])
         }
 
 
