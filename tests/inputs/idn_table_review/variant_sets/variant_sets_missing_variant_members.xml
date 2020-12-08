@@ -15,7 +15,7 @@
             <var cp="0062" type="blocked"/>
         </char>
         <char cp="0062" ref="0">
-            <var cp="0061" type="blocked"/>
+            <var cp="0061" type="blocked" when="test"/>
         </char>
         <char cp="0063" ref="0">
         </char>

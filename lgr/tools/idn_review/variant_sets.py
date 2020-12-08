@@ -6,7 +6,7 @@ variant_sets -
 """
 import logging
 from enum import auto
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from lgr.char import Char, Variant, Repertoire
 from lgr.core import LGR
@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 class VariantSetsResult(AutoName):
     MATCH = auto()
     REVIEW = auto()
+    MANUAL_CHECK = auto()
 
 
 class VariantData:
@@ -46,6 +47,11 @@ class VariantReport:
 
     def to_dict(self) -> Dict:
         dest_char = self.idn_table_var_data.fwd or self.reference_lgr_var_data.fwd
+        result_fwd, remark_fwd = self.get_result_and_remark(self.idn_table_var_data.fwd,
+                                                            self.reference_lgr_var_data.fwd)
+        # TODO rev is a list, handle conditional variants
+        result_rev, remark_rev = self.get_result_and_remark(self.idn_table_var_data.rev[0],
+                                                            self.reference_lgr_var_data.rev[0])
         return {
             'source_cp': " ".join("U+%04X" % c for c in self.idn_table_char.cp),
             'source_glyph': str(self.idn_table_char),
@@ -62,12 +68,10 @@ class VariantReport:
             'dest_in_ref': self.reference_lgr_var_data.in_lgr,
             # TODO rev is a list, handle conditional variants
             'symmetric': self.check_var_symmetry(),
-            'result_fwd': self.get_result(self.idn_table_var_data.fwd, self.reference_lgr_var_data.fwd),
-            # TODO rev is a list, handle conditional variants
-            'result_rev': self.get_result(self.idn_table_var_data.rev[0], self.reference_lgr_var_data.rev[0]),
-            'remark_fwd': self.get_remark(self.idn_table_var_data.fwd, self.reference_lgr_var_data.fwd),
-            # TODO rev is a list, handle conditional variants
-            'remark_rev': self.get_remark(self.idn_table_var_data.rev[0], self.reference_lgr_var_data.rev[0])
+            'result_fwd': result_fwd,
+            'result_rev': result_rev,
+            'remark_fwd': remark_fwd,
+            'remark_rev': remark_rev,
         }
 
     @staticmethod
@@ -85,18 +89,19 @@ class VariantReport:
         return None  # should not happen
 
     @staticmethod
-    def get_result(idn_var, ref_var) -> str:
+    def get_result_and_remark(idn_var: Variant, ref_var: Variant) -> Tuple[auto, str]:
         if not idn_var:
-            return VariantSetsResult.REVIEW.name
-        if idn_var == ref_var:
-            return VariantSetsResult.MATCH.name
-
-    @staticmethod
-    def get_remark(idn_var, ref_var) -> str:
-        if not idn_var:
-            return "Variant member exists in the reference LGR"
-        if idn_var == ref_var:
-            return "Exact match (including type, conditional variant rule)"
+            return VariantSetsResult.REVIEW.value, "Variant member exists in the reference LGR"
+        if idn_var.type == ref_var.type:
+            if idn_var == ref_var:
+                return VariantSetsResult.MATCH.value, "Exact match (including type, conditional variant rule)"
+            if (idn_var.when and not ref_var.when) or (idn_var.not_when and not ref_var.not_when):
+                return (VariantSetsResult.REVIEW.value,
+                        "IDN Table variant generation is less conservative as it only applies with some conditions")
+            if (not idn_var.when and ref_var.when) or (not idn_var.not_when and ref_var.not_when):
+                return (VariantSetsResult.MANUAL_CHECK.value,
+                        "Variant condition rules are mismatched. The IDN Table misses the rule. "
+                        "If the rule is not needed for the proper variant index calculation, then this is ok")
 
 
 class VariantSetsReport:
