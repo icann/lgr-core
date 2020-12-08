@@ -183,3 +183,142 @@ class Test(TestCase):
                 }
             ]
         }, self.report_oe])
+
+    def test_generate_variant_sets_report_mismatch_contextual_rule_idn_table_less_conservative(self):
+        idn = load_lgr('idn_table_review/variant_sets',
+                       'variant_sets_mismatch_contextual_rule_idn_table_less_conservative.xml')
+
+        result = generate_variant_sets_report(idn, self.ref)
+
+        self.assertCountEqual(result, [{
+            'set_number': (97,),
+            'idn_table': ((97,), (98,), (99,)),
+            'ref_lgr': ((97,), (98,), (99,)),
+            'relevant_idn_table_repertoire': ((97,), (98,), (99,)),
+            'symmetry_check': True,
+            'transitivity_check': True,
+            'report': [
+                {
+                    'source_cp': 'U+0061',
+                    'source_glyph': 'a',
+                    'dest_cp': 'U+0062',
+                    'dest_glyph': 'b',
+                    'fwd_type_idn': 'blocked',
+                    'fwd_type_ref': 'blocked',
+                    'reverse': True,
+                    'rev_type_idn': 'blocked',
+                    'rev_type_ref': 'blocked',
+                    'dest_in_idn': True,
+                    'dest_in_ref': True,
+                    'symmetric': True,
+                    'result_fwd': 'REVIEW',
+                    'result_rev': 'MATCH',
+                    'remark_fwd': 'IDN Table variant generation is less conservative as it only applies with some conditions',
+                    'remark_rev': 'Exact match (including type, conditional variant rule)'
+                }, {
+                    'source_cp': 'U+0061',
+                    'source_glyph': 'a',
+                    'dest_cp': 'U+0063',
+                    'dest_glyph': 'c',
+                    'fwd_type_idn': 'invalid',
+                    'fwd_type_ref': 'invalid',
+                    'reverse': True,
+                    'rev_type_idn': 'blocked',
+                    'rev_type_ref': 'blocked',
+                    'dest_in_idn': True,
+                    'dest_in_ref': True,
+                    'symmetric': False,
+                    'result_fwd': 'MATCH',
+                    'result_rev': 'MATCH',
+                    'remark_fwd': 'Exact match (including type, conditional variant rule)',
+                    'remark_rev': 'Exact match (including type, conditional variant rule)'
+                }, {
+                    'source_cp': 'U+0062',
+                    'source_glyph': 'b',
+                    'dest_cp': 'U+0063',
+                    'dest_glyph': 'c',
+                    'fwd_type_idn': 'blocked',
+                    'fwd_type_ref': 'blocked',
+                    'reverse': True,
+                    'rev_type_idn': 'allocatable',
+                    'rev_type_ref': 'allocatable',
+                    'dest_in_idn': True,
+                    'dest_in_ref': True,
+                    'symmetric': False,
+                    'result_fwd': 'MATCH',
+                    'result_rev': 'MATCH',
+                    'remark_fwd': 'Exact match (including type, conditional variant rule)',
+                    'remark_rev': 'Exact match (including type, conditional variant rule)'
+                }
+            ]
+        }, self.report_oe])
+
+    def test_generate_variant_sets_report_mismatch_contextual_rule_idn_table_more_conservative(self):
+        idn = load_lgr('idn_table_review/variant_sets',
+                       'variant_sets_mismatch_contextual_rule_idn_table_more_conservative.xml')
+
+        result = generate_variant_sets_report(idn, self.ref)
+
+        self.assertCountEqual(result, [{
+            'set_number': (97,),
+            'idn_table': ((97,), (98,), (99,)),
+            'ref_lgr': ((97,), (98,), (99,)),
+            'relevant_idn_table_repertoire': ((97,), (98,), (99,)),
+            'symmetry_check': True,
+            'transitivity_check': True,
+            'report': [
+                {
+                    'source_cp': 'U+0061',
+                    'source_glyph': 'a',
+                    'dest_cp': 'U+0062',
+                    'dest_glyph': 'b',
+                    'fwd_type_idn': 'blocked',
+                    'fwd_type_ref': 'blocked',
+                    'reverse': True,
+                    'rev_type_idn': 'blocked',
+                    'rev_type_ref': 'blocked',
+                    'dest_in_idn': True,
+                    'dest_in_ref': True,
+                    'symmetric': True,
+                    'result_fwd': 'MATCH',
+                    'result_rev': 'MANUAL CHECK',
+                    'remark_fwd': 'Exact match (including type, conditional variant rule)',
+                    'remark_rev': 'Variant condition rules are mismatched. The IDN Table misses the rule. '
+                                  'If the rule is not needed for the proper variant index calculation, then this is ok'
+                }, {
+                    'source_cp': 'U+0061',
+                    'source_glyph': 'a',
+                    'dest_cp': 'U+0063',
+                    'dest_glyph': 'c',
+                    'fwd_type_idn': 'invalid',
+                    'fwd_type_ref': 'invalid',
+                    'reverse': True,
+                    'rev_type_idn': 'blocked',
+                    'rev_type_ref': 'blocked',
+                    'dest_in_idn': True,
+                    'dest_in_ref': True,
+                    'symmetric': False,
+                    'result_fwd': 'MATCH',
+                    'result_rev': 'MATCH',
+                    'remark_fwd': 'Exact match (including type, conditional variant rule)',
+                    'remark_rev': 'Exact match (including type, conditional variant rule)'
+                }, {
+                    'source_cp': 'U+0062',
+                    'source_glyph': 'b',
+                    'dest_cp': 'U+0063',
+                    'dest_glyph': 'c',
+                    'fwd_type_idn': 'blocked',
+                    'fwd_type_ref': 'blocked',
+                    'reverse': True,
+                    'rev_type_idn': 'allocatable',
+                    'rev_type_ref': 'allocatable',
+                    'dest_in_idn': True,
+                    'dest_in_ref': True,
+                    'symmetric': False,
+                    'result_fwd': 'MATCH',
+                    'result_rev': 'MATCH',
+                    'remark_fwd': 'Exact match (including type, conditional variant rule)',
+                    'remark_rev': 'Exact match (including type, conditional variant rule)'
+                }
+            ]
+        }, self.report_oe])

@@ -12,7 +12,7 @@
     </meta>
     <data>
         <char cp="0061" ref="0">
-            <var cp="0062" type="blocked"/>
+            <var cp="0062" type="blocked" when="test"/>
             <var cp="0063" type="invalid"/>
         </char>
         <char cp="0062" ref="0">
