@@ -12,18 +12,9 @@
         </references>
     </meta>
     <data>
-        <char cp="0061" ref="0">
-            <var cp="0062" type="blocked"/>
-            <var cp="0063" type="invalid"/>
-        </char>
-        <char cp="0062" ref="0">
-            <var cp="0061" type="blocked"/>
-            <var cp="0063" type="blocked"/>
-        </char>
-        <char cp="0063" ref="0">
-            <var cp="0061" type="blocked"/>
-            <var cp="0062" type="allocatable"/>
-        </char>
+        <char cp="0061" ref="0"/>
+        <char cp="0062" ref="0"/>
+        <char cp="0063" ref="0"/>
         <char cp="0064" ref="0"/>
         <char cp="0065" ref="0"/>
         <char cp="0066" ref="0"/>
@@ -39,12 +30,11 @@
         </char>
     </data>
     <rules>
-        <!-- do not use class with property as we do not have a mocked unicode database to resolve it -->
         <class name="num" from-tag="ascii-numbers"/>
         <class name="bc">0062 0063</class>
         <union name="union" comment="0070-0074">
             <class by-ref="bc"/>
-            <class>0067-0069</class>
+            <class>0067 0068</class>
         </union>
         <rule name="match">
             <start/>
