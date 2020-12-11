@@ -24,7 +24,7 @@ def main():
     parser.add_argument('-o', '--output', help='Output folder where to generate and store the report',
                         default='/tmp/lgr-idn-table-review-report/' + str(date.today()))
     parser.add_argument('-t', '--idn-table', nargs='+', help='The IDN tables to review', required=True)
-    parser.add_argument('-l', '--reference-lgr', nargs='+', help='The reference LGR used to review IDN tables',
+    parser.add_argument('-x', '--reference-lgr', nargs='+', help='The reference LGR used to review IDN tables',
                         required=True)
 
     args = parser.parse_args()
