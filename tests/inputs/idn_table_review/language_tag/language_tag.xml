@@ -3,9 +3,11 @@
         <version comment="Sample LGR for French">1</version>
         <date>2015-08-07</date>
         <unicode-version>6.3.0</unicode-version>
-        <language>und-Arab</language>
         <language>ar</language>
+        <language>ar-arab</language>
+        <language>zh</language>
         <language>zh-hani</language>
+        <language>test-unexisting</language>
         <scope type="domain">example</scope>
         <description type="text/plain">LGR for Unit Tests</description>
         <references>
