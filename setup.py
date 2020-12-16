@@ -51,7 +51,7 @@ setup(
         'tools/lgr_populate_variants.py',
         'tools/rfc7940_validate.py'
     ],
-    tests_require=['pytest'],
+    tests_require=['pytest', 'idna'],
     cmdclass={'test': PyTest},
     classifiers=[
         'Operating System :: OS Independent',
