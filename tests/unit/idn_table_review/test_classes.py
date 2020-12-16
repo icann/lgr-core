@@ -9,6 +9,7 @@ from unittest import TestCase
 
 from lgr.tools.idn_review.classes import generate_classes_report
 from munidata.database import IDNADatabase
+from tests.unit.unicode_database_mock import UnicodeDatabaseMock
 from tests.unit.utils import load_lgr
 
 logger = logging.getLogger('test_variant_sets')
@@ -37,25 +38,11 @@ class Test(TestCase):
         'remark': 'Classes and their members are matched'
     }
 
-    @staticmethod
-    def idn_database_get_set_mock(iterable=None, pattern=None, freeze=False):
-        if pattern:
-            raise NotImplementedError
-
-        if freeze:
-            set_cls = frozenset
-        else:
-            set_cls = set
-        if not iterable:
-            return set_cls()
-
-        return set_cls(iterable)
-
     def setUp(self) -> None:
         super().setUp()
         self.maxDiff = None
         self.unidb = IDNADatabase('6.3.0')
-        self.unidb.get_set = self.idn_database_get_set_mock
+        self.unidb = UnicodeDatabaseMock()
         self.ref = load_lgr('idn_table_review', 'reference_lgr.xml', unidb=self.unidb)
 
     def test_classes_extra_members_in_ref_not_in_idn(self):
