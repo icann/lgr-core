@@ -16,56 +16,11 @@
         </references>
     </meta>
     <data>
-        <char cp="0061" ref="0">
-            <var cp="0062" type="blocked"/>
-            <var cp="0063" type="invalid"/>
-        </char>
-        <char cp="0062" ref="0">
-            <var cp="0061" type="blocked"/>
-            <var cp="0063" type="blocked"/>
-        </char>
-        <char cp="0063" ref="0">
-            <var cp="0061" type="blocked"/>
-            <var cp="0062" type="allocatable"/>
-        </char>
-        <char cp="0064" ref="0"/>
-        <char cp="0065" ref="0"/>
-        <char cp="0066" ref="0"/>
-        <char cp="0067" ref="0"/>
-        <char cp="0068" ref="0"/>
-        <char cp="0069" ref="0"/>
-        <range first-cp="0030" last-cp="0039" tag="ascii-numbers"/>
-        <char cp="0153">
-            <var cp="006F 0065" type="blocked"/>
-        </char>
-        <char cp="006F 0065">
-            <var cp="0153" type="blocked"/>
-        </char>
+        <char cp="0061" ref="0"/>
+        <char cp="0062" ref="0"/>
+        <char cp="0063" ref="0"/>
+        <char cp="0153"/>
+        <char cp="006F 0065"/>
     </data>
-    <rules>
-        <!-- do not use class with property as we do not have a mocked unicode database to resolve it -->
-        <class name="num" from-tag="ascii-numbers"/>
-        <class name="bc">0062 0063</class>
-        <union name="union" comment="0070-0074">
-            <class by-ref="bc"/>
-            <class>0067-0069</class>
-        </union>
-        <rule name="match">
-            <start/>
-            <char cp="0062"/>
-            <end/>
-        </rule>
-        <rule name="not-match">
-            <class>0153</class>
-        </rule>
-        <rule name="all-match">
-            <start/>
-            <char cp="0153"/>
-        </rule>
-        <action comment="0" disp="match" match="match"/>
-        <action comment="1" disp="not-match" not-match="not-match"/>
-        <action comment="2" disp="all" all-variants="all test"/>
-        <action comment="3" disp="any" any-variant="any"/>
-        <action comment="4" disp="all-match" all-variants="all-other" match="all-match"/>
-    </rules>
+    <rules/>
 </lgr>
