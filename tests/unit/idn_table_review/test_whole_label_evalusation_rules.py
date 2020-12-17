@@ -17,22 +17,22 @@ logger = logging.getLogger('test_variant_sets')
 class Test(TestCase):
     match_match = {
         'rule_name': 'match',
-        'in_idn': True,
-        'in_lgr': True,
+        'idn_table': True,
+        'reference_lgr': True,
         'result': 'MATCH',
         'remark': 'Exact Match (matched names and content)'
     }
     not_match_match = {
         'rule_name': 'not-match',
-        'in_idn': True,
-        'in_lgr': True,
+        'idn_table': True,
+        'reference_lgr': True,
         'result': 'MATCH',
         'remark': 'Exact Match (matched names and content)'
     }
     all_match_match = {
         'rule_name': 'all-match',
-        'in_idn': True,
-        'in_lgr': True,
+        'idn_table': True,
+        'reference_lgr': True,
         'result': 'MATCH',
         'remark': 'Exact Match (matched names and content)'
     }
@@ -100,8 +100,8 @@ class Test(TestCase):
         self.assertDictEqual(result, {
             'comparison': [self.all_match_match, self.match_match, {
                 'rule_name': 'not-match',
-                'in_idn': False,
-                'in_lgr': True,
+                'idn_table': False,
+                'reference_lgr': True,
                 'result': 'SUBSET',
                 'remark': 'Match as a subset (for the rules missing in IDN Table, '
                           'applicable code points in Ref. LGR are not in IDN Table)'
@@ -124,8 +124,8 @@ class Test(TestCase):
         self.assertDictEqual(result, {
             'comparison': [self.all_match_match, self.match_match, {
                 'rule_name': 'new',
-                'in_idn': True,
-                'in_lgr': False,
+                'idn_table': True,
+                'reference_lgr': False,
                 'result': 'MANUAL CHECK',
                 'remark': 'Mismatch (WLE rule only exists in IDN Table)'
             }, self.not_match_match],
@@ -148,8 +148,8 @@ class Test(TestCase):
         self.assertDictEqual(result, {
             'comparison': [self.all_match_match, self.match_match, {
                 'rule_name': 'not-match',
-                'in_idn': False,
-                'in_lgr': True,
+                'idn_table': False,
+                'reference_lgr': True,
                 'result': 'MANUAL CHECK',
                 'remark': 'Mismatch (WLE rule only exists in Ref. LGR)'
             }],
@@ -179,8 +179,8 @@ class Test(TestCase):
         self.assertDictEqual(result, {
             'comparison': [self.all_match_match, {
                 'rule_name': 'match',
-                'in_idn': True,
-                'in_lgr': True,
+                'idn_table': True,
+                'reference_lgr': True,
                 'result': 'MANUAL CHECK',
                 'remark': 'Mismatch class (content mismatch)'
             }, self.not_match_match],
@@ -202,8 +202,8 @@ class Test(TestCase):
         self.assertDictEqual(result, {
             'comparison': [self.all_match_match, {
                 'rule_name': 'match',
-                'in_idn': True,
-                'in_lgr': True,
+                'idn_table': True,
+                'reference_lgr': True,
                 'result': 'MANUAL CHECK',
                 'remark': 'Mismatch class (content mismatch)'
             }, self.not_match_match],

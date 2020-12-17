@@ -54,8 +54,8 @@ class WholeLabelEvaluationRuleReport:
         result, remark = self.compare_wle()
         return {
             'rule_name': self.idn_table_rule.name if self.idn_table_rule else self.reference_lgr_rule.name,
-            'in_idn': self.idn_table_rule is not None,
-            'in_lgr': self.reference_lgr_rule is not None,
+            'idn_table': self.idn_table_rule is not None,
+            'reference_lgr': self.reference_lgr_rule is not None,
             'result': result.value,
             'remark': remark
         }
