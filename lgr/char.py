@@ -51,6 +51,7 @@ class Variant(object):
         - when attribute
         - not-when attribute
     """
+
     # For now, structure is very simple, and is used to only store the variant
     # code point (or sequence). This seems very similar to what a CharBase is,
     # and maybe we should base the Variant class on it?
@@ -219,7 +220,7 @@ class CharBase(object):
         """
         # cp_sequence must be at least the same length as cp
         return len(cp_sequence) >= len(self.cp) \
-            and list(self.cp) == list(cp_sequence[:len(self)])
+               and list(self.cp) == list(cp_sequence[:len(self)])
 
     def get_variants(self):
         """
@@ -379,7 +380,7 @@ class Repertoire(object):
             cp = k.cp
             k = k.as_index()
         elif isinstance(k, int):
-            cp = (k, )
+            cp = (k,)
             k = _to_index(k)
         else:
             cp = tuple(k)
@@ -437,12 +438,13 @@ class Repertoire(object):
 
                 yield char
 
-    def all_repertoire(self, include_sequences=True, include_ranges=True):
+    def all_repertoire(self, include_sequences=True, include_ranges=True, expand_ranges=False):
         """
         Return the whole content of the repertoire, unsorted.
 
         :param include_sequences: If False CharSequence are excluded from output.
         :param include_ranges: If False RangeChar are excluded from output.
+        :param expand_ranges: Return the ranges expanded (include_ranges should be True)
         :return: A generator that contains all Char elements of the repertoire.
 
         >>> cd = Repertoire()
@@ -456,8 +458,15 @@ class Repertoire(object):
             for char in char_list:
                 if isinstance(char, CharSequence) and not include_sequences:
                     continue
-                if isinstance(char, RangeChar) and not include_ranges:
-                    continue
+                if isinstance(char, RangeChar):
+                    if not include_ranges:
+                        continue
+                    if expand_ranges:
+                        for cp in range(char.first_cp, char.last_cp + 1):
+                            yield CharBase.from_cp_or_sequence(cp,
+                                                               char.comment, char.references, char.tags,
+                                                               char.when, char.not_when)
+                        continue
                 yield char
 
     def __len__(self):
@@ -781,6 +790,7 @@ class Repertoire(object):
         :returns: List of variant set, with a variant set being
                   a list of code points included in the set.
         """
+
         def dfs(char, visited=None):
             """ Utility function to iterate in a char/variants (Depth-First Search)."""
             if visited is None:
