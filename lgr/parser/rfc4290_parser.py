@@ -31,17 +31,7 @@ class RFC4290Parser(LGRParser):
         if not self.filename and isinstance(self.source, str):
             self.filename = os.path.basename(self.source)
 
-        self._lgr = LGR(name=self.filename)
-
-        logger.debug('Start parsing of file: %s', self.filename)
-
-        if hasattr(self.source, "read"):
-            self._parse_doc(self.source)
-        else:
-            with io.open(self.source, 'r', encoding='utf-8') as rule_file:
-                self._parse_doc(rule_file)
-
-        return self._lgr
+        return super().parse_document()
 
     def _parse_doc(self, rule_file):
         """

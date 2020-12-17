@@ -28,19 +28,6 @@ class LineParser(LGRParser):
         # No validation for now
         return True
 
-    def parse_document(self):
-        self._lgr = LGR(name=self.filename)
-
-        logger.debug('Start parsing of file: %s', self.filename)
-
-        if hasattr(self.source, "read"):
-            self._parse_doc(self.source)
-        else:
-            with io.open(self.source, 'r', encoding='utf-8') as rule_file:
-                self._parse_doc(rule_file)
-
-        return self._lgr
-
     def _parse_doc(self, rule_file):
         """
         Actual parsing of document.

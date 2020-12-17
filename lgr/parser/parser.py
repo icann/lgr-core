@@ -2,9 +2,13 @@
 """
 parser.py - Base class for LGR parser.
 """
-
+import logging
 import os
+import io
 
+from lgr.core import LGR
+
+logger = logging.getLogger(__name__)
 
 class LGRParser(object):
     """
@@ -65,4 +69,17 @@ class LGRParser(object):
 
         :return: The LGR structure.
         """
+        self._lgr = LGR(name=self.filename)
+
+        logger.debug('Start parsing of file: %s', self.filename)
+
+        if hasattr(self.source, "read"):
+            self._parse_doc(self.source)
+        else:
+            with io.open(self.source, 'r', encoding='utf-8') as rule_file:
+                self._parse_doc(rule_file)
+
+        return self._lgr
+
+    def _parse_doc(self, rule_file):
         raise NotImplementedError()
