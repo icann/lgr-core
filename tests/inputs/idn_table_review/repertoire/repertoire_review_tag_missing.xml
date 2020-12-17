@@ -14,25 +14,17 @@
         </references>
     </meta>
     <data>
-        <char cp="0061" ref="0" when="match">
-            <var cp="0062" type="blocked"/>
-            <var cp="0063" type="activated"/>
-        </char>
-        <char cp="0062" ref="0" when="match">
-            <var cp="0061" type="blocked" when="test"/>
-            <var cp="0063" type="blocked"/>
-        </char>
-        <char cp="0063" ref="0" not-when="not-match">
-            <var cp="0061" type="blocked"/>
-            <var cp="0062" type="allocatable"/>
-        </char>
+        <char cp="0061" ref="0" when="match"/>
+        <char cp="0062" ref="0" when="match"/>
+        <char cp="0063" ref="0" not-when="not-match"/>
         <char cp="0064" ref="0"/>
         <char cp="0065" ref="0"/>
         <char cp="0066" ref="0"/>
         <char cp="0067" ref="0"/>
         <char cp="0068" ref="0"/>
         <char cp="0069" ref="0" tag="test"/>
-        <range first-cp="0030" last-cp="0039" tag="ascii-numbers"/>
+        <char cp="0030"/>
+        <range first-cp="0031" last-cp="0039" tag="ascii-numbers"/>
         <char cp="0153">
             <var cp="006F 0065" type="blocked"/>
         </char>
@@ -41,7 +33,6 @@
         </char>
     </data>
     <rules>
-        <!-- do not use class with property as we do not have a mocked unicode database to resolve it -->
         <class name="num" from-tag="ascii-numbers"/>
         <class name="bc">0062 0063</class>
         <union name="union" comment="0070-0074">

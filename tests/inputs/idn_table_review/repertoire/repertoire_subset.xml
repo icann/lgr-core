@@ -26,7 +26,6 @@
             <var cp="0061" type="blocked"/>
             <var cp="0062" type="allocatable"/>
         </char>
-        <char cp="0064" ref="0"/>
         <char cp="0065" ref="0"/>
         <char cp="0066" ref="0"/>
         <char cp="0067" ref="0"/>
