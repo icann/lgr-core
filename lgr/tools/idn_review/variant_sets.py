@@ -68,9 +68,9 @@ class VariantReport:
                                                             self.idn_variant_set_missing,
                                                             in_repertoire)
         return {
-            'source_cp': " ".join("U+%04X" % c for c in src_char.cp),
+            'source_cp': src_char.cp,
             'source_glyph': str(src_char),
-            'dest_cp': " ".join("U+%04X" % c for c in dest_char.cp),
+            'dest_cp': dest_char.cp,
             'dest_glyph': str(dest_char),
             'fwd_type_idn': self.get_variant_type(self.idn_table_var_data.fwd),
             'fwd_type_ref': self.get_variant_type(self.reference_lgr_var_data.fwd),
@@ -144,9 +144,8 @@ class VariantReport:
 
 class VariantSetsReport:
 
-    def __init__(self, set_nbr: int, idn_table_variant_set, reference_lgr_variant_set,
+    def __init__(self, idn_table_variant_set, reference_lgr_variant_set,
                  idn_repertoire: Repertoire, reference_lgr_repertoire: Repertoire):
-        self.set_nbr = set_nbr
         self.idn_table_variant_set = idn_table_variant_set
         self.reference_lgr_variant_set = reference_lgr_variant_set
         self.idn_repertoire = idn_repertoire
@@ -222,7 +221,6 @@ class VariantSetsReport:
 
         var_report, relevant_repertoire = self.generate_variant_set_report()
         return {
-            'set_number': self.set_nbr,
             'idn_table': self.idn_table_variant_set,
             'ref_lgr': self.reference_lgr_variant_set,
             'relevant_idn_table_repertoire': relevant_repertoire,
@@ -249,7 +247,7 @@ def generate_variant_sets_report(idn_table: LGR, reference_lgr: LGR) -> List[Dic
     for set_id in idn_table_variant_sets.keys() | reference_lgr_variant_sets.keys():
         idn_table_variant_set = idn_table_variant_sets.get(set_id, ())
         reference_lgr_variant_set = reference_lgr_variant_sets.get(set_id, ())
-        report = VariantSetsReport(set_id, idn_table_variant_set, reference_lgr_variant_set, idn_table.repertoire,
+        report = VariantSetsReport(idn_table_variant_set, reference_lgr_variant_set, idn_table.repertoire,
                                    reference_lgr.repertoire).to_dict()
         reports.append(report)
 

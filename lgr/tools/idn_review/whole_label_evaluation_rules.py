@@ -53,7 +53,7 @@ class WholeLabelEvaluationRuleReport:
     def to_dict(self) -> Dict:
         result, remark = self.compare_wle()
         return {
-            'rule_name': self.idn_table_rule.name if self.idn_table_rule else self.reference_lgr_rule.name,
+            'name': self.idn_table_rule.name if self.idn_table_rule else self.reference_lgr_rule.name,
             'idn_table': self.idn_table_rule is not None,
             'reference_lgr': self.reference_lgr_rule is not None,
             'result': result.value,
@@ -161,7 +161,7 @@ class WholeLabelEvaluationRulesCheck:
         is_rtl = self.is_rtl()
         result = False
         if is_rtl and self.digits:
-            result = self.test_label(self.get_label(startswith=self.digits[0]), "error")
+            result = self.test_label(self.get_label(startswith=list(self.digits)[0]), "error")
         return {
             'applicable': is_rtl,
             'exists': result
