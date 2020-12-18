@@ -6,7 +6,7 @@ classes -
 """
 import logging
 from enum import auto
-from typing import Dict, Set, Tuple
+from typing import Dict, Set, Tuple, List
 
 from lgr.classes import TAG_CLASSNAME_PREFIX
 from lgr.core import LGR
@@ -110,7 +110,7 @@ def get_repertoire_and_class_members(lgr) -> Tuple[Dict[str, Set], Set]:
     return members, repertoire
 
 
-def generate_classes_report(idn_table: LGR, reference_lgr: LGR):
+def generate_classes_report(idn_table: LGR, reference_lgr: LGR) -> List[Dict]:
     idn_table_members, idn_table_repertoire = get_repertoire_and_class_members(idn_table)
     ref_lgr_members, ref_lgr_repertoire = get_repertoire_and_class_members(reference_lgr)
 
