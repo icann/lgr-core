@@ -16,21 +16,21 @@ logger = logging.getLogger('test_variant_sets')
 
 class Test(TestCase):
     match_match = {
-        'rule_name': 'match',
+        'name': 'match',
         'idn_table': True,
         'reference_lgr': True,
         'result': 'MATCH',
         'remark': 'Exact Match (matched names and content)'
     }
     not_match_match = {
-        'rule_name': 'not-match',
+        'name': 'not-match',
         'idn_table': True,
         'reference_lgr': True,
         'result': 'MATCH',
         'remark': 'Exact Match (matched names and content)'
     }
     all_match_match = {
-        'rule_name': 'all-match',
+        'name': 'all-match',
         'idn_table': True,
         'reference_lgr': True,
         'result': 'MATCH',
@@ -99,7 +99,7 @@ class Test(TestCase):
 
         self.assertDictEqual(result, {
             'comparison': [self.all_match_match, self.match_match, {
-                'rule_name': 'not-match',
+                'name': 'not-match',
                 'idn_table': False,
                 'reference_lgr': True,
                 'result': 'SUBSET',
@@ -123,7 +123,7 @@ class Test(TestCase):
 
         self.assertDictEqual(result, {
             'comparison': [self.all_match_match, self.match_match, {
-                'rule_name': 'new',
+                'name': 'new',
                 'idn_table': True,
                 'reference_lgr': False,
                 'result': 'MANUAL CHECK',
@@ -147,7 +147,7 @@ class Test(TestCase):
 
         self.assertDictEqual(result, {
             'comparison': [self.all_match_match, self.match_match, {
-                'rule_name': 'not-match',
+                'name': 'not-match',
                 'idn_table': False,
                 'reference_lgr': True,
                 'result': 'MANUAL CHECK',
@@ -178,7 +178,7 @@ class Test(TestCase):
 
         self.assertDictEqual(result, {
             'comparison': [self.all_match_match, {
-                'rule_name': 'match',
+                'name': 'match',
                 'idn_table': True,
                 'reference_lgr': True,
                 'result': 'MANUAL CHECK',
@@ -201,7 +201,7 @@ class Test(TestCase):
 
         self.assertDictEqual(result, {
             'comparison': [self.all_match_match, {
-                'rule_name': 'match',
+                'name': 'match',
                 'idn_table': True,
                 'reference_lgr': True,
                 'result': 'MANUAL CHECK',

@@ -117,8 +117,10 @@ def generate_classes_report(idn_table: LGR, reference_lgr: LGR):
     reports = []
     for clz_name in sorted(idn_table_members.keys() | ref_lgr_members.keys(),
                            key=lambda x: (x.startswith(TAG_CLASSNAME_PREFIX), x)):
-        report = ClassReport(clz_name, idn_table_members.get(clz_name, set()), ref_lgr_members.get(clz_name, set()),
-                             idn_table_repertoire, ref_lgr_repertoire).to_dict()
+        report = ClassReport(clz_name,
+                             set(idn_table_members.get(clz_name, set())),
+                             set(ref_lgr_members.get(clz_name, set())),
+                             set(idn_table_repertoire), set(ref_lgr_repertoire)).to_dict()
         if report:
             reports.append(report)
 

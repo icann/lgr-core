@@ -16,7 +16,6 @@ logger = logging.getLogger('test_variant_sets')
 class Test(TestCase):
     ref = load_lgr('idn_table_review', 'reference_lgr.xml')
     report_oe = {
-        'set_number': (111, 101),
         'idn_table': ((111, 101), (339,)),
         'ref_lgr': ((111, 101), (339,)),
         'relevant_idn_table_repertoire': ((111, 101), (339,)),
@@ -24,9 +23,9 @@ class Test(TestCase):
         'transitivity_check': True,
         'report': [
             {
-                'source_cp': 'U+006F U+0065',
+                'source_cp': (111, 101),
                 'source_glyph': 'oe',
-                'dest_cp': 'U+0153',
+                'dest_cp': (339,),
                 'dest_glyph': 'œ',
                 'fwd_type_idn': 'blocked',
                 'fwd_type_ref': 'blocked',
@@ -54,7 +53,6 @@ class Test(TestCase):
         result = generate_variant_sets_report(idn, self.ref)
 
         self.assertCountEqual(result, [{
-            'set_number': (97,),
             'idn_table': ((97,), (98,), (99,)),
             'ref_lgr': ((97,), (98,), (99,)),
             'relevant_idn_table_repertoire': ((97,), (98,), (99,)),
@@ -62,9 +60,9 @@ class Test(TestCase):
             'transitivity_check': True,
             'report': [
                 {
-                    'source_cp': 'U+0061',
+                    'source_cp': (97,),
                     'source_glyph': 'a',
-                    'dest_cp': 'U+0062',
+                    'dest_cp': (98,),
                     'dest_glyph': 'b',
                     'fwd_type_idn': 'blocked',
                     'fwd_type_ref': 'blocked',
@@ -79,9 +77,9 @@ class Test(TestCase):
                     'remark_fwd': 'Exact match (including type, conditional variant rule)',
                     'remark_rev': 'Exact match (including type, conditional variant rule)'
                 }, {
-                    'source_cp': 'U+0061',
+                    'source_cp': (97,),
                     'source_glyph': 'a',
-                    'dest_cp': 'U+0063',
+                    'dest_cp': (99,),
                     'dest_glyph': 'c',
                     'fwd_type_idn': 'activated',
                     'fwd_type_ref': 'activated',
@@ -96,9 +94,9 @@ class Test(TestCase):
                     'remark_fwd': 'Exact match (including type, conditional variant rule)',
                     'remark_rev': 'Exact match (including type, conditional variant rule)'
                 }, {
-                    'source_cp': 'U+0062',
+                    'source_cp': (98,),
                     'source_glyph': 'b',
-                    'dest_cp': 'U+0063',
+                    'dest_cp': (99,),
                     'dest_glyph': 'c',
                     'fwd_type_idn': 'blocked',
                     'fwd_type_ref': 'blocked',
@@ -122,7 +120,6 @@ class Test(TestCase):
         result = generate_variant_sets_report(idn, self.ref)
 
         self.assertCountEqual(result, [{
-            'set_number': (97,),
             'idn_table': ((97,), (98,)),
             'ref_lgr': ((97,), (98,), (99,)),
             'relevant_idn_table_repertoire': ((97,), (98,)),
@@ -130,9 +127,9 @@ class Test(TestCase):
             'transitivity_check': True,
             'report': [
                 {
-                    'source_cp': 'U+0061',
+                    'source_cp': (97,),
                     'source_glyph': 'a',
-                    'dest_cp': 'U+0062',
+                    'dest_cp': (98,),
                     'dest_glyph': 'b',
                     'fwd_type_idn': 'blocked',
                     'fwd_type_ref': 'blocked',
@@ -147,9 +144,9 @@ class Test(TestCase):
                     'remark_fwd': 'Exact match (including type, conditional variant rule)',
                     'remark_rev': 'Exact match (including type, conditional variant rule)'
                 }, {
-                    'source_cp': 'U+0061',
+                    'source_cp': (97,),
                     'source_glyph': 'a',
-                    'dest_cp': 'U+0063',
+                    'dest_cp': (99,),
                     'dest_glyph': 'c',
                     'fwd_type_idn': '',
                     'fwd_type_ref': 'activated',
@@ -164,9 +161,9 @@ class Test(TestCase):
                     'remark_fwd': 'Not applicable',
                     'remark_rev': 'Not applicable'
                 }, {
-                    'source_cp': 'U+0062',
+                    'source_cp': (98,),
                     'source_glyph': 'b',
-                    'dest_cp': 'U+0063',
+                    'dest_cp': (99,),
                     'dest_glyph': 'c',
                     'fwd_type_idn': '',
                     'fwd_type_ref': 'blocked',
@@ -190,7 +187,6 @@ class Test(TestCase):
         result = generate_variant_sets_report(idn, self.ref)
 
         self.assertCountEqual(result, [{
-            'set_number': (97,),
             'idn_table': (),
             'ref_lgr': ((97,), (98,), (99,)),
             'relevant_idn_table_repertoire': ((97,), (98,), (99,)),
@@ -198,9 +194,9 @@ class Test(TestCase):
             'transitivity_check': True,
             'report': [
                 {
-                    'source_cp': 'U+0061',
+                    'source_cp': (97,),
                     'source_glyph': 'a',
-                    'dest_cp': 'U+0062',
+                    'dest_cp': (98,),
                     'dest_glyph': 'b',
                     'fwd_type_idn': '',
                     'fwd_type_ref': 'blocked',
@@ -215,9 +211,9 @@ class Test(TestCase):
                     'remark_fwd': 'Variant set exists in the reference LGR',
                     'remark_rev': 'Variant set exists in the reference LGR'
                 }, {
-                    'source_cp': 'U+0061',
+                    'source_cp': (97,),
                     'source_glyph': 'a',
-                    'dest_cp': 'U+0063',
+                    'dest_cp': (99,),
                     'dest_glyph': 'c',
                     'fwd_type_idn': '',
                     'fwd_type_ref': 'activated',
@@ -232,9 +228,9 @@ class Test(TestCase):
                     'remark_fwd': 'Variant set exists in the reference LGR',
                     'remark_rev': 'Variant set exists in the reference LGR'
                 }, {
-                    'source_cp': 'U+0062',
+                    'source_cp': (98,),
                     'source_glyph': 'b',
-                    'dest_cp': 'U+0063',
+                    'dest_cp': (99,),
                     'dest_glyph': 'c',
                     'fwd_type_idn': '',
                     'fwd_type_ref': 'blocked',
@@ -258,7 +254,6 @@ class Test(TestCase):
         result = generate_variant_sets_report(idn, self.ref)
 
         self.assertCountEqual(result, [{
-            'set_number': (97,),
             'idn_table': ((97,), (98,)),
             'ref_lgr': ((97,), (98,), (99,)),
             'relevant_idn_table_repertoire': ((97,), (98,), (99,)),
@@ -266,9 +261,9 @@ class Test(TestCase):
             'transitivity_check': True,
             'report': [
                 {
-                    'source_cp': 'U+0061',
+                    'source_cp': (97,),
                     'source_glyph': 'a',
-                    'dest_cp': 'U+0062',
+                    'dest_cp': (98,),
                     'dest_glyph': 'b',
                     'fwd_type_idn': 'blocked',
                     'fwd_type_ref': 'blocked',
@@ -283,9 +278,9 @@ class Test(TestCase):
                     'remark_fwd': 'Exact match (including type, conditional variant rule)',
                     'remark_rev': 'Exact match (including type, conditional variant rule)'
                 }, {
-                    'source_cp': 'U+0061',
+                    'source_cp': (97,),
                     'source_glyph': 'a',
-                    'dest_cp': 'U+0063',
+                    'dest_cp': (99,),
                     'dest_glyph': 'c',
                     'fwd_type_idn': '',
                     'fwd_type_ref': 'activated',
@@ -300,9 +295,9 @@ class Test(TestCase):
                     'remark_fwd': 'Variant member exists in the reference LGR',
                     'remark_rev': 'Variant member exists in the reference LGR'
                 }, {
-                    'source_cp': 'U+0062',
+                    'source_cp': (98,),
                     'source_glyph': 'b',
-                    'dest_cp': 'U+0063',
+                    'dest_cp': (99,),
                     'dest_glyph': 'c',
                     'fwd_type_idn': '',
                     'fwd_type_ref': 'blocked',
@@ -327,7 +322,6 @@ class Test(TestCase):
         result = generate_variant_sets_report(idn, self.ref)
 
         self.assertCountEqual(result, [{
-            'set_number': (97,),
             'idn_table': ((97,), (98,), (99,)),
             'ref_lgr': ((97,), (98,), (99,)),
             'relevant_idn_table_repertoire': ((97,), (98,), (99,)),
@@ -335,9 +329,9 @@ class Test(TestCase):
             'transitivity_check': True,
             'report': [
                 {
-                    'source_cp': 'U+0061',
+                    'source_cp': (97,),
                     'source_glyph': 'a',
-                    'dest_cp': 'U+0062',
+                    'dest_cp': (98,),
                     'dest_glyph': 'b',
                     'fwd_type_idn': 'blocked',
                     'fwd_type_ref': 'blocked',
@@ -352,9 +346,9 @@ class Test(TestCase):
                     'remark_fwd': 'IDN Table variant generation is less conservative as it only applies with some conditions',
                     'remark_rev': 'Exact match (including type, conditional variant rule)'
                 }, {
-                    'source_cp': 'U+0061',
+                    'source_cp': (97,),
                     'source_glyph': 'a',
-                    'dest_cp': 'U+0063',
+                    'dest_cp': (99,),
                     'dest_glyph': 'c',
                     'fwd_type_idn': 'activated',
                     'fwd_type_ref': 'activated',
@@ -369,9 +363,9 @@ class Test(TestCase):
                     'remark_fwd': 'Exact match (including type, conditional variant rule)',
                     'remark_rev': 'Exact match (including type, conditional variant rule)'
                 }, {
-                    'source_cp': 'U+0062',
+                    'source_cp': (98,),
                     'source_glyph': 'b',
-                    'dest_cp': 'U+0063',
+                    'dest_cp': (99,),
                     'dest_glyph': 'c',
                     'fwd_type_idn': 'blocked',
                     'fwd_type_ref': 'blocked',
@@ -396,7 +390,6 @@ class Test(TestCase):
         result = generate_variant_sets_report(idn, self.ref)
 
         self.assertCountEqual(result, [{
-            'set_number': (97,),
             'idn_table': ((97,), (98,), (99,)),
             'ref_lgr': ((97,), (98,), (99,)),
             'relevant_idn_table_repertoire': ((97,), (98,), (99,)),
@@ -404,9 +397,9 @@ class Test(TestCase):
             'transitivity_check': True,
             'report': [
                 {
-                    'source_cp': 'U+0061',
+                    'source_cp': (97,),
                     'source_glyph': 'a',
-                    'dest_cp': 'U+0062',
+                    'dest_cp': (98,),
                     'dest_glyph': 'b',
                     'fwd_type_idn': 'blocked',
                     'fwd_type_ref': 'blocked',
@@ -422,9 +415,9 @@ class Test(TestCase):
                     'remark_rev': 'Variant condition rules are mismatched. The IDN Table misses the rule. '
                                   'If the rule is not needed for the proper variant index calculation, then this is ok'
                 }, {
-                    'source_cp': 'U+0061',
+                    'source_cp': (97,),
                     'source_glyph': 'a',
-                    'dest_cp': 'U+0063',
+                    'dest_cp': (99,),
                     'dest_glyph': 'c',
                     'fwd_type_idn': 'activated',
                     'fwd_type_ref': 'activated',
@@ -439,9 +432,9 @@ class Test(TestCase):
                     'remark_fwd': 'Exact match (including type, conditional variant rule)',
                     'remark_rev': 'Exact match (including type, conditional variant rule)'
                 }, {
-                    'source_cp': 'U+0062',
+                    'source_cp': (98,),
                     'source_glyph': 'b',
-                    'dest_cp': 'U+0063',
+                    'dest_cp': (99,),
                     'dest_glyph': 'c',
                     'fwd_type_idn': 'blocked',
                     'fwd_type_ref': 'blocked',
@@ -466,7 +459,6 @@ class Test(TestCase):
         result = generate_variant_sets_report(idn, self.ref)
 
         self.assertCountEqual(result, [{
-            'set_number': (97,),
             'idn_table': ((97,), (98,), (99,)),
             'ref_lgr': ((97,), (98,), (99,)),
             'relevant_idn_table_repertoire': ((97,), (98,), (99,)),
@@ -474,9 +466,9 @@ class Test(TestCase):
             'transitivity_check': True,
             'report': [
                 {
-                    'source_cp': 'U+0061',
+                    'source_cp': (97,),
                     'source_glyph': 'a',
-                    'dest_cp': 'U+0062',
+                    'dest_cp': (98,),
                     'dest_glyph': 'b',
                     'fwd_type_idn': 'allocatable',
                     'fwd_type_ref': 'blocked',
@@ -491,9 +483,9 @@ class Test(TestCase):
                     'remark_fwd': 'Variant type in the IDN Table is less conservative comparing to the Reference LGR',
                     'remark_rev': 'Exact match (including type, conditional variant rule)'
                 }, {
-                    'source_cp': 'U+0061',
+                    'source_cp': (97,),
                     'source_glyph': 'a',
-                    'dest_cp': 'U+0063',
+                    'dest_cp': (99,),
                     'dest_glyph': 'c',
                     'fwd_type_idn': 'activated',
                     'fwd_type_ref': 'activated',
@@ -508,9 +500,9 @@ class Test(TestCase):
                     'remark_fwd': 'Exact match (including type, conditional variant rule)',
                     'remark_rev': 'Variant type in the IDN Table is less conservative comparing to the Reference LGR'
                 }, {
-                    'source_cp': 'U+0062',
+                    'source_cp': (98,),
                     'source_glyph': 'b',
-                    'dest_cp': 'U+0063',
+                    'dest_cp': (99,),
                     'dest_glyph': 'c',
                     'fwd_type_idn': 'blocked',
                     'fwd_type_ref': 'blocked',
@@ -535,7 +527,6 @@ class Test(TestCase):
         result = generate_variant_sets_report(idn, self.ref)
 
         self.assertCountEqual(result, [{
-            'set_number': (97,),
             'idn_table': ((97,), (98,), (99,)),
             'ref_lgr': ((97,), (98,), (99,)),
             'relevant_idn_table_repertoire': ((97,), (98,), (99,)),
@@ -543,9 +534,9 @@ class Test(TestCase):
             'transitivity_check': True,
             'report': [
                 {
-                    'source_cp': 'U+0061',
+                    'source_cp': (97,),
                     'source_glyph': 'a',
-                    'dest_cp': 'U+0062',
+                    'dest_cp': (98,),
                     'dest_glyph': 'b',
                     'fwd_type_idn': 'blocked',
                     'fwd_type_ref': 'blocked',
@@ -560,9 +551,9 @@ class Test(TestCase):
                     'remark_fwd': 'Exact match (including type, conditional variant rule)',
                     'remark_rev': 'Exact match (including type, conditional variant rule)'
                 }, {
-                    'source_cp': 'U+0061',
+                    'source_cp': (97,),
                     'source_glyph': 'a',
-                    'dest_cp': 'U+0063',
+                    'dest_cp': (99,),
                     'dest_glyph': 'c',
                     'fwd_type_idn': 'blocked',
                     'fwd_type_ref': 'activated',
@@ -578,9 +569,9 @@ class Test(TestCase):
                                   'IDN Table is more conservative comparing to the Reference LGR',
                     'remark_rev': 'Exact match (including type, conditional variant rule)'
                 }, {
-                    'source_cp': 'U+0062',
+                    'source_cp': (98,),
                     'source_glyph': 'b',
-                    'dest_cp': 'U+0063',
+                    'dest_cp': (99,),
                     'dest_glyph': 'c',
                     'fwd_type_idn': 'unknown',
                     'fwd_type_ref': 'blocked',
