@@ -7,7 +7,6 @@ from __future__ import unicode_literals
 import logging
 
 from lgr.char import Char, CharSequence, RangeChar
-from lgr.utils import format_cp
 
 
 logger = logging.getLogger(__name__)

@@ -22,7 +22,7 @@ def check_symmetry(lgr, options):
     properties are identical (type, when, not-when).
 
     :param lgr: The LGR to be tested.
-    :param options: Dictionary of options to the validation function - unused.
+    :param options: Dictionary of options to the validation function.
     :return True is LGR symmetry is achieved, False otherwise.
     """
     logger.info("Testing symmetry")
@@ -46,6 +46,8 @@ def check_symmetry(lgr, options):
                 result['repertoire'].append({
                     'char': a,
                     'variant': b,
+                    'rule_type': None,
+                    'rule': None,
                     'type': 'not-in-repertoire'
                 })
                 success = False
@@ -54,34 +56,55 @@ def check_symmetry(lgr, options):
             # Variant is defined in repertoire,
             # let's see if the original character is in its
             # variants
-            if a.cp not in [var.cp for var in lgr.get_variants(b.cp)]:
+            reverse = []
+            for v in lgr.get_variants(b.cp):
+                if a.cp == v.cp:
+                    reverse.append(v)
+
+            if not reverse:
                 success = False
                 logger.warning('CP %s should have CP %s in its variants.',
                                format_cp(b.cp), format_cp(a.cp))
                 lgr.notify_error('basic_symmetry')
                 result['repertoire'].append({
-                    'char': b,
-                    'variant': a,
-                    'type': 'missing'
+                    'char': a,
+                    'variant': b,
+                    'rule_type': None,
+                    'rule': None,
+                    'type': 'missing-symmetric-variant'
                 })
                 continue
 
-            # Now let's check if the reverse mappings agree in their
-            # "when" or "not-when" attributes
-            for c in lgr.get_variants(b.cp):
-                if c.cp == a.cp:
-                    if c.when == b.when and c.not_when == b.not_when:
-                        break
-            else:
+            if options and options.get('ignore_rules'):
+                continue
+
+            # Variant is defined in repertoire and original character is in its variants,
+            # let's see if variant and reverse variant have the same contextual rules
+            if b.when and b.when not in [r.when for r in reverse]:
                 success = False
-                lgr.notify_error('strict_symmetry')
-                logger.warning('CP %s should have CP %s in its strict variants.',
-                               format_cp(b.cp), format_cp(a.cp))
+                logger.warning('Variant CP %s of CP %s should have reverse contextual when rule %s.',
+                               format_cp(a.cp), format_cp(b.cp), b.when)
                 result['repertoire'].append({
-                    'char': b,
-                    'variant': a,
-                    'type': 'missing'
+                    'char': a,
+                    'variant': b,
+                    'rule_type': 'when',
+                    'rule': b.when,
+                    'type': 'variant-contextual-rule-missing'
                 })
+                lgr.notify_error('strict_symmetry')
+            elif b.not_when and b.not_when not in [r.not_when for r in reverse]:
+                success = False
+                logger.warning('Variant CP %s of CP %s should have reverse contextual not-when rule %s.',
+                               format_cp(a.cp), format_cp(b.cp), b.not_when)
+                result['repertoire'].append({
+                    'char': a,
+                    'variant': b,
+                    'rule_type': 'not-when',
+                    'rule': b.not_when,
+                    'type': 'variant-contextual-rule-missing'
+                })
+                lgr.notify_error('strict_symmetry')
+
     logger.info("Symmetry test done")
     lgr.notify_tested('basic_symmetry')
     lgr.notify_tested('strict_symmetry')

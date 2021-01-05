@@ -1,6 +1,6 @@
-lxml==3.4.4
-language-tags==0.3.2
+language-tags==0.4.6
+lxml==4.3.3
 
 # Unicode modules
-picu==1.0
+picu==1.1
 munidata==2.0.0

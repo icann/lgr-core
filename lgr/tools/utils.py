@@ -5,8 +5,11 @@ utils - List of utility functions for tools.
 from __future__ import unicode_literals
 
 import logging
+import os
 import sys
 import codecs
+from io import BytesIO
+from six.moves.urllib import request as url_req, parse as url_parse
 
 from lgr import text_type
 from lgr.utils import cp_to_ulabel
@@ -16,7 +19,7 @@ from lgr.tools.merge_set import merge_lgr_set
 logger = logging.getLogger(__name__)
 
 
-def read_labels(input, unidb, do_raise=False, keep_commented=False):
+def read_labels(input, unidb=None, do_raise=False, keep_commented=False, as_cp=False):
     """
     Read a label file and format lines to get a list of correct labels
 
@@ -24,6 +27,7 @@ def read_labels(input, unidb, do_raise=False, keep_commented=False):
     :param unidb: The UnicodeDatabase
     :param do_raise: Whether the label parsing exceptions are raised or not
     :param keep_commented: Whether commented labels are returned (still commented) or not
+    :param as_cp: If True, returns a list of code points per label. Otherwise, unicode string.
     :return: [(label, valid, error)]
     """
     labels = [l.strip() for l in input]
@@ -44,7 +48,10 @@ def read_labels(input, unidb, do_raise=False, keep_commented=False):
         valid = True
         # transform U-label and A-label in unicode strings
         try:
-            label = parse_label_input(label, unidb.idna_decode_label, False)
+            if unidb:
+                label = parse_label_input(label, idna_decoder=unidb.idna_decode_label, as_cp=as_cp)
+            else:
+                label = parse_label_input(label, as_cp=as_cp)
         except BaseException as ex:
             if do_raise:
                 raise
@@ -185,6 +192,7 @@ def parse_label_input(s, idna_decoder=lambda x: x.encode('utf-8').decode('idna')
         else:
             return s
 
+
 def merge_lgrs(input_lgrs, name=None, rng=None, unidb=None):
     """
     Merge LGRs to create a LGR set
@@ -241,3 +249,13 @@ def get_stdin():
         return sys.stdin
     else:
         return codecs.getreader('utf8')(sys.stdin)
+
+
+def download_file(source_url):
+    base_url = url_parse.urlparse(source_url).path
+    filename = os.path.basename(base_url)
+    with url_req.urlopen(source_url) as resp:
+        logger.debug("Retrieve %s at URL %s", filename, source_url)
+        data = BytesIO(resp.read())
+
+    return filename, data

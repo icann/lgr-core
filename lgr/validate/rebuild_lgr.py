@@ -34,11 +34,11 @@ def rebuild_lgr(lgr, options):
                                   lgr.metadata.unicode_version)
     validating_repertoire = options.get('validating_repertoire', None)
 
-    description = "Rebuilding LGR with Unicode version {}".format(unicode_version)
-    if validating_repertoire is not None:
-        description += " and validating repertoire '{}'".format(validating_repertoire)
     result = {
-        'description': description,
+        'description': "Rebuilding LGR",
+        'unicode_version': unicode_version,
+        'validating_repertoire': validating_repertoire,
+        'unidb_version': None,
         'repertoire': {}  # XXX: Cannot use defaultdict because of django...
     }
 
@@ -49,13 +49,9 @@ def rebuild_lgr(lgr, options):
     unidb = options.get('unidb', None)
     if unidb is not None:
         unidb_version = unidb.get_unicode_version()
+        result['unidb_version'] = unidb_version
         if unidb_version != unicode_version:
-            result['generic'] = "Target Unicode version {} " \
-                                "differs from UnicodeDatabase {}".format(unicode_version,
-                                                                         unidb_version)
-            logger.warning("Target Unicode version %s differs "
-                           "from UnicodeDatabase %s",
-                           unicode_version, unidb_version)
+            logger.warning("Target Unicode version %s differs from UnicodeDatabase %s", unicode_version, unidb_version)
 
     # For now, simply copy the metadata and references of the source LGR
     target_metadata = copy.deepcopy(lgr.metadata)

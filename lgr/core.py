@@ -1126,9 +1126,6 @@ class LGR(object):
                                                           disp_set,
                                                           only_variants)
 
-                if collect_log:
-                    rule_logger.removeHandler(ch)
-
                 if variant_disp is None:
                     # 8.3.  Determining a Disposition for a Label or Variant Label
                     # Step 4
@@ -1138,8 +1135,11 @@ class LGR(object):
                 if variant_cp == label:
                     # Skip original label, yield last
                     original_label = variant_cp, variant_disp, variant_invalid_parts, idx, disp_set, log_output.getvalue()
-                    continue
-                yield variant_cp, variant_disp, variant_invalid_parts, idx, disp_set, log_output.getvalue()
+                else:
+                    yield variant_cp, variant_disp, variant_invalid_parts, idx, disp_set, log_output.getvalue()
+
+            if collect_log:
+                rule_logger.removeHandler(ch)
 
         if not original_label:
             # TODO: already computed since label MUST be eligible
@@ -1586,6 +1586,13 @@ class LGR(object):
                     if cp.is_prefix_of(label):
                         same_prefix = [cp]
                         break
+
+        for char in same_prefix[:]:
+            if isinstance(char, CharSequence):
+                # char is a sequence, if first code point of the sequence is in the LGR we need to consider it
+                for cp in self.repertoire.get_chars_from_prefix(label[0]):
+                    if len(cp) < len(char) and cp.is_prefix_of(label):
+                        same_prefix.append(cp)
 
         # Iterate through characters matching the start of the label
         for char in same_prefix:

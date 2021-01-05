@@ -4,12 +4,11 @@ diff_collisions.py - Diff and collisions of labels
 """
 from __future__ import unicode_literals
 
+from collections import Counter
 from copy import deepcopy
 
-from collections import Counter
-
-from lgr.utils import format_cp, cp_to_ulabel
 from lgr.exceptions import InvalidSymmetry, NotInLGR
+from lgr.utils import format_cp, cp_to_ulabel
 
 MD = "\n```\n"
 
@@ -20,12 +19,13 @@ PRIMARY = 'Primary'
 VARIANT = 'Variant'
 
 
-def _generate_indexes(lgr, labels, keep=False, quiet=False):
+def _generate_indexes(lgr, labels, tlds=None, keep=False, quiet=False):
     """
     Generate indexes based on labels provided in the list
 
     :param lgr: The current LGR
     :param labels: The list of labels, as a list of U-Labels.
+    :param tlds: The list of TLDs
     :param keep: Do we keep labels without collision in the output
     :param quiet: If True, do not collect rule log.
 
@@ -37,29 +37,39 @@ def _generate_indexes(lgr, labels, keep=False, quiet=False):
 
     label_indexes = {}
     not_in_lgr = []
-    # Get the indexes and variants for all labels
-    for label in labels:
-        label_cp = tuple([ord(c) for c in label])
-        try:
-            label_index = lgr.generate_index_label(label_cp)
-        except NotInLGR:
-            not_in_lgr.append(label_cp)
-            continue
 
-        label_cp_out = format_cp(label_cp)
-        if label_index not in label_indexes:
-            label_indexes[label_index] = []
-        label_indexes[label_index].append({'label': label,
-                                           'bidi': "%s'%s'%s" % (LRI,
-                                                                 label,
-                                                                 PDI),
-                                           'cat': PRIMARY,
-                                           'cp': label_cp,
-                                           'cp_out': label_cp_out,
-                                           'disp': {label: '-'},
-                                           'rules': {label: '-'},
-                                           'action_idx': {label: '-'}
-                                           })
+    # Get the indexes and variants for all labels
+    def get_indexes(label_list, is_tld=False):
+        for label in label_list:
+            label_cp = tuple([ord(c) for c in label])
+            try:
+                label_index = lgr.generate_index_label(label_cp)
+            except NotInLGR:
+                if is_tld:
+                    continue
+                not_in_lgr.append(label)
+                continue
+
+            label_cp_out = format_cp(label_cp)
+            if label_index not in label_indexes:
+                label_indexes[label_index] = []
+            label_indexes[label_index].append({'label': label,
+                                               'bidi': "%s'%s'%s" % (LRI,
+                                                                     label,
+                                                                     PDI),
+                                               'cat': PRIMARY,
+                                               'cp': label_cp,
+                                               'cp_out': label_cp_out,
+                                               'disp': {label: '-'},
+                                               'rules': {label: '-'},
+                                               'action_idx': {label: '-'},
+                                               'tld': is_tld
+                                               })
+
+    get_indexes(labels)
+    if tlds:
+        # remove labels from tlds as we do not want duplicated in label_indexes lists
+        get_indexes(tlds - labels, is_tld=True)
 
     for (label_index, primaries) in deepcopy(label_indexes).items():
         # only get variants for collided labels (if not keep)
@@ -228,7 +238,7 @@ def _get_new_variants(new_labels, old_labels):
 
 def _write_complete_output(label_indexes):
     """
-    Output le collisions information between labels
+    Output the collisions information between labels
     :param label_indexes: the dictionary containing the primary labels and
                           their variants (with various information) for each index.
     """
@@ -244,7 +254,7 @@ def _write_complete_output(label_indexes):
     for collisions in label_indexes.values():
         # do not output anything if there is not at least 2 primaries colliding
         if len(collisions) < 2 or \
-                        len([lbl for lbl in collisions if lbl['cat'] == PRIMARY]) < 2:
+                len([lbl for lbl in collisions if lbl['cat'] == PRIMARY]) < 2:
             continue
         idx = 0
         collided = True
@@ -302,6 +312,34 @@ def _write_complete_output(label_indexes):
         yield MD
         yield "No collision in the list of labels"
         yield MD
+
+
+def _write_simple_output(labels, tlds, label_indexes):
+    """
+    Output the collisions between labels
+    :param label_indexes: the dictionary containing the primary labels and
+                          their variants (with various information) for each index.
+    """
+
+    def yield_collisions(colliding1, colliding2, label_type, warn=""):
+        for l1 in colliding1:
+            for l2 in colliding2:
+                if l1 != l2:
+                    yield '{}: collides with {} {}{}\n'.format(l1, label_type, l2, warn)
+
+    for collisions in label_indexes.values():
+        colliding_labels = labels.intersection(set([l['label'] for l in collisions]))
+        colliding_tlds = tlds.intersection(set([l['label'] for l in collisions]))
+        if len(colliding_labels) > 1:
+            for y in yield_collisions(colliding_labels, colliding_labels, "label"):
+                yield y
+        if len(colliding_tlds) > 1:
+            for y in yield_collisions(colliding_tlds, colliding_tlds, "TLD",
+                                      "\n (WARNING: this should not append, your TLD file may be corrupted)"):
+                yield y
+
+        for y in yield_collisions(colliding_labels, colliding_tlds, "TLD"):
+            yield y
 
 
 def _full_dump(label_indexes):
@@ -374,8 +412,8 @@ def diff(lgr_1, lgr_2, labels_input, show_collision=True,
     if not_in_lgr_1 or not_in_lgr_2:
         for index, not_in_lgr in enumerate([not_in_lgr_1, not_in_lgr_2], 1):
             yield "# Labels not in LGR {} #\n\n".format(index)
-            for label_cp in not_in_lgr:
-                yield "Label {}\n".format(cp_to_ulabel(label_cp))
+            for label in not_in_lgr:
+                yield "Label {}\n".format(label)
             yield '\n'
 
     # generate a dictionary of indexes per label
@@ -415,12 +453,13 @@ def diff(lgr_1, lgr_2, labels_input, show_collision=True,
                 yield output
 
 
-def collision(lgr, labels_input, show_dump=False, quiet=False):
+def collision(lgr, labels_input, tlds_input, show_dump=False, quiet=False):
     """
     Show collisions in a list of labels for a given LGR
 
     :param lgr: The LGR object.
     :param labels_input: The file containing the labels
+    :param tlds_input: The file containing the TLDs
     :param show_dump: Generate a full dump
     :param quiet: Do not print rules
     """
@@ -432,15 +471,29 @@ def collision(lgr, labels_input, show_dump=False, quiet=False):
         else:
             yield "Label {}: {}\n".format(label, error)
 
-    # get diff between labels and variants for the two LGR
+    tlds = None
+    if tlds_input:
+        tlds = set()
+        for label, valid, error in read_labels(tlds_input, lgr.unicode_database):
+            if valid:
+                tlds.add(label)
+            else:
+                yield "TLD {}: {}\n (WARNING: this should not append, your TLD file may be corrupted)".format(label,
+                                                                                                              error)
+    if tlds_input:
+        in_tld = labels & tlds
+        if in_tld:
+            yield "\n# Labels that are TLDs #\n\n"
+            for label in sorted(in_tld):
+                yield "Label {}\n".format(label)
+
     # only keep label without collision for a full dump
-    label_indexes, not_in_lgr = _generate_indexes(lgr, labels, keep=show_dump,
-                                                  quiet=quiet)
+    label_indexes, not_in_lgr = _generate_indexes(lgr, labels, tlds=tlds, keep=show_dump, quiet=quiet)
 
     if not_in_lgr:
         yield "\n# Labels not in LGR #\n\n"
-        for label_cp in not_in_lgr:
-            yield "Label {}\n".format(cp_to_ulabel(label_cp))
+        for label in sorted(not_in_lgr):
+            yield "Label {}\n".format(label)
 
     # output collisions
     yield "\n# Collisions #\n\n"
@@ -450,6 +503,72 @@ def collision(lgr, labels_input, show_dump=False, quiet=False):
         yield "\n# Summary #\n\n"
         for output in _full_dump(label_indexes):
             yield output
+
+
+def basic_collision(lgr, labels_input, tlds_input, with_annotations=False):
+    """
+    Show collisions in a list of labels for a given LGR with no information
+
+    :param lgr: The LGR object.
+    :param labels_input: The file containing the labels
+    :param tlds_input: The file containing the TLDs
+    :param annotate: Add label annotation
+    """
+    from lgr.tools.utils import read_labels
+    from lgr.tools.annotate import annotate
+
+    if with_annotations:
+        yield "# Validity #\n\n"
+        for res in annotate(lgr, deepcopy(labels_input)):
+            yield res
+        yield "\n"
+
+    label_errors = []
+    labels = set()
+    for label, valid, error in read_labels(labels_input, lgr.unicode_database):
+        if valid:
+            labels.add(label)
+        else:
+            label_errors.append("{}: {}".format(label, error))
+
+    tlds = set()
+    for label, valid, error in read_labels(tlds_input, lgr.unicode_database):
+        if valid:
+            tlds.add(label)
+        else:
+            yield "TLD {}: {}\n (WARNING: this should not append, your TLD file may be corrupted)".format(label, error)
+
+    yield "# Collisions #\n\n"
+    has_one = False
+    if tlds_input:
+        in_tld = labels & tlds
+        for label in sorted(in_tld):
+            has_one = True
+            yield "{}: is a TLD\n".format(label)
+
+    # only keep label without collision for a full dump
+    label_indexes, not_in_lgr = _generate_indexes(lgr, labels, tlds=tlds, keep=False, quiet=True)
+
+    label_not_in_lgr = []
+    if not_in_lgr:
+        for label in sorted(not_in_lgr):
+            label_not_in_lgr.append("{}: not in LGR".format(label))
+
+    # output collisions
+    for output in _write_simple_output(labels, tlds, label_indexes):
+        has_one = True
+        yield output
+
+    if not has_one:
+        yield "No collision\n"
+
+    if label_errors or label_not_in_lgr:
+        yield "\n# Errors #\n\n"
+        for error in label_errors:
+            yield error + '\n'
+
+        for not_in_lgr in label_not_in_lgr:
+            yield not_in_lgr + '\n'
 
 
 def get_collisions(lgr, labels_input, quiet=True):
@@ -479,5 +598,3 @@ def is_collision(lgr, labels_input):
     :return: Whether there is a collision or not
     """
     return len(get_collisions(lgr, labels_input)) > 0
-
-

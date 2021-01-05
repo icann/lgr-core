@@ -59,6 +59,8 @@ class TestSymmetry(unittest.TestCase):
         self.assertDictEqual(result, {'description': 'Testing symmetry',
                                       'repertoire': [{'char': self.lgr.get_char([0x0061]),
                                                       'variant': self.lgr.get_variant([0x0061], (0x0062, ))[0],
+                                                      'rule_type': None,
+                                                      'rule': None,
                                                       'type': 'not-in-repertoire'}]})
 
     def test_no_symmetric_in_variants(self):
@@ -72,9 +74,71 @@ class TestSymmetry(unittest.TestCase):
                          'CP U+0062 should have CP U+0061 in its variants.\n')
         self.assertFalse(success)
         self.assertDictEqual(result, {'description': 'Testing symmetry',
-                                      'repertoire': [{'char': self.lgr.get_variant([0x0061], (0x0062, ))[0],
-                                                      'variant': self.lgr.get_char([0x0061]),
-                                                      'type': 'missing'}]})
+                                      'repertoire': [{'char': self.lgr.get_char([0x0061]),
+                                                      'variant': self.lgr.get_variant([0x0061], (0x0062, ))[0],
+                                                      'rule_type': None,
+                                                      'rule': None,
+                                                      'type': 'missing-symmetric-variant'}]})
+
+    def test_no_symmetric_rule_when_in_variants(self):
+        self.lgr.add_cp([0x0061])
+        self.lgr.add_variant([0x0061], [0x0062], when='test-when')
+        self.lgr.add_cp([0x0062])
+        self.lgr.add_variant([0x0062], [0x0061])
+        success, result = check_symmetry(self.lgr, {})
+        log_content = self.log_output.getvalue()
+        self.assertGreater(len(log_content), 0)
+        self.assertEqual(log_content,
+                         'Variant CP U+0061 of CP U+0062 should have reverse contextual when rule test-when.\n')
+        self.assertFalse(success)
+        self.assertDictEqual(result, {'description': 'Testing symmetry',
+                                      'repertoire': [{'char': self.lgr.get_char([0x0061]),
+                                                      'variant': self.lgr.get_variant([0x0061], (0x0062, ))[0],
+                                                      'rule_type': 'when',
+                                                      'rule': 'test-when',
+                                                      'type': 'variant-contextual-rule-missing'}]})
+
+    def test_no_symmetric_rule_not_when_in_variants(self):
+        self.lgr.add_cp([0x0061])
+        self.lgr.add_variant([0x0061], [0x0062], not_when='test-not-when')
+        self.lgr.add_cp([0x0062])
+        self.lgr.add_variant([0x0062], [0x0061])
+        success, result = check_symmetry(self.lgr, {})
+        log_content = self.log_output.getvalue()
+        self.assertGreater(len(log_content), 0)
+        self.assertEqual(log_content,
+                         'Variant CP U+0061 of CP U+0062 should have reverse contextual not-when rule test-not-when.\n')
+        self.assertFalse(success)
+        self.assertDictEqual(result, {'description': 'Testing symmetry',
+                                      'repertoire': [{'char': self.lgr.get_char([0x0061]),
+                                                      'variant': self.lgr.get_variant([0x0061], (0x0062, ))[0],
+                                                      'rule_type': 'not-when',
+                                                      'rule': 'test-not-when',
+                                                      'type': 'variant-contextual-rule-missing'}]})
+
+    def test_no_symmetric_rule_in_variants_when_not_when(self):
+        self.lgr.add_cp([0x0061])
+        self.lgr.add_variant([0x0061], [0x0062], when='test-when')
+        self.lgr.add_cp([0x0062])
+        self.lgr.add_variant([0x0062], [0x0061], not_when='test-not-when')
+        success, result = check_symmetry(self.lgr, {})
+        log_content = self.log_output.getvalue()
+        self.assertGreater(len(log_content), 0)
+        self.assertEqual(log_content,
+                         'Variant CP U+0061 of CP U+0062 should have reverse contextual when rule test-when.\n'
+                         'Variant CP U+0062 of CP U+0061 should have reverse contextual not-when rule test-not-when.\n')
+        self.assertFalse(success)
+        self.assertDictEqual(result, {'description': 'Testing symmetry',
+                                      'repertoire': [{'char': self.lgr.get_char([0x0061]),
+                                                      'variant': self.lgr.get_variant([0x0061], (0x0062, ))[0],
+                                                      'rule_type': 'when',
+                                                      'rule': 'test-when',
+                                                      'type': 'variant-contextual-rule-missing'},
+                                                     {'char': self.lgr.get_char([0x0062]),
+                                                      'variant': self.lgr.get_variant([0x0062], (0x0061,))[0],
+                                                      'rule_type': 'not-when',
+                                                      'rule': 'test-not-when',
+                                                      'type': 'variant-contextual-rule-missing'}]})
 
     def test_symmetry_ok(self):
         self.lgr.add_cp([0x0061])
@@ -266,40 +330,57 @@ class TestRebuildLGR(unittest.TestCase):
 
     def test_empty_lgr(self):
         __, result = rebuild_lgr(self.lgr, {})
-        self.assertDictEqual(result, {'description': 'Rebuilding LGR with Unicode version {}'.format(
-                                                                                        self.DEFAULT_UNICODE_VERSION),
-                                      'repertoire': {}})
+        self.assertDictEqual(result, {
+            'description': 'Rebuilding LGR',
+            'unicode_version': self.DEFAULT_UNICODE_VERSION,
+            'validating_repertoire': None,
+            'unidb_version': None,
+            'repertoire': {}
+        })
 
     def test_lgr_non_default_unicode(self):
         self.lgr.metadata.set_unicode_version('6.2.0')
         __, result = rebuild_lgr(self.lgr, {})
-        self.assertDictEqual(result, {'description': 'Rebuilding LGR with Unicode version 6.2.0',
-                                      'repertoire': {}})
+        self.assertDictEqual(result, {
+            'description': 'Rebuilding LGR',
+            'unicode_version': '6.2.0',
+            'validating_repertoire': None,
+            'unidb_version': None,
+            'repertoire': {}
+        })
 
     def test_lgr_validating_repertoire(self):
         validating_repertoire = LGR(name='validating')
         __, result = rebuild_lgr(self.lgr, {'validating_repertoire': validating_repertoire})
-        self.assertDictEqual(result, {'description': "Rebuilding LGR with Unicode version {} "
-                                                     "and validating repertoire '{}'".format(
-                                                                self.DEFAULT_UNICODE_VERSION, validating_repertoire),
-                                      'repertoire': {}})
+        self.assertDictEqual(result, {
+            'description': 'Rebuilding LGR',
+            'unicode_version': self.DEFAULT_UNICODE_VERSION,
+            'validating_repertoire': validating_repertoire,
+            'unidb_version': None,
+            'repertoire': {}
+        })
 
     def test_lgr_unidb_same_unicode(self):
         unidb = IDNADatabase('6.3.0')
         __, result = rebuild_lgr(self.lgr, {'unidb': unidb})
-        self.assertDictEqual(result, {'description': 'Rebuilding LGR with Unicode version {}'.format(
-                                                                                    self.DEFAULT_UNICODE_VERSION),
-                                      'repertoire': {}})
+        self.assertDictEqual(result, {
+            'description': 'Rebuilding LGR',
+            'unicode_version': self.DEFAULT_UNICODE_VERSION,
+            'validating_repertoire': None,
+            'unidb_version': '6.3.0',
+            'repertoire': {}
+        })
 
     def test_lgr_unidb_different_unicode(self):
         unidb = IDNADatabase('6.2.0')
         __, result = rebuild_lgr(self.lgr, {'unidb': unidb})
-        self.assertDictEqual(result, {'description': 'Rebuilding LGR with Unicode version {}'.format(
-                                                                                    self.DEFAULT_UNICODE_VERSION),
-                                      'generic': "Target Unicode version {} differs from UnicodeDatabase {}".format(
-                                                                                    self.DEFAULT_UNICODE_VERSION,
-                                                                                    '6.2.0'),
-                                      'repertoire': {}})
+        self.assertDictEqual(result, {
+            'description': 'Rebuilding LGR',
+            'unicode_version': self.DEFAULT_UNICODE_VERSION,
+            'validating_repertoire': None,
+            'unidb_version': '6.2.0',
+            'repertoire': {}
+        })
 
     def test_lgr_wrong_range_char(self):
         self.lgr.add_range(0x0060, 0x0063, force=True)
@@ -310,9 +391,13 @@ class TestRebuildLGR(unittest.TestCase):
         errors = result.get('repertoire', {}).get(r, {'errors': []})['errors']
         self.assertEqual(len(errors), 1)
         self.assertIsInstance(errors[0], CharInvalidIdnaProperty)
-        self.assertDictEqual(result, {'description': 'Rebuilding LGR with Unicode version {}'.format(
-                                                                                    self.DEFAULT_UNICODE_VERSION),
-                                      'repertoire': {r: {'errors': errors}}})
+        self.assertDictEqual(result, {
+            'description': 'Rebuilding LGR',
+            'unicode_version': self.DEFAULT_UNICODE_VERSION,
+            'validating_repertoire': None,
+            'unidb_version': self.DEFAULT_UNICODE_VERSION,
+            'repertoire': {r: {'errors': errors}}
+        })
 
     def test_lgr_wrong_char(self):
         self.lgr.add_cp(0x0060)
@@ -323,9 +408,13 @@ class TestRebuildLGR(unittest.TestCase):
         errors = result.get('repertoire', {}).get(char, {'errors': []})['errors']
         self.assertEqual(len(errors), 1)
         self.assertIsInstance(errors[0], CharInvalidIdnaProperty)
-        self.assertDictEqual(result, {'description': 'Rebuilding LGR with Unicode version {}'.format(
-                                                                                    self.DEFAULT_UNICODE_VERSION),
-                                      'repertoire': {char: {'errors': errors}}})
+        self.assertDictEqual(result, {
+            'description': 'Rebuilding LGR',
+            'unicode_version': self.DEFAULT_UNICODE_VERSION,
+            'validating_repertoire': None,
+            'unidb_version': self.DEFAULT_UNICODE_VERSION,
+            'repertoire': {char: {'errors': errors}}
+        })
 
     def test_lgr_wrong_variant(self):
         self.lgr.add_cp(0x0061)
@@ -338,9 +427,13 @@ class TestRebuildLGR(unittest.TestCase):
         errors = result.get('repertoire', {}).get(char, {}).get('variants', {}).get(var, [])
         self.assertEqual(len(errors), 1)
         self.assertIsInstance(errors[0], CharInvalidIdnaProperty)
-        self.assertDictEqual(result, {'description': 'Rebuilding LGR with Unicode version {}'.format(
-                                                                                    self.DEFAULT_UNICODE_VERSION),
-                                      'repertoire': {char: {'variants': {var: errors}}}})
+        self.assertDictEqual(result, {
+            'description': 'Rebuilding LGR',
+            'unicode_version': self.DEFAULT_UNICODE_VERSION,
+            'validating_repertoire': None,
+            'unidb_version': self.DEFAULT_UNICODE_VERSION,
+            'repertoire': {char: {'variants': {var: errors}}}
+        })
 
     def test_lgr_ok(self):
         self.lgr.add_range(0x0061, 0x0063, force=True)
@@ -351,9 +444,13 @@ class TestRebuildLGR(unittest.TestCase):
         unidb = IDNADatabase(self.DEFAULT_UNICODE_VERSION)
         self.lgr.unicode_database = unidb
         _, result = rebuild_lgr(self.lgr, {'unidb': unidb})
-        self.assertDictEqual(result, {'description': 'Rebuilding LGR with Unicode version {}'.format(
-                                                                                        self.DEFAULT_UNICODE_VERSION),
-                                      'repertoire': {}})
+        self.assertDictEqual(result, {
+            'description': 'Rebuilding LGR',
+            'unicode_version': self.DEFAULT_UNICODE_VERSION,
+            'validating_repertoire': None,
+            'unidb_version': self.DEFAULT_UNICODE_VERSION,
+            'repertoire': {}
+        })
 
 
 class TestXmlValidity(unittest.TestCase):

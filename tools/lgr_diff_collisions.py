@@ -93,7 +93,7 @@ def main():
                             args.quiet):
                 write_output(out)
         else:
-            for out in collision(lgr1, label_input, args.generate, args.quiet):
+            for out in collision(lgr1, label_input, None, args.generate, args.quiet):
                 write_output(out)
 
 
