@@ -3,15 +3,14 @@
 rfc4290_parser.py - Parse a RFC4290 compliant file.
 """
 from __future__ import unicode_literals
+
 import logging
 import os
-import io
 import re
 
-from lgr.core import LGR
 from lgr.exceptions import LGRException
-from lgr.utils import format_cp
 from lgr.parser.parser import LGRParser
+from lgr.utils import format_cp
 
 logger = logging.getLogger(__name__)
 

@@ -10,6 +10,7 @@ from lgr.core import LGR
 
 logger = logging.getLogger(__name__)
 
+
 class LGRParser(object):
     """
     This class is intended to define a base class to be inherited by actual parser classses.
@@ -49,8 +50,7 @@ class LGRParser(object):
         """
         raise NotImplementedError()
 
-    def validate_document(self,
-                          schema=None):
+    def validate_document(self, schema=None):
         """
         Validate the document source.
 
