@@ -3,17 +3,15 @@
 rfc3743_parser.py - 
 """
 from __future__ import unicode_literals
+
 import logging
 import os
-import io
 import re
 
-from lgr.core import LGR
-from lgr.metadata import Version
 from lgr.exceptions import LGRException
-from lgr.utils import format_cp
+from lgr.metadata import Version
 from lgr.parser.parser import LGRParser
-
+from lgr.utils import format_cp
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +77,7 @@ class RFC3743Parser(LGRParser):
 
                 try:
                     self._lgr.metadata.version = Version(version_no,
-                                                        comment=comment)
+                                                         comment=comment)
                     self._lgr.metadata.date = date
                 except LGRException:
                     logger.error("Invalid version '%s' on line %d",
