@@ -40,8 +40,8 @@ class LanguageTagReport:
         ref_tag = tags.tag(tag)
         if self.compare_language(idn_tag, ref_tag):
             if idn_tag.ERR_SUPPRESS_SCRIPT in [e.code for e in idn_tag.errors]:
-                return (
-                LanguageTagResult.MATCH, "Consider minimizing the tag as per the RFC5646 and IANA subtag registry")
+                return (LanguageTagResult.MATCH,
+                        "Consider minimizing the tag as per the RFC5646 and IANA subtag registry")
             return LanguageTagResult.MATCH, "Language match"
 
         if (idn_tag.language and idn_tag.language.script and ref_tag.script and
