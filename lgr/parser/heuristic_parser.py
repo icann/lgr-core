@@ -43,6 +43,10 @@ class HeuristicParser(LGRParser):
         else:
             self._check_rfc_format(rule_file)
 
+        if not self.lgr_parser:
+            # default to LGR XML parser
+            self.lgr_parser = XMLParser(rule_file, self.filename)
+
         rule_file.seek(0)
 
     def _check_rfc_format(self, rule_file):
@@ -58,8 +62,6 @@ class HeuristicParser(LGRParser):
                 else:
                     self.lgr_parser = RFC4290Parser(io.StringIO(rule_file.read().decode('utf-8')), self.filename)
                     break
-        else:
-            raise LGRException
 
     def _parse_doc(self, rule_file):
         """
