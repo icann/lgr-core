@@ -45,7 +45,8 @@ class RepertoireReport:
         result = None
         remark = ''
         # check tags
-        for tag in set(self.idn_table_char.tags) ^ set(self.reference_lgr_char.tags):
+        for tag in set(t for t in set(self.idn_table_char.tags) ^ set(self.reference_lgr_char.tags) if
+                       not t.startswith('sc:')):
             if tag not in self.idn_table_char.tags:
                 result = RepertoireResult.REVIEW
                 remark = "Tags do not match"
