@@ -1,5 +1,5 @@
 lxml==4.3.3
-language-tags==1.12.0
+language-tags==1.0.0
 
 # Unicode modules
 picu==1.1
