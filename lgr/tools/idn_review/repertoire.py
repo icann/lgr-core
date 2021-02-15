@@ -5,23 +5,14 @@
 repertoire - 
 """
 import logging
-from enum import auto
 from typing import Set, Tuple, Dict, List
 
 from lgr.char import Char
 from lgr.core import LGR
-from lgr.tools.idn_review.utils import AutoName
+from lgr.tools.idn_review.utils import IdnReviewResult
 from munidata.database import UnicodeDatabase
 
 logger = logging.getLogger(__name__)
-
-
-class RepertoireResult(AutoName):
-    MATCH = auto()
-    SUBSET = auto()
-    NOTE = auto()
-    REVIEW = auto()
-    MANUAL_CHECK = auto()
 
 
 class RepertoireReport:
@@ -34,11 +25,11 @@ class RepertoireReport:
         self.reference_lgr_rules_names = reference_lgr_rules_names
         self.unidb = unidb
 
-    def compare_char(self) -> Tuple[RepertoireResult, str]:
+    def compare_char(self) -> Tuple[IdnReviewResult, str]:
         if not self.idn_table_char:
-            return RepertoireResult.SUBSET, "Match as a subset of repertoire"
+            return IdnReviewResult.SUBSET, "Match as a subset of repertoire"
         if not self.reference_lgr_char:
-            return (RepertoireResult.MANUAL_CHECK,
+            return (IdnReviewResult.MANUAL_CHECK,
                     "The code point only exists in the IDN Table but not in the reference LGR")
 
         # here we merge NOTE and REVIEW on rules and tags but REVIEW is prioritized over NOTE for result
@@ -48,16 +39,16 @@ class RepertoireReport:
         for tag in set(t for t in set(self.idn_table_char.tags) ^ set(self.reference_lgr_char.tags) if
                        not t.startswith('sc:')):
             if tag not in self.idn_table_char.tags:
-                result = RepertoireResult.REVIEW
+                result = IdnReviewResult.REVIEW
                 remark = "Tags do not match"
                 break
             if tag not in self.reference_lgr_char.tags:
                 if tag in self.reference_lgr_tags:
-                    result = RepertoireResult.REVIEW
+                    result = IdnReviewResult.REVIEW
                     remark = "Tags do not match"
                     break  # stop here as we have a REVIEW that is prioritized over NOTE
                 elif not result:
-                    result = RepertoireResult.NOTE
+                    result = IdnReviewResult.NOTE
                     remark = "Tags not required in Reference LGR"
                     # continue in case we have a REVIEW later
         # check rule
@@ -66,20 +57,20 @@ class RepertoireReport:
         if idn_rule_name != ref_rule_name:
             if remark:
                 remark += '\n'
-            if result != RepertoireResult.REVIEW:
+            if result != IdnReviewResult.REVIEW:
                 if idn_rule_name and idn_rule_name not in self.reference_lgr_rules_names:
-                    result = RepertoireResult.NOTE
+                    result = IdnReviewResult.NOTE
                     remark += "Rules not required in Reference LGR"
                     return result, remark
                 else:
                     # reset remarks as we will get a REVIEW result
                     remark = ''
-            result = RepertoireResult.REVIEW
+            result = IdnReviewResult.REVIEW
             remark += "Rules do not match"
 
         if not result:
             # tags and rules match
-            return RepertoireResult.MATCH, "Matches code point (including tags, context rule)"
+            return IdnReviewResult.MATCH, "Matches code point (including tags, context rule)"
 
         return result, remark
 
@@ -92,7 +83,7 @@ class RepertoireReport:
             'name': " ".join(self.unidb.get_char_name(cp) for cp in char.cp),
             'idn_table': self.idn_table_char is not None,
             'reference_lgr': self.reference_lgr_char is not None,
-            'result': result.value,
+            'result': result.name,
             'remark': remark
         }
 

@@ -5,22 +5,14 @@
 classes -
 """
 import logging
-from enum import auto
 from typing import Dict, Set, Tuple, List
 
 from lgr.classes import TAG_CLASSNAME_PREFIX
 from lgr.core import LGR
-from lgr.tools.idn_review.utils import AutoName
+from lgr.tools.idn_review.utils import IdnReviewResult
 from lgr.utils import cp_to_ulabel
 
 logger = logging.getLogger(__name__)
-
-
-class ClassReportResult(AutoName):
-    MATCH = auto()
-    SUBSET = auto()
-    MANUAL_CHECK = auto()
-    REVIEW = auto()
 
 
 class ClassReport:
@@ -35,7 +27,7 @@ class ClassReport:
 
     def compute_result_and_remark(self):
         if not self.idn_table_cp ^ self.ref_lgr_cp:
-            return ClassReportResult.MATCH, "Classes and their members are matched"
+            return IdnReviewResult.MATCH, "Classes and their members are matched"
 
         extra_idn = self.idn_table_cp - self.ref_lgr_cp
         extra_ref = self.ref_lgr_cp - self.idn_table_cp
@@ -47,33 +39,33 @@ class ClassReport:
         if not self.idn_table_cp:
             # case with not idn_table_cp and all ref_lgr_cp out of IDN repertoire not handled here and already discarded
             assert self.ref_lgr_cp & self.idn_table_repertoire
-            return (ClassReportResult.MANUAL_CHECK,
+            return (IdnReviewResult.MANUAL_CHECK,
                     "Mismatch class (class does not exist in IDN Table; check for different class names)")
 
         if not self.ref_lgr_cp:
             if self.idn_table_cp & self.reference_lgr_repertoire:
-                return (ClassReportResult.MANUAL_CHECK,
+                return (IdnReviewResult.MANUAL_CHECK,
                         "Mismatch class (class does not exist in ref. LGR; check for different class names)")
             if self.idn_table_cp ^ self.reference_lgr_repertoire:
-                return ClassReportResult.MANUAL_CHECK, "Mismatch class with only additional code points."
+                return IdnReviewResult.MANUAL_CHECK, "Mismatch class with only additional code points."
 
         result = None
         remark = []
         if extra_idn and extra_idn & self.reference_lgr_repertoire:
-            result = ClassReportResult.REVIEW
+            result = IdnReviewResult.REVIEW
             remark.append("Mismatch class members (extra member(s) in IDN Table)")
         if extra_ref and extra_ref & self.idn_table_repertoire:
-            result = ClassReportResult.REVIEW
+            result = IdnReviewResult.REVIEW
             remark.append("Mismatch class members (missing member(s) in IDN Table)")
         if result:
             return result, '\n'.join(remark)
 
         if extra_idn:
-            return (ClassReportResult.MANUAL_CHECK,
+            return (IdnReviewResult.MANUAL_CHECK,
                     "Mismatch class members (extra member(s) in IDN Table which are not in Ref. LGR repertoire)")
 
         if extra_ref:
-            return ClassReportResult.SUBSET, "Extra members in Ref. LGR not in IDN Table"
+            return IdnReviewResult.SUBSET, "Extra members in Ref. LGR not in IDN Table"
 
     def to_dict(self) -> Dict:
         if not self.idn_table_cp and not (self.ref_lgr_cp & self.idn_table_repertoire):
@@ -85,7 +77,7 @@ class ClassReport:
             'name': self.class_name.replace(TAG_CLASSNAME_PREFIX, ''),
             'idn_members': sorted(cp_to_ulabel(cp) for cp in self.idn_table_cp),
             'ref_members': sorted(cp_to_ulabel(cp) for cp in self.ref_lgr_cp),
-            'result': result.value,
+            'result': result.name,
             'remark': remark
         }
 
