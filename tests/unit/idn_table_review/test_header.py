@@ -23,7 +23,7 @@ class Test(TestCase):
         self.assertDictEqual(generate_header(idn, ref),
                              {
                                  'date': date.today(),
-                                 'disclaimer': 'TODO',
+                                 'disclaimer': 'Waiting for ICANN disclaimer',
                                  'idn_table': {
                                      'filename': 'header.xml',
                                      'version': '2'
