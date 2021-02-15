@@ -213,8 +213,7 @@ class XMLParser(LGRParser):
                 # Seems to be an issue with CDATA/iterparse: https://bugs.launchpad.net/lxml/+bug/1788449
                 # For now, manually replace CRLF with LF
                 metadata.description = Description(child.text.replace('\r\n', '\n'),
-                                                   child.get('type',
-                                                             None))
+                                                   child.get('type', None))
             elif tag == REFERENCES_TAG:
                 for reference in child:
                     value = reference.text

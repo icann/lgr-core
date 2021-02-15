@@ -37,29 +37,38 @@ class HeuristicParser(LGRParser):
         if self.lgr_parser:
             return
 
-        if self._is_lgr(rule_file.readline().decode('utf-8')):
-            self.lgr_parser = XMLParser(rule_file, self.filename)
+        first_line = rule_file.readline()
+        is_str = True
+        if not isinstance(first_line, str):
+            is_str = False
+            first_line = first_line.decode('utf-8')
+        if self._is_lgr(first_line):
+            self.lgr_parser = XMLParser(self.source, self.filename)
         else:
-            self._check_rfc_format(rule_file)
+            self._check_rfc_format(rule_file, is_str)
 
         if not self.lgr_parser:
             # default to LGR XML parser
-            self.lgr_parser = XMLParser(rule_file, self.filename)
+            self.lgr_parser = XMLParser(self.source, self.filename)
 
-        rule_file.seek(0)
+        if hasattr(rule_file, "seek"):
+            rule_file.seek(0)
 
-    def _check_rfc_format(self, rule_file):
+    def _check_rfc_format(self, rule_file, is_str):
+        def get_source():
+            if not is_str:
+                return io.StringIO(rule_file.read().decode('utf-8'))
+            return self.source
+
         for line in rule_file:
-            line = line.decode('utf-8')
-            if RFC3743_REGEX.match(line.strip()):
-                self.lgr_parser = RFC3743Parser(io.StringIO(rule_file.read().decode('utf-8')), self.filename)
-                break
-            if RFC4290_REGEX.match(line.strip()):
+            if not is_str:
+                line = line.decode('utf-8')
+            if RFC4290_REGEX.match(line.strip()) or RFC3743_REGEX.match(line.strip()):
                 if ';' in line:
-                    self.lgr_parser = RFC3743Parser(io.StringIO(rule_file.read().decode('utf-8')), self.filename)
+                    self.lgr_parser = RFC3743Parser(get_source(), self.filename)
                     break
                 else:
-                    self.lgr_parser = RFC4290Parser(io.StringIO(rule_file.read().decode('utf-8')), self.filename)
+                    self.lgr_parser = RFC4290Parser(get_source(), self.filename)
                     break
 
     def _parse_doc(self, rule_file):
