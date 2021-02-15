@@ -30,12 +30,12 @@ class TestMetadata(unittest.TestCase):
         self.metadata.add_language('sr-Latn-RS')
         self.metadata.add_language('sl-nedis')
         self.metadata.add_language('de-CH-1901')
-        self.metadata.add_language('hy-Latn-IT-arevela')
+        self.metadata.add_language('oc-Latn-FR-aranes')
         self.metadata.add_language('es-419')
         self.assertEqual(self.metadata.languages,
                          ['fr', 'sr-Cyrl', 'zh-yue-HK',
                           'sr-Latn-RS', 'sl-nedis', 'de-CH-1901',
-                          'hy-Latn-IT-arevela', 'es-419'])
+                          'oc-Latn-FR-aranes', 'es-419'])
         with self.assertRaises(LGRFormatException) as cm:
             self.metadata.add_language('de-419-DE')
 
