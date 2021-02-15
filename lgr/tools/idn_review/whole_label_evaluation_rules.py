@@ -5,21 +5,14 @@
 whole_label_evaluation_rules - 
 """
 import logging
-from enum import auto
 from typing import Dict, Set, Tuple, List
 
 from lgr.char import Char
 from lgr.core import LGR
 from lgr.rule import Rule
-from lgr.tools.idn_review.utils import AutoName
+from lgr.tools.idn_review.utils import IdnReviewResult
 
 logger = logging.getLogger(__name__)
-
-
-class WholeLabelEvaluationRuleResult(AutoName):
-    MATCH = auto()
-    SUBSET = auto()
-    MANUAL_CHECK = auto()
 
 
 class WholeLabelEvaluationRuleReport:
@@ -33,22 +26,22 @@ class WholeLabelEvaluationRuleReport:
         self.reference_lgr_context = reference_lgr_context
         self.idn_table_repertoire = set(c.cp for c in self.idn_table.repertoire)
 
-    def compare_wle(self) -> Tuple[WholeLabelEvaluationRuleResult, str]:
+    def compare_wle(self) -> Tuple[IdnReviewResult, str]:
         # compare rule regex for rule equality
         if not self.idn_table_rule:
             if not (self.idn_table_repertoire & self.reference_lgr_context):
-                return (WholeLabelEvaluationRuleResult.SUBSET,
+                return (IdnReviewResult.SUBSET,
                         "Match as a subset (for the rules missing in IDN Table, "
                         "applicable code points in Ref. LGR are not in IDN Table)")
-            return WholeLabelEvaluationRuleResult.MANUAL_CHECK, "Mismatch (WLE rule only exists in Ref. LGR)"
+            return IdnReviewResult.MANUAL_CHECK, "Mismatch (WLE rule only exists in Ref. LGR)"
         if not self.reference_lgr_rule:
-            return WholeLabelEvaluationRuleResult.MANUAL_CHECK, "Mismatch (WLE rule only exists in IDN Table)"
+            return IdnReviewResult.MANUAL_CHECK, "Mismatch (WLE rule only exists in IDN Table)"
 
         if str(self.idn_table_rule) == str(self.reference_lgr_rule):
             if not (self.idn_table_context ^ self.reference_lgr_context):
-                return WholeLabelEvaluationRuleResult.MATCH, "Exact Match (matched names and content)"
+                return IdnReviewResult.MATCH, "Exact Match (matched names and content)"
 
-        return WholeLabelEvaluationRuleResult.MANUAL_CHECK, "Mismatch class (content mismatch)"
+        return IdnReviewResult.MANUAL_CHECK, "Mismatch class (content mismatch)"
 
     def to_dict(self) -> Dict:
         result, remark = self.compare_wle()
@@ -56,13 +49,12 @@ class WholeLabelEvaluationRuleReport:
             'name': self.idn_table_rule.name if self.idn_table_rule else self.reference_lgr_rule.name,
             'idn_table': self.idn_table_rule is not None,
             'reference_lgr': self.reference_lgr_rule is not None,
-            'result': result.value,
+            'result': result.name,
             'remark': remark
         }
 
 
 class WholeLabelEvaluationRulesCheck:
-
     ASCII_RANGE_MAX = 0xFF
 
     def __init__(self, idn_table: LGR, reference_lgr: LGR):

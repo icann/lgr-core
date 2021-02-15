@@ -5,7 +5,6 @@ heuristic_parser.py - Guess the right parser to use (either rfc3743, rfc4290 or 
 import io
 import logging
 
-from lgr.exceptions import LGRException
 from lgr.parser.parser import LGRParser
 from lgr.parser.rfc3743_parser import RFC3743Parser
 from lgr.parser.rfc3743_parser import UNICODE_CODEPOINT_RE as RFC3743_REGEX

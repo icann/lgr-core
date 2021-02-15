@@ -5,23 +5,15 @@
 variant_sets -
 """
 import logging
-from enum import auto
 from typing import Dict, List, Tuple
 
 from lgr.char import Char, Variant, Repertoire
 from lgr.core import LGR
 from lgr.exceptions import NotInLGR
-from lgr.tools.idn_review.utils import AutoName
+from lgr.tools.idn_review.utils import IdnReviewResult
 from lgr.validate import check_symmetry, check_transitivity
 
 logger = logging.getLogger(__name__)
-
-
-class VariantSetsResult(AutoName):
-    MATCH = auto()
-    NOTE = auto()
-    REVIEW = auto()
-    MANUAL_CHECK = auto()
 
 
 class VariantData:
@@ -110,36 +102,36 @@ class VariantReport:
 
     @classmethod
     def get_result_and_remark(cls, idn_var: Variant, ref_var: Variant,
-                              idn_variant_set_missing: bool, in_idn_repertoire: bool) -> Tuple[auto, str]:
+                              idn_variant_set_missing: bool, in_idn_repertoire: bool) -> Tuple[str, str]:
         if idn_variant_set_missing:
-            return VariantSetsResult.REVIEW.value, "Variant set exists in the reference LGR"
+            return IdnReviewResult.REVIEW.name, "Variant set exists in the reference LGR"
 
         if not idn_var:
             if in_idn_repertoire:
-                return VariantSetsResult.REVIEW.value, "Variant member exists in the reference LGR"
-            return VariantSetsResult.NOTE.value, "Not applicable"
+                return IdnReviewResult.REVIEW.name, "Variant member exists in the reference LGR"
+            return IdnReviewResult.NOTE.name, "Not applicable"
 
         if idn_var.type == ref_var.type:
             if idn_var == ref_var:
-                return VariantSetsResult.MATCH.value, "Exact match (including type, conditional variant rule)"
+                return IdnReviewResult.MATCH.name, "Exact match (including type, conditional variant rule)"
             if (idn_var.when and not ref_var.when) or (idn_var.not_when and not ref_var.not_when):
-                return (VariantSetsResult.REVIEW.value,
+                return (IdnReviewResult.REVIEW.name,
                         "IDN Table variant generation is less conservative as it only applies with some conditions")
             if (not idn_var.when and ref_var.when) or (not idn_var.not_when and ref_var.not_when):
-                return (VariantSetsResult.MANUAL_CHECK.value,
+                return (IdnReviewResult.MANUAL_CHECK.name,
                         "Variant condition rules are mismatched. The IDN Table misses the rule. "
                         "If the rule is not needed for the proper variant index calculation, then this is ok")
         else:
             try:
                 if cls.VARIANT_TYPES_ORDER.index(idn_var.type) < cls.VARIANT_TYPES_ORDER.index(ref_var.type):
-                    return (VariantSetsResult.REVIEW.value,
+                    return (IdnReviewResult.REVIEW.name,
                             "Variant type in the IDN Table is less conservative comparing to the Reference LGR")
                 else:
-                    return (VariantSetsResult.NOTE.value,
+                    return (IdnReviewResult.NOTE.name,
                             "Variant types are mismatched. "
                             "IDN Table is more conservative comparing to the Reference LGR")
             except ValueError:
-                return VariantSetsResult.REVIEW.value, "Unknown variant type"
+                return IdnReviewResult.REVIEW.name, "Unknown variant type"
 
 
 class VariantSetsReport:
@@ -226,7 +218,7 @@ class VariantSetsReport:
             'relevant_idn_table_repertoire': relevant_repertoire,
             'symmetry_check': symmetry_ok,
             'transitivity_check': transitivity_ok,
-            'report': sorted(var_report, key=lambda x: x['dest_cp'])
+            'report': sorted(var_report or [], key=lambda x: x['dest_cp'])
         }
 
     def same_repertoire(self):
@@ -249,6 +241,7 @@ def generate_variant_sets_report(idn_table: LGR, reference_lgr: LGR) -> List[Dic
         reference_lgr_variant_set = reference_lgr_variant_sets.get(set_id, ())
         report = VariantSetsReport(idn_table_variant_set, reference_lgr_variant_set, idn_table.repertoire,
                                    reference_lgr.repertoire).to_dict()
-        reports.append(report)
+        if report:
+            reports.append(report)
 
     return reports

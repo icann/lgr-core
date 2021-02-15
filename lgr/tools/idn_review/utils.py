@@ -5,11 +5,19 @@
 utils - 
 """
 import logging
-from enum import Enum
+from enum import IntEnum
+from types import DynamicClassAttribute
 
 logger = logging.getLogger(__name__)
 
 
-class AutoName(Enum):
-    def _generate_next_value_(name, start, count, last_values):
-        return name.replace('_', ' ')
+class IdnReviewResult(IntEnum):
+    MATCH = 0
+    SUBSET = 1
+    NOTE = 2
+    MANUAL_CHECK = 3
+    REVIEW = 4
+
+    @DynamicClassAttribute
+    def name(self):
+        return super(IdnReviewResult, self).name.replace('_', ' ')
