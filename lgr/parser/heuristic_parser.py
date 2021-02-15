@@ -82,4 +82,4 @@ class HeuristicParser(LGRParser):
         self._lgr = self.lgr_parser.parse_document()
 
     def _is_lgr(self, first_line):
-        return '<?xml' in first_line or str(self.filename).endswith('.xml')
+        return '<?xml' in first_line or '<lgr' in first_line or str(self.filename).endswith('.xml')
