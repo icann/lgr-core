@@ -24,7 +24,7 @@ def generate_header(idn_table: LGR, reference_lgr: LGR) -> dict:
 
     return {
         'date': date.today(),
-        'disclaimer': 'TODO',
+        'disclaimer': 'Waiting for ICANN disclaimer',
         'idn_table': {
             'filename': idn_table.name,
             'version': idn_table_version
