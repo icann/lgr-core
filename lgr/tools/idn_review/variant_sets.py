@@ -12,6 +12,7 @@ from lgr.core import LGR
 from lgr.exceptions import NotInLGR
 from lgr.tools.idn_review.utils import IdnReviewResult
 from lgr.validate import check_symmetry, check_transitivity
+from munidata.database import UnicodeDatabase
 
 logger = logging.getLogger(__name__)
 
@@ -230,8 +231,21 @@ class VariantSetsReport:
                 return False
         return True
 
+def get_additional_codepoints(idn_table, idn_table_variant_sets, reference_lgr) -> List[Dict]:
+    """
+    Get code points from IDN table not in reference LGR that are not handled in the report (i.e. not in a variant set)
+    """
+    unidb = idn_table.unicode_database
+    variants_flat = set(zip(*[v for v in idn_table_variant_sets.values()]))
+    return [{
+        'cp': char.cp,
+        'glyph': str(char),
+        'name': " ".join(unidb.get_char_name(cp) for cp in char.cp),
+    } for char in idn_table.repertoire if
+        char.cp not in variants_flat and char not in reference_lgr.repertoire]
 
-def generate_variant_sets_report(idn_table: LGR, reference_lgr: LGR) -> List[Dict]:
+
+def generate_variant_sets_report(idn_table: LGR, reference_lgr: LGR) -> Dict:
     idn_table_variant_sets = {s[0]: s for s in idn_table.repertoire.get_variant_sets()}
     reference_lgr_variant_sets = {s[0]: s for s in reference_lgr.repertoire.get_variant_sets()}
 
@@ -244,4 +258,7 @@ def generate_variant_sets_report(idn_table: LGR, reference_lgr: LGR) -> List[Dic
         if report:
             reports.append(report)
 
-    return reports
+    return {
+        'reports': reports,
+        'additional': get_additional_codepoints(idn_table, idn_table_variant_sets, reference_lgr)
+    }
