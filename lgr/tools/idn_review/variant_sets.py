@@ -112,6 +112,9 @@ class VariantReport:
                 return IdnReviewResult.REVIEW.name, "Variant member exists in the reference LGR"
             return IdnReviewResult.NOTE.name, "Not applicable"
 
+        if not ref_var:
+            return IdnReviewResult.NOTE.name, 'TODO not handled for now'
+
         if idn_var.type == ref_var.type:
             if idn_var == ref_var:
                 return IdnReviewResult.MATCH.name, "Exact match (including type, conditional variant rule)"
@@ -152,7 +155,7 @@ class VariantSetsReport:
 
         if not self.idn_table_variant_set and not self.same_repertoire():
             # XXX case not handled: missing variant sets but repertoires are not the same
-            return
+            return None, None
 
         for cp in sorted(set(self.idn_table_variant_set) | set(self.reference_lgr_variant_set)):
             idn_table_vars = {}
@@ -213,6 +216,9 @@ class VariantSetsReport:
         transitivity_ok, _ = check_transitivity(lgr, None)
 
         var_report, relevant_repertoire = self.generate_variant_set_report()
+        if not relevant_repertoire:  # TODO remove that once case is handled
+            return {}
+
         return {
             'idn_table': self.idn_table_variant_set,
             'ref_lgr': self.reference_lgr_variant_set,
@@ -230,6 +236,7 @@ class VariantSetsReport:
             if cp not in self.idn_repertoire:
                 return False
         return True
+
 
 def get_additional_codepoints(idn_table, idn_table_variant_sets, reference_lgr) -> List[Dict]:
     """
