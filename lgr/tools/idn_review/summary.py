@@ -35,7 +35,7 @@ def handle_report(reports, result_keys=None, remark_keys=None):
 def generate_summary(reports) -> Dict:
     return {'language_tag': handle_report(c for r in reports['language_tags'] for c in r['comparison']),
             'repertoire': handle_report(reports['repertoire']),
-            'variant_sets': handle_report((c for r in reports['variant_sets'] for c in r['report']),
+            'variant_sets': handle_report((c for r in reports['variant_sets']['reports'] for c in r['report']),
                                           result_keys=('result_fwd', 'result_rev'),
                                           remark_keys=('remark_fwd', 'remark_rev')),
             'classes': handle_report(reports['classes']),
