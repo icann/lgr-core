@@ -325,3 +325,10 @@ class Test(TestCase):
             'result': 'SUBSET',
             'remark': 'Match as a subset of repertoire'
         }], key=lambda x: x['cp']))
+
+    def test_repertoire_ignore_script_tag(self):
+        idn = load_lgr('idn_table_review/repertoire', 'repertoire_script_tag.xml', unidb=self.unidb)
+
+        result = generate_repertoire_report(idn, self.ref)
+
+        self.assertCountEqual(result, sorted(self.matching_cp, key=lambda x: x['cp']))
