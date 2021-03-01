@@ -21,7 +21,7 @@ class TestMetadata(unittest.TestCase):
     def test_get_scripts(self):
         self.metadata.languages = ['und-Cyrl', 'und-Zyyy', 'fr']
         self.assertEqual(self.metadata.get_scripts(),
-                         ['Cyrl', 'Zyyy'])
+                         ['Cyrl', 'Zyyy', 'Latn'])
 
     def test_add_language(self):
         self.metadata.add_language('fr')
