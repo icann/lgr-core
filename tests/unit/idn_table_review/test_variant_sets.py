@@ -500,7 +500,7 @@ class Test(TestCase):
                         'symmetric': False,
                         'result_fwd': 'REVIEW',
                         'result_rev': 'MATCH',
-                        'remark_fwd': 'Variant type in the IDN Table is less conservative comparing to the Reference LGR',
+                        'remark_fwd': 'Variant type in the IDN Table is less conservative compared to the Ref. LGR',
                         'remark_rev': 'Exact match (including type, conditional variant rule)'
                     }, {
                         'source_cp': (97,),
@@ -518,7 +518,7 @@ class Test(TestCase):
                         'result_fwd': 'MATCH',
                         'result_rev': 'REVIEW',
                         'remark_fwd': 'Exact match (including type, conditional variant rule)',
-                        'remark_rev': 'Variant type in the IDN Table is less conservative comparing to the Reference LGR'
+                        'remark_rev': 'Variant type in the IDN Table is less conservative compared to the Ref. LGR'
                     }, {
                         'source_cp': (98,),
                         'source_glyph': 'b',
