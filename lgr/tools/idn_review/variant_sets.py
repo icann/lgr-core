@@ -127,7 +127,7 @@ class VariantReport:
             try:
                 if cls.VARIANT_TYPES_ORDER.index(idn_var.type) < cls.VARIANT_TYPES_ORDER.index(ref_var.type):
                     return (IdnReviewResult.REVIEW.name,
-                            "Variant type in the IDN Table is less conservative comparing to the Reference LGR")
+                            "Variant type in the IDN Table is less conservative compared to the Ref. LGR")
                 else:
                     return (IdnReviewResult.NOTE.name,
                             "Variant types are mismatched. "
