@@ -57,7 +57,11 @@ class HeuristicParser(LGRParser):
     def _check_rfc_format(self, rule_file, is_str):
         def get_source():
             if not is_str:
+                if hasattr(rule_file, "seek"):
+                    rule_file.seek(0)
                 return io.StringIO(rule_file.read().decode('utf-8'))
+            if hasattr(self.source, "seek"):
+                self.source.seek(0)
             return self.source
 
         for line in rule_file:
