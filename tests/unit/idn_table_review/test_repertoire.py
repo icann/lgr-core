@@ -255,10 +255,10 @@ class Test(TestCase):
 
         result = generate_repertoire_report(idn, self.ref)
 
-        self.assertCountEqual(result, sorted(self.matching_cp[:3] + self.matching_cp[4:] + [{
-            'cp': (100,),
-            'glyph': 'd',
-            'name': 'LATIN SMALL LETTER D',
+        self.assertCountEqual(result, sorted(self.matching_cp[:2] + self.matching_cp[3:] + [{
+            'cp': (99,),
+            'glyph': 'c',
+            'name': 'LATIN SMALL LETTER C',
             'idn_table': True,
             'reference_lgr': True,
             'result': 'REVIEW',

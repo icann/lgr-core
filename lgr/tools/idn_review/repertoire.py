@@ -57,7 +57,7 @@ class RepertoireReport:
             if remark:
                 remark += '\n'
             if result != IdnReviewResult.REVIEW:
-                if idn_rule_name and idn_rule_name not in self.reference_lgr_rules_names:
+                if idn_rule_name and not ref_rule_name:
                     result = IdnReviewResult.NOTE
                     remark += "Rules not required in Reference LGR"
                     return result, remark

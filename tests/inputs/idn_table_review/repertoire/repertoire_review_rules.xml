@@ -16,8 +16,8 @@
     <data>
         <char cp="0061" ref="0" when="match"/>
         <char cp="0062" ref="0" when="match"/>
-        <char cp="0063" ref="0" not-when="not-match"/>
-        <char cp="0064" ref="0" when="match"/>
+        <char cp="0063" ref="0" not-when="match"/>
+        <char cp="0064" ref="0"/>
         <char cp="0065" ref="0"/>
         <char cp="0066" ref="0"/>
         <char cp="0067" ref="0"/>
