@@ -1,6 +1,5 @@
 #! /bin/env python
 # -*- coding: utf-8 -*-
-# Author: Viagénie
 """
 variant_sets -
 """
@@ -12,7 +11,6 @@ from lgr.core import LGR
 from lgr.exceptions import NotInLGR
 from lgr.tools.idn_review.utils import IdnReviewResult
 from lgr.validate import check_symmetry, check_transitivity
-from munidata.database import UnicodeDatabase
 
 logger = logging.getLogger(__name__)
 
