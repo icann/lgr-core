@@ -236,7 +236,7 @@ class CharBase(object):
 
     def get_variant(self, var_cp):
         """
-        Return a the variant marching the code point.
+        Return the variant marching the code point.
 
         :returns: The required variant
         """

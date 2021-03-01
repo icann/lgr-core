@@ -19,7 +19,7 @@ from io import BytesIO
 # OrderedDict is used in replacement for set in order to get OrderedSets
 from collections import OrderedDict
 
-from lgr.exceptions import LGRFormatException, CharAlreadyExists, CharInvalidContextRule
+from lgr.exceptions import LGRFormatException, CharInvalidContextRule
 from lgr.core import LGR, DEFAULT_ACTIONS
 from lgr.metadata import Metadata, Version, Description
 from lgr.tools.compare.utils import compare_objects

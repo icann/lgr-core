@@ -2,8 +2,6 @@
 """
 action.py - Definition of action structures.
 """
-from __future__ import unicode_literals
-
 import logging
 
 from lgr.utils import format_cp
