@@ -182,8 +182,13 @@ class Metadata(object):
             lang_tag = rfc5646.tag(language)
             if lang_tag.valid:
                 iso_script_tag = lang_tag.script
+                iso_script = None
                 if iso_script_tag is not None:
                     iso_script = iso_script_tag.format
+                if not iso_script_tag and lang_tag.language:
+                    # retrieve script from language 'Suppress-Script'
+                    iso_script = lang_tag.language.data.get('record', {}).get('Suppress-Script')
+                if iso_script:
                     scripts += script_iso15924_to_unicode(iso_script)
         return scripts
 
