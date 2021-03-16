@@ -204,6 +204,94 @@ class Test(TestCase):
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
-                'ascii_cp': self.general_rules_ascii_cp
+            }
+        })
+
+    def test_wle_combining_mark_applicable_ok(self):
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_combining_marks.xml', unidb=self.unidb)
+
+        result = generate_whole_label_evaluation_rules_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'comparison': [self.all_match_match, {
+                'name': 'leading-combining-mark',
+                'idn_table': True,
+                'reference_lgr': False,
+                'result': 'MANUAL CHECK',
+                'remark': 'Mismatch (WLE rule only exists in IDN Table)'
+            }, self.match_match, self.not_match_match],
+            'additional_cp': self.additional_cp + [{
+                'cp': (2478,),
+                'glyph': 'ম',
+                'name': 'BENGALI LETTER MA'
+            }, {
+                'cp': (2497,),
+                'glyph': 'ু',
+                'name': 'BENGALI VOWEL SIGN U'
+            }],
+            'additional_general_rules': {
+                'combining_mark': {
+                    'applicable': True,
+                    'exists': True
+                },
+                'consecutive_hyphens': self.general_rules_consecutive_hyphens,
+                'rtl': self.general_rules_rtl,
+                'digits_set': self.general_rules_digits_sets,
+            }
+        })
+
+    def test_wle_combining_mark_applicable_missing_cp(self):
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_combining_marks_missing_cp.xml', unidb=self.unidb)
+
+        result = generate_whole_label_evaluation_rules_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'comparison': [self.all_match_match, {
+                'name': 'leading-combining-mark',
+                'idn_table': True,
+                'reference_lgr': False,
+                'result': 'MANUAL CHECK',
+                'remark': 'Mismatch (WLE rule only exists in IDN Table)'
+            }, self.match_match, self.not_match_match],
+            'additional_cp': self.additional_cp + [{
+                'cp': (2497,),
+                'glyph': 'ু',
+                'name': 'BENGALI VOWEL SIGN U'
+            }],
+            'additional_general_rules': {
+                'combining_mark': {
+                    'applicable': True,
+                    'exists': None
+                },
+                'consecutive_hyphens': self.general_rules_consecutive_hyphens,
+                'rtl': self.general_rules_rtl,
+                'digits_set': self.general_rules_digits_sets,
+            }
+        })
+
+    def test_wle_combining_mark_applicable_not_ok(self):
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_combining_marks_wrong.xml', unidb=self.unidb)
+
+        result = generate_whole_label_evaluation_rules_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'comparison': [self.all_match_match, self.match_match, self.not_match_match],
+            'additional_cp': self.additional_cp + [{
+                'cp': (2478,),
+                'glyph': 'ম',
+                'name': 'BENGALI LETTER MA'
+            }, {
+                'cp': (2497,),
+                'glyph': 'ু',
+                'name': 'BENGALI VOWEL SIGN U'
+            }],
+            'additional_general_rules': {
+                'combining_mark': {
+                    'applicable': True,
+                    'exists': False
+                },
+                'consecutive_hyphens': self.general_rules_consecutive_hyphens,
+                'rtl': self.general_rules_rtl,
+                'digits_set': self.general_rules_digits_sets,
             }
         })

@@ -55,7 +55,7 @@ class UnicodeDatabaseMock(UnicodeDatabase):
         raise NotImplementedError
 
     def is_combining_mark(self, cp):
-        return unicodedata.combining(cp_to_ulabel(cp)) != 0
+        return unicodedata.category(cp_to_ulabel(cp)) in ['Mn', 'Mc']
 
     def is_digit(self, cp):
         try:
@@ -71,6 +71,7 @@ class UnicodeDatabaseMock(UnicodeDatabase):
         return False
 
     def compile_regex(self, regex):
+        # single code points
         c = re.compile(r'(?:\\x)?{([0-9]+)}')
         new_regex = regex
         while True:
@@ -78,17 +79,37 @@ class UnicodeDatabaseMock(UnicodeDatabase):
             if not m:
                 break
             new_regex = new_regex[:m.start()] + cp_to_ulabel(int(m.group(1), 16)) + new_regex[m.end():]
+        # list of code points {97, 99} -> [ac]
+        c = re.compile(r'{([0-9]+, ?)+[0-9]+}')
+        while True:
+            m = c.search(new_regex)
+            if not m:
+                break
+            new_regex = f"{new_regex[:m.start()]}[" \
+                        f"{''.join([cp_to_ulabel(int(i.strip())) for i in new_regex[m.start() + 1:m.end() - 1].split(',')])}" \
+                        f"]{new_regex[m.end():]}"
 
         return PatternMock(re.compile(new_regex))
 
-    def get_set(self, iterable=None, pattern=None, freeze=False):
-        if pattern:
-            raise NotImplementedError
+    def _get_cp_in_category(self, category):
+        cps = set()
+        for cp in range(110000):
+            if unicodedata.category(cp_to_ulabel(cp)) == category:
+                cps.add(cp)
+        return cps
 
+    def get_set(self, iterable=None, pattern=None, freeze=False):
         if freeze:
             set_cls = frozenset
         else:
             set_cls = set
+
+        if pattern:
+            if pattern.startswith('\p{gc='):
+                return set_cls(self._get_cp_in_category(pattern[6:8]))
+            else:
+                raise NotImplementedError
+
         if not iterable:
             return set_cls()
 
