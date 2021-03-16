@@ -71,14 +71,23 @@ class UnicodeDatabaseMock(UnicodeDatabase):
         return False
 
     def compile_regex(self, regex):
-        # single code points
-        c = re.compile(r'(?:\\x)?{([0-9]+)}')
+        # single hex code points
+        c = re.compile(r'(?:\\x){([0-9A-F]+)}')
         new_regex = regex
         while True:
             m = c.search(new_regex)
             if not m:
                 break
             new_regex = new_regex[:m.start()] + cp_to_ulabel(int(m.group(1), 16)) + new_regex[m.end():]
+
+        # single code points
+        c = re.compile(r'{([0-9]+)}')
+        while True:
+            m = c.search(new_regex)
+            if not m:
+                break
+            new_regex = new_regex[:m.start()] + cp_to_ulabel(int(m.group(1))) + new_regex[m.end():]
+
         # list of code points {97, 99} -> [ac]
         c = re.compile(r'{([0-9]+, ?)+[0-9]+}')
         while True:
