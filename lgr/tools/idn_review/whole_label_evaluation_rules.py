@@ -6,12 +6,194 @@ whole_label_evaluation_rules -
 import logging
 from typing import Dict, Set, Tuple, List
 
-from lgr.char import Char
+from language_tags import tags
+
+from lgr.char import Char, CharSequence
 from lgr.core import LGR
+from lgr.exceptions import NotInLGR
 from lgr.rule import Rule
 from lgr.tools.idn_review.utils import IdnReviewResult
 
 logger = logging.getLogger(__name__)
+
+SAME_SCRIPTS = {
+    'Aran': 'Arab',
+    'Cyrs': 'Cyrl',
+    'ace': 'zh',
+    'yue': 'zh',
+    'wuu': 'zh',
+    'gan': 'zh',
+    'och': 'zh',
+    'cjy': 'zh',
+    'hak': 'zh',
+    'hsn': 'zh',
+    'cpx': 'zh',
+    'czh': 'zh',
+    'mnp': 'zh',
+    'nan': 'zh',
+    'cdo': 'zh',
+    'cmn': 'zh',
+    'lzh': 'zh',
+    'zhx': 'zh',
+    'czo': 'zh',
+    'ltc': 'zh',
+    'csl': 'zh',
+    'cpi': 'zh',
+    'kvk': 'ko',
+    'oko': 'ko',
+    'okm': 'ko',
+    'he': 'Hebr',
+    'iw': 'Hebr',
+    'hbo': 'Hebr',
+    'ojp': 'ja',
+    'jpx': 'ja',
+    'jsl': 'ja',
+    'Latg': 'Latn',
+    'Latf': 'Latn'
+}
+
+COMBINING_MARK_LABELS = {
+    'Arab': [],  # Arabic script
+    'Armn': [],  # Armenian script
+    'Beng': [[0x09C1, 0x09AE, 0x09AE]],  # Bengali script
+    'Cyrl': [],  # Cyrillic script
+    'Deva': [[0x0948, 0x092C, 0x092C]],  # Devanagari script
+    'Ethi': [],  # Ethiopic script
+    'Geor': [],  # Georgian script
+    'Grek': [],  # Greek script
+    'Gujr': [[0x0ABC, 0x0AAC]],  # Gujarati script
+    'Guru': [[0x0A02, 0x0A20]],  # Gurmukhi script
+    'zh': [],  # Chinese language
+    'ko': [],  # Korean language
+    'Hebr': [],  # Hebrew
+    'ja': [],  # Japanese language
+    'Khmr': [[0x17B7, 0x178A]],  # Khmer script
+    'Laoo': [[0x0EB4, 0x0E9D, 0x0E9D]],  # Lao script
+    'Latn': [],  # Latin script
+    'Mlym': [[0x0D02, 0x0D1C]],  # Malayalam script
+    'Mymr': [[0x1032, 0x1005]],  # Myanmar script
+    'Orya': [[0x0B03, 0x0B15]],  # Oriya script
+    # '': [[0x0D82, 0x0DA8]],  # Sinala script
+    'Taml': [[0x0BBE, 0x0B9A]],  # Tamil script
+    'Telu': [[0x0C03, 0x0C16]],  # Telugu script
+    'Thaa': [[0x07A6, 0x0786]],  # Thaana script
+    'Thai': [[0x0E37, 0x0E01]],  # Thai script
+    'Tibt': [[0x0F80, 0x0F40]],  # Tibetan script
+}
+
+CONSECUTIVE_HYPHEN_LABELS = {
+    'Arab': [[0x002D, 0x062A, 0x062A], [0x062A, 0x062A, 0x002D],
+             [0x062A, 0x062A, 0x002D, 0x002D, 0x062A, 0x062A]],  # Arabic script
+    'Armn': [[0x002D, 0x0561, 0x0561], [0x0561, 0x0561, 0x002D],
+             [0x0561, 0x0561, 0x002D, 0x002D, 0x0561, 0x0561]],  # Armenian script
+    'Beng': [[0x002D, 0x09AE, 0x09AE], [0x09AE, 0x09AE, 0x002D],
+             [0x09AE, 0x09AE, 0x002D, 0x002D, 0x09AE, 0x09AE]],  # Bengali script
+    'Cyrl': [[0x002D, 0x0434, 0x0434], [0x0434, 0x0434, 0x002D],
+             [0x0434, 0x0434, 0x002D, 0x002D, 0x0434, 0x0434]],  # Cyrillic script
+    'Deva': [[0x002D, 0x092C, 0x092C], [0x092C, 0x092C, 0x002D],
+             [0x092C, 0x092C, 0x002D, 0x002D, 0x092C, 0x092C]],  # Devanagari script
+    'Ethi': [[0x002D, 0x1228, 0x1228], [0x1228, 0x1228, 0x002D],
+             [0x1228, 0x1228, 0x002D, 0x002D, 0x1228, 0x1228]],  # Ethiopic script
+    'Geor': [[0x002D, 0x10D1, 0x10D1], [0x10D1, 0x10D1, 0x002D],
+             [0x10D1, 0x10D1, 0x002D, 0x002D, 0x10D1, 0x10D1]],  # Georgian script
+    'Grek': [[0x002D, 0x03C0, 0x03C0], [0x03C0, 0x03C0, 0x002D],
+             [0x03C0, 0x03C0, 0x002D, 0x002D, 0x03C0, 0x03C0]],  # Greek script
+    'Gujr': [[0x002D, 0x0AAC, 0x0AAC], [0x0AAC, 0x0AAC, 0x002D],
+             [0x0AAC, 0x0AAC, 0x002D, 0x002D, 0x0AAC, 0x0AAC]],  # Gujarati script
+    'Guru': [[0x002D, 0x0A20, 0x0A20], [0x0A20, 0x0A20, 0x002D],
+             [0x0A20, 0x0A20, 0x002D, 0x002D, 0x0A20, 0x0A20]],  # Gurmukhi script
+    'zh': [[0x002D, 0x4E24, 0x4E24], [0x4E24, 0x4E24, 0x002D],
+           [0x4E24, 0x4E24, 0x002D, 0x002D, 0x4E24, 0x4E24]],  # Chinese language
+    'ko': [[0x002D, 0xAC00, 0xAC00], [0xAC00, 0xAC00, 0x002D],
+           [0xAC00, 0xAC00, 0x002D, 0x002D, 0xAC00, 0xAC00]],  # Korean language
+    'Hebr': [[0x002D, 0x05D1, 0x05D1], [0x05D1, 0x05D1, 0x002D],
+             [0x05D1, 0x05D1, 0x002D, 0x002D, 0x05D1, 0x05D1]],  # Hebrew
+    'ja': [[0x002D, 0x3064, 0x3064], [0x3064, 0x3064, 0x002D],
+           [0x3064, 0x3064, 0x002D, 0x002D, 0x3064, 0x3064]],  # Japanese language
+    'Khmr': [[0x002D, 0x178A, 0x178A], [0x178A, 0x178A, 0x002D],
+             [0x178A, 0x178A, 0x002D, 0x002D, 0x178A, 0x178A]],  # Khmer script
+    'Laoo': [[0x002D, 0x0E9D, 0x0E9D], [0x0E9D, 0x0E9D, 0x002D],
+             [0x0E9D, 0x0E9D, 0x002D, 0x002D, 0x0E9D]],  # Lao script
+    'Latn': [[0x002D, 0x006D, 0x006D], [0x0D1C, 0x0D1C, 0x002D],
+             [0x006D, 0x006D, 0x002D, 0x002D, 0x006D, 0x006D]],  # Latin script
+    'Mlym': [[0x002D, 0x0D1C, 0x0D1C], [0x0D1C, 0x0D1C, 0x002D],
+             [0x0D1C, 0x0D1C, 0x002D, 0x002D, 0x0D1C, 0x0D1C]],  # Malayalam script
+    'Mymr': [[0x002D, 0x1005, 0x1005], [0x1005, 0x1005, 0x002D],
+             [0x1005, 0x1005, 0x002D, 0x002D, 0x1005, 0x1005]],  # Myanmar script
+    'Orya': [[0x002D, 0x0B15, 0x0B15], [0x0B15, 0x0B15, 0x002D],
+             [0x0B15, 0x0B15, 0x002D, 0x002D, 0x0B15, 0x0B15]],  # Oriya script
+    # '': [[0x002D, 0x0DA8, 0x0DA8], [0x0DA8, 0x0DA8, 0x002D],
+    #         [0x0DA8, 0x0DA8, 0x002D, 0x002D, 0x0DA8, 0x0DA8]],  # Sinala script
+    'Taml': [[0x002D, 0x0B9A, 0x0B9A], [0x0B9A, 0x0B9A, 0x002D],
+             [0x0B9A, 0x0B9A, 0x002D, 0x002D, 0x0B9A, 0x0B9A]],  # Tamil script
+    'Telu': [[0x002D, 0x0C16, 0x0C16], [0x0C16, 0x0C16, 0x002D],
+             [0x0C16, 0x0C16, 0x002D, 0x002D, 0x0C16, 0x0C16]],  # Telugu script
+    'Thaa': [[0x002D, 0x0786, 0x0786], [0x0786, 0x0786, 0x002D],
+             [0x0786, 0x0786, 0x002D, 0x002D, 0x0786, 0x0786]],  # Thaana script
+    'Thai': [[0x002D, 0x0E01, 0x0E01], [0x0E01, 0x0E01, 0x002D],
+             [0x0E01, 0x0E01, 0x002D, 0x002D, 0x0E01, 0x0E01]],  # Thai script
+    'Tibt': [[0x002D, 0x0F40, 0x0F40], [0x0F40, 0x0F40, 0x002D],
+             [0x0F40, 0x0F40, 0x002D, 0x002D, 0x0F40, 0x0F40]],  # Tibetan script
+}
+
+BEGIN_DIGIT_LABELS = {
+    'Arab': [[0x0032, 0x062A, 0x062A], [0x0660, 0x062A, 0x062A], [0x06F5, 0x062A, 0x062A]],  # Arabic script
+    'Armn': [],  # Armenian script
+    'Beng': [],  # Bengali script
+    'Cyrl': [],  # Cyrillic script
+    'Deva': [],  # Devanagari script
+    'Ethi': [],  # Ethiopic script
+    'Geor': [],  # Georgian script
+    'Grek': [],  # Greek script
+    'Gujr': [],  # Gujarati script
+    'Guru': [],  # Gurmukhi script
+    'zh': [],  # Chinese language
+    'ko': [],  # Korean language
+    'Hebr': [[0x0033, 0x05D1, 0x05D1]],  # Hebrew
+    'ja': [],  # Japanese language
+    'Khmr': [],  # Khmer script
+    'Laoo': [],  # Lao script
+    'Latn': [],  # Latin script
+    'Mlym': [],  # Malayalam script
+    'Mymr': [],  # Myanmar script
+    'Orya': [],  # Oriya script
+    # '': [],  # Sinala script
+    'Taml': [],  # Tamil script
+    'Telu': [],  # Telugu script
+    'Thaa': [[0x0034, 0x0786]],  # Thaana script
+    'Thai': [],  # Thai script
+    'Tibt': [],  # Tibetan script
+}
+
+MULTIPLE_DIGIT_SETS_LABELS = {
+    'Arab': [[0x062A, 0x062A, 0x0032, 0x0662], [0x062A, 0x062A, 0x0032, 0x06F5],
+             [0x062A, 0x062A, 0x0662, 0x06F5]],  # Arabic script
+    'Armn': [],  # Armenian script
+    'Beng': [[0x09AE, 0x09AE, 0x0032, 0x09E9]],  # Bengali script
+    'Cyrl': [],  # Cyrillic script
+    'Deva': [[0x092D, 0x0032, 0x0966]],  # Devanagari script
+    'Ethi': [],  # Ethiopic script
+    'Geor': [],  # Georgian script
+    'Grek': [],  # Greek script
+    'Gujr': [[0x0AAC, 0x0032, 0x0AEE]],  # Gujarati script
+    'Guru': [],  # Gurmukhi script
+    'zh': [],  # Chinese language
+    'ko': [],  # Korean language
+    'Hebr': [],  # Hebrew
+    'ja': [],  # Japanese language
+    'Khmr': [[0x178A, 0x0032, 0x17E5]],  # Khmer script
+    'Laoo': [[0x0E9D, 0x0ED9, 0x0033]],  # Lao script
+    'Latn': [],  # Latin script
+    'Mlym': [],  # Malayalam script
+    'Mymr': [[0x1005, 0x1042, 0x0035], [0x1005, 0x0035, 0x1095], [0x1005, 0x1042, 0x1095]],  # Myanmar script
+    'Orya': [],  # Oriya script
+    # '': [],  # Sinala script
+    'Taml': [],  # Tamil script
+    'Telu': [],  # Telugu script
+    'Thaa': [],  # Thaana script
+    'Thai': [[0x0E01, 0x0E53, 0x0033]],  # Thai script
+    'Tibt': [[0x0F40, 0x0033, 0x0F27]],  # Tibetan script
+}
 
 
 class WholeLabelEvaluationRuleReport:
@@ -62,34 +244,44 @@ class WholeLabelEvaluationRulesCheck:
         self.idn_table_context_rules: Dict[str, Set] = dict()
         self.idn_table_char_without_rule: Set[Char] = set()
         self.reference_lgr_context_rules: Dict[str, Set] = dict()
-        self.combining_mark = None
+        self.combining_mark = False
         self.has_hyphen = 0x002D in self.idn_table.repertoire
         self.digits = set()
         self.has_multiple_digits_sets = False
-        self.ascii_cp = set()
         self.get_context_rules()
-        self.is_rtl()
+        self.is_rtl = False
+        self.check_rtl()
+        self.language_tags = []
+        self.get_language_tags()
 
-    def is_rtl(self):
+    def check_rtl(self):
+        self.is_rtl = False
         for script in self.idn_table.metadata.get_scripts():
             if self.idn_table.unicode_database.is_script_rtl(script):
-                return True
-        return False
+                self.is_rtl = True
+
+    def get_language_tags(self):
+        """
+        Retrieve language and scripts
+        """
+        for language_tag in sorted(self.idn_table.metadata.languages):
+            tag = tags.tag(language_tag)
+            if tag.language:
+                self.language_tags.append(tag.language.format)
+        self.language_tags.extend(self.idn_table.metadata.get_scripts())
 
     def get_context_rules(self):
         digit_sets = set()
         for char in self.idn_table.repertoire:
             if len(char.cp) == 1:
                 cp = char.cp[0]
-                if cp < self.ASCII_RANGE_MAX:
-                    self.ascii_cp.add(str(char))
                 if self.idn_table.unicode_database.is_digit(cp):
                     script = self.idn_table.unicode_database.get_script(cp)
                     if str(cp) not in self.digits:
                         self.digits.add(str(cp))
                     digit_sets.add(script)
-                if not self.combining_mark and self.idn_table.unicode_database.is_combining_mark(cp):
-                    self.combining_mark = str(char)
+                if self.idn_table.unicode_database.is_combining_mark(cp):
+                    self.combining_mark = True
             if char.when:
                 self.idn_table_context_rules.setdefault(char.when, set()).add(char.cp)
             elif char.not_when:
@@ -105,80 +297,70 @@ class WholeLabelEvaluationRulesCheck:
             if char.not_when:
                 self.reference_lgr_context_rules.setdefault(char.not_when, set()).add(char.cp)
 
-    def get_label(self, startswith=None, contains=None, pos=None, endswith=None):
-        avoid_chars = set()
-        label = startswith or ''
-        for seq in [startswith, contains, endswith]:
-            if seq:
-                avoid_chars.add(c for c in seq)
+    def get_labels(self, collection):
+        labels = []
+        for ls in self.language_tags:
+            ls = SAME_SCRIPTS.get(ls, ls)
+            l = collection.get(ls)
+            if l:
+                labels.extend(l)
+        return labels
 
-        count = 0
-        for char in self.idn_table.repertoire:
-            if str(char) not in avoid_chars:
-                label += str(char)
-                count += 1
-            if contains and ((pos and count == pos) or count) > 5:
-                label += contains
-            if count > 8:
-                break
-        if endswith:
-            label += endswith
+    def make_report(self, condition, collection, applicable=None):
+        applicable = applicable or condition
+        result = None
+        if condition:
+            for label in self.get_labels(collection):
+                if not self.check_label_cp_in_repertoire(label):
+                    result = None
+                    break
+                result = not self.test_label(label)
+                if not result:
+                    # label is eligible, rule does not exist, stop here
+                    break
 
-        return label
+        return {
+            'applicable': applicable,
+            'exists': result if result is not None else None
+        }
+
+    def check_label_cp_in_repertoire(self, label):
+        i = 0
+        result = False
+        cp = label[i]
+
+        try:
+            char_list = self.idn_table.repertoire.get_chars_from_prefix(cp)
+        except NotInLGR:
+            return False
+
+        for char in char_list:
+            if isinstance(char, CharSequence):
+                if not char.is_prefix_of(label[i:]):
+                    continue
+                else:
+                    result |= self.check_label_cp_in_repertoire(label[i + len(char):])
+            elif len(label) > 1:
+                result |= self.check_label_cp_in_repertoire(label[i + 1:])
+            else:
+                return True
+
+        return result
 
     def combining_mark_report(self) -> Dict:
-        result = False
-        if self.combining_mark is not None:
-            result = self.test_label(self.get_label(startswith=self.combining_mark), "error")
-
-        return {
-            'applicable': self.combining_mark is not None,
-            'exists': result
-        }
+        return self.make_report(self.combining_mark, COMBINING_MARK_LABELS)
 
     def consecutive_hyphens_report(self) -> Dict:
-        result = False
-        if self.has_hyphen:
-            result = self.test_label(self.get_label(startswith='-'), "error")
-            result &= self.test_label(self.get_label(contains='--', pos=3), "error")
-            result &= self.test_label(self.get_label(endswith='-'), "error")
-
-        return {
-            'applicable': self.has_hyphen,
-            'exists': result
-        }
+        return self.make_report(self.has_hyphen, CONSECUTIVE_HYPHEN_LABELS)
 
     def rtl_report(self) -> Dict:
-        is_rtl = self.is_rtl()
-        result = False
-        if is_rtl and self.digits:
-            result = self.test_label(self.get_label(startswith=list(self.digits)[0]), "error")
-        return {
-            'applicable': is_rtl,
-            'exists': result
-        }
+        return self.make_report(self.is_rtl and self.digits, BEGIN_DIGIT_LABELS, applicable=self.is_rtl)
 
     def digits_set_report(self) -> Dict:
-        result = False
-        if self.has_multiple_digits_sets:
-            result = self.test_label(self.get_label(contains=''.join(self.digits)), "error")
-        return {
-            'applicable': self.has_multiple_digits_sets,
-            'exists': result
-        }
+        return self.make_report(self.has_multiple_digits_sets, MULTIPLE_DIGIT_SETS_LABELS)
 
-    def ascii_cp_report(self) -> Dict:
-        result = False
-        if self.ascii_cp:
-            result = self.test_label(''.join(list(self.ascii_cp)[:min(len(self.ascii_cp), 6)]), "error")
-        return {
-            'applicable': len(self.ascii_cp) > 0,
-            'exists': result
-        }
-
-    def test_label(self, label, expected_error):
-        label_cp = tuple([ord(c) for c in label])
-        result, a, b, c, d, e = self.idn_table.test_label_eligible(label_cp)
+    def test_label(self, label):
+        result, a, b, c, d, e = self.idn_table.test_label_eligible(label)
         return result
 
     def additional_cp_report(self) -> List[Dict]:
@@ -210,6 +392,5 @@ def generate_whole_label_evaluation_rules_report(idn_table: LGR, reference_lgr: 
             'consecutive_hyphens': check.consecutive_hyphens_report(),
             'rtl': check.rtl_report(),
             'digits_set': check.digits_set_report(),
-            'ascii_cp': check.ascii_cp_report()
         }
     }
