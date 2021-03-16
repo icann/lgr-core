@@ -66,23 +66,19 @@ class Test(TestCase):
     }]
     general_rules_combining_mark = {
         'applicable': False,
-        'exists': False
+        'exists': None
     }
     general_rules_consecutive_hyphens = {
         'applicable': False,
-        'exists': False
+        'exists': None
     }
     general_rules_rtl = {
         'applicable': False,
-        'exists': False
+        'exists': None
     }
     general_rules_digits_sets = {
         'applicable': False,
-        'exists': False
-    }
-    general_rules_ascii_cp = {
-        'applicable': True,
-        'exists': False
+        'exists': None
     }
 
     def setUp(self) -> None:
@@ -111,7 +107,6 @@ class Test(TestCase):
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
-                'ascii_cp': self.general_rules_ascii_cp
             }
         })
 
@@ -134,7 +129,6 @@ class Test(TestCase):
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
-                'ascii_cp': self.general_rules_ascii_cp
             }
         })
 
@@ -166,7 +160,6 @@ class Test(TestCase):
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
-                'ascii_cp': self.general_rules_ascii_cp
             }
         })
 
@@ -189,7 +182,6 @@ class Test(TestCase):
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
-                'ascii_cp': self.general_rules_ascii_cp
             }
         })
 

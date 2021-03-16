@@ -7,7 +7,6 @@ import logging
 from unittest import TestCase
 
 from lgr.tools.idn_review.classes import generate_classes_report
-from munidata.database import IDNADatabase
 from tests.unit.unicode_database_mock import UnicodeDatabaseMock
 from tests.unit.utils import load_lgr
 
@@ -40,7 +39,6 @@ class Test(TestCase):
     def setUp(self) -> None:
         super().setUp()
         self.maxDiff = None
-        self.unidb = IDNADatabase('6.3.0')
         self.unidb = UnicodeDatabaseMock()
         self.ref = load_lgr('idn_table_review', 'reference_lgr.xml', unidb=self.unidb)
 
