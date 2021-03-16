@@ -295,3 +295,61 @@ class Test(TestCase):
                 'digits_set': self.general_rules_digits_sets,
             }
         })
+
+    def test_wle_hyphen_applicable_ok(self):
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_hyphen.xml', unidb=self.unidb)
+
+        result = generate_whole_label_evaluation_rules_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'comparison': [self.all_match_match, {
+                'name': 'hyphen-minus-disallowed',
+                'idn_table': True,
+                'reference_lgr': False,
+                'result': 'MANUAL CHECK',
+                'remark': 'Mismatch (WLE rule only exists in IDN Table)'
+            }, self.match_match, self.not_match_match],
+            'additional_cp': sorted(self.additional_cp + [{
+                'cp': (109,),
+                'glyph': 'm',
+                'name': 'LATIN SMALL LETTER M'
+            }], key=lambda x: x['cp'][0]),
+            'additional_general_rules': {
+                'combining_mark': self.general_rules_combining_mark,
+                'consecutive_hyphens': {
+                    'applicable': True,
+                    'exists': True
+                },
+                'rtl': self.general_rules_rtl,
+                'digits_set': self.general_rules_digits_sets,
+            }
+        })
+
+    def test_wle_hyphen_applicable_not_ok(self):
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_hyphen_wrong.xml', unidb=self.unidb)
+
+        result = generate_whole_label_evaluation_rules_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'comparison': [self.all_match_match, {
+                'name': 'hyphen-minus-disallowed',
+                'idn_table': True,
+                'reference_lgr': False,
+                'result': 'MANUAL CHECK',
+                'remark': 'Mismatch (WLE rule only exists in IDN Table)'
+            }, self.match_match, self.not_match_match],
+            'additional_cp': sorted(self.additional_cp + [{
+                'cp': (109,),
+                'glyph': 'm',
+                'name': 'LATIN SMALL LETTER M'
+            }], key=lambda x: x['cp'][0]),
+            'additional_general_rules': {
+                'combining_mark': self.general_rules_combining_mark,
+                'consecutive_hyphens': {
+                    'applicable': True,
+                    'exists': False
+                },
+                'rtl': self.general_rules_rtl,
+                'digits_set': self.general_rules_digits_sets,
+            }
+        })
