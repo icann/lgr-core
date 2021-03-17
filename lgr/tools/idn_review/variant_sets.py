@@ -202,16 +202,23 @@ class VariantSetsReport:
             variants[var.cp] = VariantData(var, var_var, in_lgr)
         return variants
 
-    def to_dict(self) -> Dict:
-        lgr = LGR()
-        for cp in self.idn_table_variant_set:
-            lgr.add_cp(cp)
-            char: Char = self.idn_repertoire.get_char(cp)
-            for var in char.get_variants():
-                lgr.add_variant(cp, var.cp)
+    def checks(self):
+        symmetry_ok = None
+        transitivity_ok = None
+        if self.idn_table_variant_set:
+            lgr = LGR()
+            for cp in self.idn_table_variant_set:
+                lgr.add_cp(cp)
+                char: Char = self.idn_repertoire.get_char(cp)
+                for var in char.get_variants():
+                    lgr.add_variant(cp, var.cp)
 
-        symmetry_ok, _ = check_symmetry(lgr, None)
-        transitivity_ok, _ = check_transitivity(lgr, None)
+            symmetry_ok, _ = check_symmetry(lgr, None)
+            transitivity_ok, _ = check_transitivity(lgr, None)
+        return symmetry_ok, transitivity_ok
+
+    def to_dict(self) -> Dict:
+        symmetry_ok, transitivity_ok = self.checks()
 
         var_report, relevant_repertoire = self.generate_variant_set_report()
         if not relevant_repertoire:  # TODO remove that once case is handled
