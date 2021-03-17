@@ -286,7 +286,7 @@ class WholeLabelEvaluationRulesCheck:
                 self.idn_table_context_rules.setdefault(char.when, set()).add(char.cp)
             elif char.not_when:
                 self.idn_table_context_rules.setdefault(char.not_when, set()).add(char.cp)
-            else:
+            elif char not in self.reference_lgr.repertoire:
                 self.idn_table_char_without_rule.add(char)
 
         self.has_multiple_digits_sets = len(digit_sets) > 1
@@ -364,14 +364,11 @@ class WholeLabelEvaluationRulesCheck:
         return result
 
     def additional_cp_report(self) -> List[Dict]:
-        additional_cp = []
-        for char in sorted(self.idn_table_char_without_rule, key=lambda x: x.cp):
-            additional_cp.append({
-                'cp': char.cp,
-                'glyph': str(char),
-                'name': " ".join(self.idn_table.unicode_database.get_char_name(cp) for cp in char.cp)
-            })
-        return additional_cp
+        return [{
+            'cp': char.cp,
+            'glyph': str(char),
+            'name': " ".join(self.idn_table.unicode_database.get_char_name(cp) for cp in char.cp)
+        } for char in sorted(self.idn_table_char_without_rule, key=lambda x: x.cp)]
 
 
 def generate_whole_label_evaluation_rules_report(idn_table: LGR, reference_lgr: LGR) -> Dict:
