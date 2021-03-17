@@ -51,8 +51,18 @@ class RepertoireReport:
                     remark = "Tags not required in Reference LGR"
                     # continue in case we have a REVIEW later
         # check rule
-        idn_rule_name = self.idn_table_char.when or self.idn_table_char.not_when
-        ref_rule_name = self.reference_lgr_char.when or self.reference_lgr_char.not_when
+        idn_rule_name = None
+        if self.idn_table_char.when:
+            idn_rule_name = f'when-{self.idn_table_char.when}'
+        elif self.idn_table_char.not_when:
+            idn_rule_name = f'not-when-{self.idn_table_char.not_when}'
+
+        ref_rule_name = None
+        if self.reference_lgr_char.when:
+            ref_rule_name = f'when-{self.reference_lgr_char.when}'
+        elif self.reference_lgr_char.not_when:
+            ref_rule_name = f'not-when-{self.reference_lgr_char.not_when}'
+
         if idn_rule_name != ref_rule_name:
             if remark:
                 remark += '\n'

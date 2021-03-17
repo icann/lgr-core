@@ -265,6 +265,21 @@ class Test(TestCase):
             'remark': 'Rules do not match'
         }], key=lambda x: x['cp']))
 
+    def test_repertoire_review_rules_when_not_when(self):
+        idn = load_lgr('idn_table_review/repertoire', 'repertoire_review_rules_when_not_when.xml', unidb=self.unidb)
+
+        result = generate_repertoire_report(idn, self.ref)
+
+        self.assertCountEqual(result, sorted(self.matching_cp[:2] + self.matching_cp[3:] + [{
+            'cp': (99,),
+            'glyph': 'c',
+            'name': 'LATIN SMALL LETTER C',
+            'idn_table': True,
+            'reference_lgr': True,
+            'result': 'REVIEW',
+            'remark': 'Rules do not match'
+        }], key=lambda x: x['cp']))
+
     def test_repertoire_review_tag_missing(self):
         idn = load_lgr('idn_table_review/repertoire', 'repertoire_review_tag_missing.xml', unidb=self.unidb)
 
