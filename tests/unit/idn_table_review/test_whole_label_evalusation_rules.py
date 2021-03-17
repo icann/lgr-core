@@ -35,35 +35,6 @@ class Test(TestCase):
         'result': 'MATCH',
         'remark': 'Exact Match (matched names and content)'
     }
-    additional_cp = [{
-        'cp': (100,),
-        'glyph': 'd',
-        'name': 'LATIN SMALL LETTER D'
-    }, {
-        'cp': (101,),
-        'glyph': 'e',
-        'name': 'LATIN SMALL LETTER E'
-    }, {
-        'cp': (102,),
-        'glyph': 'f',
-        'name': 'LATIN SMALL LETTER F'
-    }, {
-        'cp': (103,),
-        'glyph': 'g',
-        'name': 'LATIN SMALL LETTER G'
-    }, {
-        'cp': (104,),
-        'glyph': 'h',
-        'name': 'LATIN SMALL LETTER H'
-    }, {
-        'cp': (105,),
-        'glyph': 'i',
-        'name': 'LATIN SMALL LETTER I'
-    }, {
-        'cp': (339,),
-        'glyph': 'œ',
-        'name': 'LATIN SMALL LIGATURE OE'
-    }]
     general_rules_combining_mark = {
         'applicable': False,
         'exists': None
@@ -101,7 +72,7 @@ class Test(TestCase):
                 'remark': 'Match as a subset (for the rules missing in IDN Table, '
                           'applicable code points in Ref. LGR are not in IDN Table)'
             }],
-            'additional_cp': self.additional_cp,
+            'additional_cp': [],
             'additional_general_rules': {
                 'combining_mark': self.general_rules_combining_mark,
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
@@ -123,7 +94,7 @@ class Test(TestCase):
                 'result': 'MANUAL CHECK',
                 'remark': 'Mismatch (WLE rule only exists in IDN Table)'
             }, self.not_match_match],
-            'additional_cp': self.additional_cp,
+            'additional_cp': [],
             'additional_general_rules': {
                 'combining_mark': self.general_rules_combining_mark,
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
@@ -146,15 +117,7 @@ class Test(TestCase):
                 'result': 'MANUAL CHECK',
                 'remark': 'Mismatch (WLE rule only exists in Ref. LGR)'
             }],
-            'additional_cp': sorted([{
-                'cp': (99,),
-                'glyph': 'c',
-                'name': 'LATIN SMALL LETTER C'
-            }, {
-                'cp': (111, 101),
-                'glyph': 'oe',
-                'name': 'LATIN SMALL LETTER O LATIN SMALL LETTER E'
-            }] + self.additional_cp, key=lambda x: x['cp']),
+            'additional_cp': [],
             'additional_general_rules': {
                 'combining_mark': self.general_rules_combining_mark,
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
@@ -176,7 +139,7 @@ class Test(TestCase):
                 'result': 'MANUAL CHECK',
                 'remark': 'Mismatch class (content mismatch)'
             }, self.not_match_match],
-            'additional_cp': self.additional_cp[1:],
+            'additional_cp': [],
             'additional_general_rules': {
                 'combining_mark': self.general_rules_combining_mark,
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
@@ -198,7 +161,7 @@ class Test(TestCase):
                 'result': 'MANUAL CHECK',
                 'remark': 'Mismatch class (content mismatch)'
             }, self.not_match_match],
-            'additional_cp': self.additional_cp,
+            'additional_cp': [],
             'additional_general_rules': {
                 'combining_mark': self.general_rules_combining_mark,
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
@@ -220,15 +183,10 @@ class Test(TestCase):
                 'result': 'MANUAL CHECK',
                 'remark': 'Mismatch (WLE rule only exists in IDN Table)'
             }, self.match_match, self.not_match_match],
-            'additional_cp': self.additional_cp + [{
-                'cp': (2478,),
-                'glyph': 'ম',
-                'name': 'BENGALI LETTER MA'
-            }, {
-                'cp': (2497,),
-                'glyph': 'ু',
-                'name': 'BENGALI VOWEL SIGN U'
-            }],
+            'additional_cp': [
+                {'cp': (2478,), 'glyph': 'ম', 'name': 'BENGALI LETTER MA'},
+                {'cp': (2497,), 'glyph': 'ু', 'name': 'BENGALI VOWEL SIGN U'}
+            ],
             'additional_general_rules': {
                 'combining_mark': {
                     'applicable': True,
@@ -254,11 +212,7 @@ class Test(TestCase):
                 'result': 'MANUAL CHECK',
                 'remark': 'Mismatch (WLE rule only exists in IDN Table)'
             }, self.match_match, self.not_match_match],
-            'additional_cp': self.additional_cp + [{
-                'cp': (2497,),
-                'glyph': 'ু',
-                'name': 'BENGALI VOWEL SIGN U'
-            }],
+            'additional_cp': [{'cp': (2497,), 'glyph': 'ু', 'name': 'BENGALI VOWEL SIGN U'}],
             'additional_general_rules': {
                 'combining_mark': {
                     'applicable': True,
@@ -278,15 +232,10 @@ class Test(TestCase):
 
         self.assertDictEqual(result, {
             'comparison': [self.all_match_match, self.match_match, self.not_match_match],
-            'additional_cp': self.additional_cp + [{
-                'cp': (2478,),
-                'glyph': 'ম',
-                'name': 'BENGALI LETTER MA'
-            }, {
-                'cp': (2497,),
-                'glyph': 'ু',
-                'name': 'BENGALI VOWEL SIGN U'
-            }],
+            'additional_cp': [
+                {'cp': (2478,), 'glyph': 'ম', 'name': 'BENGALI LETTER MA'},
+                {'cp': (2497,), 'glyph': 'ু', 'name': 'BENGALI VOWEL SIGN U'}
+            ],
             'additional_general_rules': {
                 'combining_mark': {
                     'applicable': True,
@@ -311,11 +260,7 @@ class Test(TestCase):
                 'result': 'MANUAL CHECK',
                 'remark': 'Mismatch (WLE rule only exists in IDN Table)'
             }, self.match_match, self.not_match_match],
-            'additional_cp': sorted(self.additional_cp + [{
-                'cp': (109,),
-                'glyph': 'm',
-                'name': 'LATIN SMALL LETTER M'
-            }], key=lambda x: x['cp'][0]),
+            'additional_cp': [{'cp': (109,), 'glyph': 'm', 'name': 'LATIN SMALL LETTER M'}],
             'additional_general_rules': {
                 'combining_mark': self.general_rules_combining_mark,
                 'consecutive_hyphens': {
@@ -340,11 +285,7 @@ class Test(TestCase):
                 'result': 'MANUAL CHECK',
                 'remark': 'Mismatch (WLE rule only exists in IDN Table)'
             }, self.match_match, self.not_match_match],
-            'additional_cp': sorted(self.additional_cp + [{
-                'cp': (109,),
-                'glyph': 'm',
-                'name': 'LATIN SMALL LETTER M'
-            }], key=lambda x: x['cp'][0]),
+            'additional_cp': [{'cp': (109,), 'glyph': 'm', 'name': 'LATIN SMALL LETTER M'}],
             'additional_general_rules': {
                 'combining_mark': self.general_rules_combining_mark,
                 'consecutive_hyphens': {
@@ -363,15 +304,7 @@ class Test(TestCase):
 
         self.assertDictEqual(result, {
             'comparison': [self.all_match_match, self.match_match, self.not_match_match],
-            'additional_cp': sorted(self.additional_cp + [{
-                'cp': (51,),
-                'glyph': '3',
-                'name': 'DIGIT THREE'
-            }, {
-                'cp': (1489,),
-                'glyph': 'ב',
-                'name': 'HEBREW LETTER BET'
-            }], key=lambda x: x['cp'][0]),
+            'additional_cp': [{'cp': (1489,), 'glyph': 'ב', 'name': 'HEBREW LETTER BET'}],
             'additional_general_rules': {
                 'combining_mark': self.general_rules_combining_mark,
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
@@ -396,11 +329,7 @@ class Test(TestCase):
                 'result': 'MANUAL CHECK',
                 'remark': 'Mismatch (WLE rule only exists in IDN Table)'
             }, self.match_match, self.not_match_match],
-            'additional_cp': sorted(self.additional_cp + [{
-                'cp': (1489,),
-                'glyph': 'ב',
-                'name': 'HEBREW LETTER BET'
-            }], key=lambda x: x['cp'][0]),
+            'additional_cp': [{'cp': (1489,), 'glyph': 'ב', 'name': 'HEBREW LETTER BET'}],
             'additional_general_rules': {
                 'combining_mark': self.general_rules_combining_mark,
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
