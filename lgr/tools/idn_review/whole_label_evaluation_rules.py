@@ -271,15 +271,14 @@ class WholeLabelEvaluationRulesCheck:
         self.language_tags.extend(self.idn_table.metadata.get_scripts())
 
     def get_context_rules(self):
-        digit_sets = set()
-        for char in self.idn_table.repertoire:
+        nbr_digits = 0
+        for char in self.idn_table.repertoire.all_repertoire(expand_ranges=True):
             if len(char.cp) == 1:
                 cp = char.cp[0]
                 if self.idn_table.unicode_database.is_digit(cp):
-                    script = self.idn_table.unicode_database.get_script(cp)
+                    nbr_digits += 1
                     if str(cp) not in self.digits:
                         self.digits.add(str(cp))
-                    digit_sets.add(script)
                 if self.idn_table.unicode_database.is_combining_mark(cp):
                     self.combining_mark = True
             if char.when:
@@ -289,7 +288,8 @@ class WholeLabelEvaluationRulesCheck:
             elif char not in self.reference_lgr.repertoire:
                 self.idn_table_char_without_rule.add(char)
 
-        self.has_multiple_digits_sets = len(digit_sets) > 1
+        # we consider that there is more than one digit set if we have more than 9 digits
+        self.has_multiple_digits_sets = nbr_digits > 9
 
         for char in self.reference_lgr.repertoire:
             if char.when:

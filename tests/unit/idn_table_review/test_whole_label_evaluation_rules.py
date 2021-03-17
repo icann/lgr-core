@@ -340,3 +340,77 @@ class Test(TestCase):
                 'digits_set': self.general_rules_digits_sets,
             }
         })
+
+    def test_wle_digits_mixing_applicable_ok(self):
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_digits_sets.xml', unidb=self.unidb)
+
+        result = generate_whole_label_evaluation_rules_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'comparison': [self.all_match_match, {
+                'name': 'digit-mixing',
+                'idn_table': True,
+                'reference_lgr': False,
+                'result': 'MANUAL CHECK',
+                'remark': 'Mismatch (WLE rule only exists in IDN Table)'
+            }, self.match_match, self.not_match_match],
+            'additional_cp': [
+                {'cp': (2478,), 'glyph': 'ম', 'name': 'BENGALI LETTER MA'},
+                {'cp': (2534,), 'glyph': '০', 'name': 'BENGALI DIGIT ZERO'},
+                {'cp': (2535,), 'glyph': '১', 'name': 'BENGALI DIGIT ONE'},
+                {'cp': (2536,), 'glyph': '২', 'name': 'BENGALI DIGIT TWO'},
+                {'cp': (2537,), 'glyph': '৩', 'name': 'BENGALI DIGIT THREE'},
+                {'cp': (2538,), 'glyph': '৪', 'name': 'BENGALI DIGIT FOUR'},
+                {'cp': (2539,), 'glyph': '৫', 'name': 'BENGALI DIGIT FIVE'},
+                {'cp': (2540,), 'glyph': '৬', 'name': 'BENGALI DIGIT SIX'},
+                {'cp': (2541,), 'glyph': '৭', 'name': 'BENGALI DIGIT SEVEN'},
+                {'cp': (2542,), 'glyph': '৮', 'name': 'BENGALI DIGIT EIGHT'},
+                {'cp': (2543,), 'glyph': '৯', 'name': 'BENGALI DIGIT NINE'},
+            ],
+            'additional_general_rules': {
+                'combining_mark': self.general_rules_combining_mark,
+                'consecutive_hyphens': self.general_rules_consecutive_hyphens,
+                'rtl': self.general_rules_digits_sets,
+                'digits_set': {
+                    'applicable': True,
+                    'exists': True
+                },
+            }
+        })
+
+    def test_wle_digits_mixing_applicable_not_ok(self):
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_digits_sets_wrong.xml', unidb=self.unidb)
+
+        result = generate_whole_label_evaluation_rules_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'comparison': [self.all_match_match, {
+                'name': 'digit-mixing',
+                'idn_table': True,
+                'reference_lgr': False,
+                'result': 'MANUAL CHECK',
+                'remark': 'Mismatch (WLE rule only exists in IDN Table)'
+            }, self.match_match, self.not_match_match],
+            'additional_cp': [
+                {'cp': (2478,), 'glyph': 'ম', 'name': 'BENGALI LETTER MA'},
+                {'cp': (2534,), 'glyph': '০', 'name': 'BENGALI DIGIT ZERO'},
+                {'cp': (2535,), 'glyph': '১', 'name': 'BENGALI DIGIT ONE'},
+                {'cp': (2536,), 'glyph': '২', 'name': 'BENGALI DIGIT TWO'},
+                {'cp': (2537,), 'glyph': '৩', 'name': 'BENGALI DIGIT THREE'},
+                {'cp': (2538,), 'glyph': '৪', 'name': 'BENGALI DIGIT FOUR'},
+                {'cp': (2539,), 'glyph': '৫', 'name': 'BENGALI DIGIT FIVE'},
+                {'cp': (2540,), 'glyph': '৬', 'name': 'BENGALI DIGIT SIX'},
+                {'cp': (2541,), 'glyph': '৭', 'name': 'BENGALI DIGIT SEVEN'},
+                {'cp': (2542,), 'glyph': '৮', 'name': 'BENGALI DIGIT EIGHT'},
+                {'cp': (2543,), 'glyph': '৯', 'name': 'BENGALI DIGIT NINE'},
+            ],
+            'additional_general_rules': {
+                'combining_mark': self.general_rules_combining_mark,
+                'consecutive_hyphens': self.general_rules_consecutive_hyphens,
+                'rtl': self.general_rules_digits_sets,
+                'digits_set': {
+                    'applicable': True,
+                    'exists': False
+                },
+            }
+        })
