@@ -3,8 +3,7 @@
         <version comment="Sample LGR for French">1</version>
         <date>2015-08-07</date>
         <unicode-version>6.3.0</unicode-version>
-        <language>fr</language>
-        <language>und-Beng</language>
+        <language>und-Hebr</language>
         <scope type="domain">example</scope>
         <description type="text/plain">LGR for Unit Tests</description>
         <references>
@@ -24,8 +23,8 @@
         <char cp="0069" ref="0"/>
         <char cp="0153"/>
         <char cp="006F 0065" not-when="not-match"/>
-        <char cp="09C1"/>
-        <char cp="09AE"/>
+        <char cp="0033"/>
+        <char cp="05D1"/>
     </data>
     <rules>
         <class name="bc">0062 0063</class>

@@ -28,7 +28,6 @@
         <char cp="006D"/>
     </data>
     <rules>
-        <class name="num" from-tag="ascii-numbers"/>
         <class name="bc">0062 0063</class>
         <class name="hyphen" from-tag="Hyphen" comment="The Hyphen-minus character ⍟"/>
         <union name="union" comment="0070-0074">

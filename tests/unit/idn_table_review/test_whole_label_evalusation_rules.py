@@ -241,7 +241,8 @@ class Test(TestCase):
         })
 
     def test_wle_combining_mark_applicable_missing_cp(self):
-        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_combining_marks_missing_cp.xml', unidb=self.unidb)
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_combining_marks_missing_cp.xml',
+                       unidb=self.unidb)
 
         result = generate_whole_label_evaluation_rules_report(idn, self.ref)
 
@@ -270,7 +271,8 @@ class Test(TestCase):
         })
 
     def test_wle_combining_mark_applicable_not_ok(self):
-        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_combining_marks_wrong.xml', unidb=self.unidb)
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_combining_marks_wrong.xml',
+                       unidb=self.unidb)
 
         result = generate_whole_label_evaluation_rules_report(idn, self.ref)
 
@@ -350,6 +352,62 @@ class Test(TestCase):
                     'exists': False
                 },
                 'rtl': self.general_rules_rtl,
+                'digits_set': self.general_rules_digits_sets,
+            }
+        })
+
+    def test_wle_rtl_digit_applicable_ok(self):
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_rtl.xml', unidb=self.unidb)
+
+        result = generate_whole_label_evaluation_rules_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'comparison': [self.all_match_match, self.match_match, self.not_match_match],
+            'additional_cp': sorted(self.additional_cp + [{
+                'cp': (51,),
+                'glyph': '3',
+                'name': 'DIGIT THREE'
+            }, {
+                'cp': (1489,),
+                'glyph': 'ב',
+                'name': 'HEBREW LETTER BET'
+            }], key=lambda x: x['cp'][0]),
+            'additional_general_rules': {
+                'combining_mark': self.general_rules_combining_mark,
+                'consecutive_hyphens': self.general_rules_consecutive_hyphens,
+                'rtl': {
+                    'applicable': True,
+                    'exists': False
+                },
+                'digits_set': self.general_rules_digits_sets,
+            }
+        })
+
+    def test_wle_rtl_digit_applicable_not_ok(self):
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_rtl_wrong.xml', unidb=self.unidb)
+
+        result = generate_whole_label_evaluation_rules_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'comparison': [self.all_match_match, {
+                'name': 'leading-digit',
+                'idn_table': True,
+                'reference_lgr': False,
+                'result': 'MANUAL CHECK',
+                'remark': 'Mismatch (WLE rule only exists in IDN Table)'
+            }, self.match_match, self.not_match_match],
+            'additional_cp': sorted(self.additional_cp + [{
+                'cp': (1489,),
+                'glyph': 'ב',
+                'name': 'HEBREW LETTER BET'
+            }], key=lambda x: x['cp'][0]),
+            'additional_general_rules': {
+                'combining_mark': self.general_rules_combining_mark,
+                'consecutive_hyphens': self.general_rules_consecutive_hyphens,
+                'rtl': {
+                    'applicable': True,
+                    'exists': True
+                },
                 'digits_set': self.general_rules_digits_sets,
             }
         })

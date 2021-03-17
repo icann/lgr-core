@@ -28,7 +28,6 @@
         <char cp="09AE"/>
     </data>
     <rules>
-        <class name="num" from-tag="ascii-numbers"/>
         <class name="bc">0062 0063</class>
         <union name="union" comment="0070-0074">
             <class by-ref="bc"/>
