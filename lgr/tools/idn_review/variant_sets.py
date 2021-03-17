@@ -29,8 +29,7 @@ class VariantData:
 
 
 class VariantReport:
-    VARIANT_TYPES_ORDER = ['activated', 'allocatable', 'optionally-allocatable', 'blocked']
-
+    VARIANT_TYPES_ORDER = ['activated', 'optionally-activated', 'allocatable', 'optionally-allocatable', 'blocked']
     def __init__(self, idn_table_char: Char, reference_lgr_char: Char,
                  idn_table_var_data: VariantData, reference_lgr_var_data: VariantData,
                  idn_variant_set_missing: bool, idn_table_repertoire: Repertoire):
