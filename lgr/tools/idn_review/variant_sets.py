@@ -255,7 +255,7 @@ def generate_variant_sets_report(idn_table: LGR, reference_lgr: LGR) -> Dict:
     reference_lgr_variant_sets = {s[0]: s for s in reference_lgr.repertoire.get_variant_sets()}
 
     reports = []
-    for set_id in idn_table_variant_sets.keys() | reference_lgr_variant_sets.keys():
+    for set_id in sorted(idn_table_variant_sets.keys() | reference_lgr_variant_sets.keys()):
         idn_table_variant_set = idn_table_variant_sets.get(set_id, ())
         reference_lgr_variant_set = reference_lgr_variant_sets.get(set_id, ())
         report = VariantSetsReport(idn_table_variant_set, reference_lgr_variant_set, idn_table.repertoire,
