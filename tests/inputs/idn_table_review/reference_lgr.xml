@@ -31,7 +31,7 @@
         <char cp="0066" ref="0"/>
         <char cp="0067" ref="0"/>
         <char cp="0068" ref="0"/>
-        <char cp="0069" ref="0" tag="test"/>
+        <char cp="0069" ref="0" tag="test sc:Latn"/>
         <range first-cp="0030" last-cp="0039" tag="ascii-numbers"/>
         <char cp="0153">
             <var cp="006F 0065" type="blocked"/>
