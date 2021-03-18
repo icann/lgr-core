@@ -260,6 +260,21 @@ def generate_variant_sets_report(idn_table: LGR, reference_lgr: LGR) -> Dict:
     idn_table_variant_sets = {s[0]: s for s in idn_table.repertoire.get_variant_sets()}
     reference_lgr_variant_sets = {s[0]: s for s in reference_lgr.repertoire.get_variant_sets()}
 
+    # if some variant sets from IDN table or Ref. LGR are included respectively in Ref. LGR or IDN table but does not
+    # have the same index, try to update the indexes to make them match
+    only_in_idn = [k for k in idn_table_variant_sets.keys() if k not in reference_lgr_variant_sets.keys()]
+    only_in_ref = [k for k in reference_lgr_variant_sets.keys() if k not in idn_table_variant_sets.keys()]
+    for idn_set_id in only_in_idn:
+        idn_cps = idn_table_variant_sets[idn_set_id]
+        for ref_set_id in only_in_ref:
+            ref_cps = reference_lgr_variant_sets[ref_set_id]
+            if set(idn_cps) <= set(ref_cps) or set(idn_cps) >= set(ref_cps):
+                new_set_id = min(idn_set_id, ref_set_id)
+                if new_set_id not in idn_table_variant_sets:
+                    idn_table_variant_sets[new_set_id] = idn_table_variant_sets.pop(idn_set_id)
+                if new_set_id not in reference_lgr_variant_sets:
+                    reference_lgr_variant_sets[new_set_id] = reference_lgr_variant_sets.pop(reference_lgr_variant_sets)
+
     reports = []
     for set_id in sorted(idn_table_variant_sets.keys() | reference_lgr_variant_sets.keys()):
         idn_table_variant_set = idn_table_variant_sets.get(set_id, ())
