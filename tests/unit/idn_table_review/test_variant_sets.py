@@ -53,7 +53,7 @@ class Test(TestCase):
 
         result = generate_variant_sets_report(idn, self.ref)
 
-        self.assertCountEqual(result, {
+        self.assertDictEqual(result, {
             'reports': [{
                 'idn_table': ((97,), (98,), (99,)),
                 'ref_lgr': ((97,), (98,), (99,)),
@@ -123,7 +123,7 @@ class Test(TestCase):
 
         result = generate_variant_sets_report(idn, self.ref)
 
-        self.assertCountEqual(result, {
+        self.assertDictEqual(result, {
             'reports': [{
                 'idn_table': ((97,), (98,)),
                 'ref_lgr': ((97,), (98,), (99,)),
@@ -193,13 +193,13 @@ class Test(TestCase):
 
         result = generate_variant_sets_report(idn, self.ref)
 
-        self.assertCountEqual(result, {
+        self.assertDictEqual(result, {
             'reports': [{
                 'idn_table': (),
                 'ref_lgr': ((97,), (98,), (99,)),
                 'relevant_idn_table_repertoire': ((97,), (98,), (99,)),
-                'symmetry_check': True,
-                'transitivity_check': True,
+                'symmetry_check': None,
+                'transitivity_check': None,
                 'report': [
                     {
                         'source_cp': (97,),
@@ -263,7 +263,7 @@ class Test(TestCase):
 
         result = generate_variant_sets_report(idn, self.ref)
 
-        self.assertCountEqual(result, {
+        self.assertDictEqual(result, {
             'reports': [{
                 'idn_table': ((97,), (98,)),
                 'ref_lgr': ((97,), (98,), (99,)),
@@ -334,7 +334,7 @@ class Test(TestCase):
 
         result = generate_variant_sets_report(idn, self.ref)
 
-        self.assertCountEqual(result, {
+        self.assertDictEqual(result, {
             'reports': [{
                 'idn_table': ((97,), (98,), (99,)),
                 'ref_lgr': ((97,), (98,), (99,)),
@@ -405,7 +405,7 @@ class Test(TestCase):
 
         result = generate_variant_sets_report(idn, self.ref)
 
-        self.assertCountEqual(result, {
+        self.assertDictEqual(result, {
             'reports': [{
                 'idn_table': ((97,), (98,), (99,)),
                 'ref_lgr': ((97,), (98,), (99,)),
@@ -477,7 +477,7 @@ class Test(TestCase):
 
         result = generate_variant_sets_report(idn, self.ref)
 
-        self.assertCountEqual(result, {
+        self.assertDictEqual(result, {
             'reports': [{
                 'idn_table': ((97,), (98,), (99,)),
                 'ref_lgr': ((97,), (98,), (99,)),
@@ -548,7 +548,7 @@ class Test(TestCase):
 
         result = generate_variant_sets_report(idn, self.ref)
 
-        self.assertCountEqual(result, {
+        self.assertDictEqual(result, {
             'reports': [{
                 'idn_table': ((97,), (98,), (99,)),
                 'ref_lgr': ((97,), (98,), (99,)),
@@ -620,7 +620,7 @@ class Test(TestCase):
 
         result = generate_variant_sets_report(idn, self.ref)
 
-        self.assertCountEqual(result, {
+        self.assertDictEqual(result, {
             'reports': [{
                 'idn_table': ((97,), (98,), (99,)),
                 'ref_lgr': ((97,), (98,), (99,)),
@@ -683,11 +683,11 @@ class Test(TestCase):
                 ]
             }, self.report_oe],
             'additional': [{
-                'cp': (100,),
+                'cp': (112,),
                 'glyph': 'p',
                 'name': 'LATIN SMALL LETTER P'
             }, {
-                'cp': (101,),
+                'cp': (113,),
                 'glyph': 'q',
                 'name': 'LATIN SMALL LETTER Q'
             }]
