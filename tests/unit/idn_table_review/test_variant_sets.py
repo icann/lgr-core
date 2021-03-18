@@ -692,3 +692,75 @@ class Test(TestCase):
                 'name': 'LATIN SMALL LETTER Q'
             }]
         })
+
+    def test_variant_sets_missing_variant_not_same_id(self):
+        idn = load_lgr('idn_table_review/variant_sets', 'variant_sets_missing_variant_not_same_id.xml',
+                       unidb=self.unidb)
+
+        result = generate_variant_sets_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'reports': [{
+                'idn_table': ((98,), (99,)),
+                'ref_lgr': ((97,), (98,), (99,)),
+                'relevant_idn_table_repertoire': ((97,), (98,), (99,)),
+                'symmetry_check': True,
+                'transitivity_check': True,
+                'report': [
+                    {
+                        'source_cp': (97,),
+                        'source_glyph': 'a',
+                        'dest_cp': (98,),
+                        'dest_glyph': 'b',
+                        'fwd_type_idn': '',
+                        'fwd_type_ref': 'blocked',
+                        'reverse': True,
+                        'rev_type_idn': '',
+                        'rev_type_ref': 'blocked',
+                        'dest_in_idn': False,
+                        'dest_in_ref': True,
+                        'symmetric': True,
+                        'result_fwd': 'REVIEW',
+                        'result_rev': 'REVIEW',
+                        'remark_fwd': 'Variant member exists in the reference LGR',
+                        'remark_rev': 'Variant member exists in the reference LGR'
+                    }, {
+                        'source_cp': (97,),
+                        'source_glyph': 'a',
+                        'dest_cp': (99,),
+                        'dest_glyph': 'c',
+                        'fwd_type_idn': '',
+                        'fwd_type_ref': 'activated',
+                        'reverse': True,
+                        'rev_type_idn': '',
+                        'rev_type_ref': 'blocked',
+                        'dest_in_idn': False,
+                        'dest_in_ref': True,
+                        'symmetric': False,
+                        'result_fwd': 'REVIEW',
+                        'result_rev': 'REVIEW',
+                        'remark_fwd': 'Variant member exists in the reference LGR',
+                        'remark_rev': 'Variant member exists in the reference LGR'
+                    }, {
+                        'source_cp': (98,),
+                        'source_glyph': 'b',
+                        'dest_cp': (99,),
+                        'dest_glyph': 'c',
+                        'fwd_type_idn': 'blocked',
+                        'fwd_type_ref': 'blocked',
+                        'reverse': True,
+                        'rev_type_idn': 'allocatable',
+                        'rev_type_ref': 'allocatable',
+                        'dest_in_idn': True,
+                        'dest_in_ref': True,
+                        'symmetric': False,
+                        'result_fwd': 'MATCH',
+                        'result_rev': 'MATCH',
+                        'remark_fwd': 'Exact match (including type, conditional variant rule)',
+                        'remark_rev': 'Exact match (including type, conditional variant rule)'
+
+                    }
+                ]
+            }, self.report_oe],
+            'additional': []
+        })
