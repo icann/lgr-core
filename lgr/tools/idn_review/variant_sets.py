@@ -134,6 +134,8 @@ class VariantReport:
             except ValueError:
                 return IdnReviewResult.REVIEW.name, "Unknown variant type"
 
+        return IdnReviewResult.NOTE.name, 'TODO not handled for now'
+
 
 class VariantSetsReport:
 
