@@ -4,6 +4,7 @@
 actions - 
 """
 import logging
+from collections import OrderedDict
 from typing import List, Dict, Set
 
 from lgr.action import Action
@@ -35,18 +36,28 @@ class ActionReport:
 
 def generate_actions_report(idn_table: LGR, reference_lgr: LGR) -> Dict:
     action_reports: List[ActionReport] = []
-    idn_actions = {a: None for a in idn_table.actions}
-    ref_actions = {a: None for a in reference_lgr.actions}
+    idn_actions = OrderedDict()  # only necessary for Python < 3.7
+    ref_actions = OrderedDict()
+    idx = 0
+    for a in idn_table.actions:
+        idx += 1
+        name = f' ({a.comment})' if a.comment else ''
+        idn_actions[f'IDN Table-{idx}{name}'] = a
+    idx = 0
+    for a in reference_lgr.actions:
+        idx += 1
+        name = f' ({a.comment})' if a.comment else ''
+        ref_actions[f'Ref. LGR-{idx}{name}'] = a
 
-    matching_actions: Set[str] = idn_actions.keys() & ref_actions.keys()
+    matching_actions: Set[Action] = set(idn_actions.values()) & set(ref_actions.values())
 
     # check sequence of matching actions
     matching_idn_actions_ordered: List[Action] = []
     matching_ref_actions_ordered: List[Action] = []
-    for action in idn_actions:
+    for action in idn_actions.values():
         if action in matching_actions:
             matching_idn_actions_ordered.append(action)
-    for action in ref_actions:
+    for action in ref_actions.values():
         if action in matching_actions:
             matching_ref_actions_ordered.append(action)
 
@@ -54,18 +65,18 @@ def generate_actions_report(idn_table: LGR, reference_lgr: LGR) -> Dict:
     if matching_idn_actions_ordered == matching_ref_actions_ordered:
         sequence_match = IdnReviewResult.MATCH.name
 
-    for action in matching_idn_actions_ordered:
-        action_reports.append(ActionReport(str(action), True, True, IdnReviewResult.MATCH,
-                                           'Exact Match (action name and content are the same)'))
+    for name, action in idn_actions.items():
+        if action in matching_idn_actions_ordered:
+            action_reports.append(ActionReport(name, True, True, IdnReviewResult.MATCH,
+                                               'Exact Match (action name and content are the same)'))
+        else:
+            action_reports.append(
+                ActionReport(name, True, False, IdnReviewResult.MANUAL_CHECK, 'Mismatch (additional action)'))
 
-    for action in idn_actions.keys() - ref_actions.keys():
+    for name, action in ref_actions.items():
+        if action in matching_ref_actions_ordered:
+            continue
         action_reports.append(
-            ActionReport(str(action), True, False, IdnReviewResult.MANUAL_CHECK,
-                         'Mismatch (additional action)'))
-
-    for action in ref_actions.keys() - idn_actions.keys():
-        action_reports.append(
-            ActionReport(str(action), False, True, IdnReviewResult.MANUAL_CHECK,
-                         'Mismatch (missing action)'))
+            ActionReport(name, False, True, IdnReviewResult.MANUAL_CHECK, 'Mismatch (missing action)'))
 
     return {'comparison': [r.to_dict() for r in action_reports], 'sequence': sequence_match}
