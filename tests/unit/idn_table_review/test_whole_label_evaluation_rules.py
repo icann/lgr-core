@@ -1,7 +1,7 @@
 #! /bin/env python
 # -*- coding: utf-8 -*-
 """
-test_variant_sets - 
+test_whole_label_evaluation_rules -
 """
 import logging
 from unittest import TestCase

@@ -91,16 +91,38 @@ class RepertoireReport:
         }
 
 
-def generate_repertoire_report(idn_table: LGR, reference_lgr: LGR) -> List[Dict]:
+def get_idn_cp_in_ref_seq(idn_table: LGR, reference_lgr: LGR, unidb: UnicodeDatabase) -> List[Dict]:
+    results = []
+    for char in reference_lgr.repertoire.all_repertoire(include_sequences=True, include_ranges=False):
+        if len(char) > 1:
+            for cp in char.cp:
+                single_char = Char(cp)
+                if single_char not in reference_lgr.repertoire and single_char in idn_table.repertoire:
+                    results.append({
+                        'idn_cp': single_char.cp,
+                        'idn_glyph': str(single_char),
+                        'idn_name': " ".join(unidb.get_char_name(cp) for cp in single_char.cp),
+                        'ref_cp': char.cp,
+                        'ref_glyph': str(char),
+                        'ref_name': " ".join(unidb.get_char_name(cp) for cp in char.cp),
+                    })
+
+    return results
+
+
+def generate_repertoire_report(idn_table: LGR, reference_lgr: LGR) -> Dict:
     idn_table_repertoire: Dict[Tuple, Char] = {c.cp: c for c in idn_table.repertoire.all_repertoire(expand_ranges=True)}
     reference_lgr_repertoire = {c.cp: c for c in reference_lgr.repertoire.all_repertoire(expand_ranges=True)}
 
+    unidb = idn_table.unicode_database or reference_lgr.unicode_database
     reports = []
     for cp in sorted(idn_table_repertoire.keys() | reference_lgr_repertoire.keys()):
         idn_char = idn_table_repertoire.get(cp)
         ref_char = reference_lgr_repertoire.get(cp)
-        unidb = idn_table.unicode_database if idn_char else reference_lgr.unicode_database
         report = RepertoireReport(idn_char, ref_char, set(reference_lgr.rules_lookup.keys()), unidb)
         reports.append(report.to_dict())
 
-    return reports
+    return {
+        'reports': reports,
+        'cp_in_sequences': get_idn_cp_in_ref_seq(idn_table, reference_lgr, unidb)
+    }
