@@ -1,7 +1,7 @@
 #! /bin/env python
 # -*- coding: utf-8 -*-
 """
-test_variant_sets - 
+test_repertoire -
 """
 import logging
 from unittest import TestCase
@@ -195,154 +195,212 @@ class Test(TestCase):
 
         result = generate_repertoire_report(idn, self.ref)
 
-        self.assertCountEqual(result, sorted(self.matching_cp + [{
-            'cp': (106,),
-            'glyph': 'j',
-            'name': 'LATIN SMALL LETTER J',
-            'idn_table': True,
-            'reference_lgr': False,
-            'result': 'MANUAL CHECK',
-            'remark': 'The code point only exists in the IDN Table but not in the reference LGR'
-        }], key=lambda x: x['cp']))
+        self.assertDictEqual(result, {
+            'reports': sorted(self.matching_cp + [{
+                'cp': (106,),
+                'glyph': 'j',
+                'name': 'LATIN SMALL LETTER J',
+                'idn_table': True,
+                'reference_lgr': False,
+                'result': 'MANUAL CHECK',
+                'remark': 'The code point only exists in the IDN Table but not in the reference LGR'
+            }], key=lambda x: x['cp']),
+            'cp_in_sequences': []
+        })
 
     def test_repertoire_note_rule(self):
         idn = load_lgr('idn_table_review/repertoire', 'repertoire_note_rule.xml', unidb=self.unidb)
 
         result = generate_repertoire_report(idn, self.ref)
 
-        self.assertCountEqual(result, sorted(self.matching_cp[:3] + self.matching_cp[4:] + [{
-            'cp': (100,),
-            'glyph': 'd',
-            'name': 'LATIN SMALL LETTER D',
-            'idn_table': True,
-            'reference_lgr': True,
-            'result': 'NOTE',
-            'remark': 'Rules not required in Reference LGR'
-        }], key=lambda x: x['cp']))
+        self.assertDictEqual(result, {
+            'reports': sorted(self.matching_cp[:3] + self.matching_cp[4:] + [{
+                'cp': (100,),
+                'glyph': 'd',
+                'name': 'LATIN SMALL LETTER D',
+                'idn_table': True,
+                'reference_lgr': True,
+                'result': 'NOTE',
+                'remark': 'Rules not required in Reference LGR'
+            }], key=lambda x: x['cp']),
+            'cp_in_sequences': []
+        })
 
     def test_repertoire_note_tag(self):
         idn = load_lgr('idn_table_review/repertoire', 'repertoire_note_tag.xml', unidb=self.unidb)
 
         result = generate_repertoire_report(idn, self.ref)
 
-        self.assertCountEqual(result, sorted(self.matching_cp[:2] + self.matching_cp[3:] + [{
-            'cp': (99,),
-            'glyph': 'c',
-            'name': 'LATIN SMALL LETTER C',
-            'idn_table': True,
-            'reference_lgr': True,
-            'result': 'NOTE',
-            'remark': 'Tags not required in Reference LGR'
-        }], key=lambda x: x['cp']))
+        self.assertDictEqual(result, {
+            'reports': sorted(self.matching_cp[:2] + self.matching_cp[3:] + [{
+                'cp': (99,),
+                'glyph': 'c',
+                'name': 'LATIN SMALL LETTER C',
+                'idn_table': True,
+                'reference_lgr': True,
+                'result': 'NOTE',
+                'remark': 'Tags not required in Reference LGR'
+            }], key=lambda x: x['cp']),
+            'cp_in_sequences': []
+        })
 
     def test_repertoire_notes(self):
         idn = load_lgr('idn_table_review/repertoire', 'repertoire_notes.xml', unidb=self.unidb)
 
         result = generate_repertoire_report(idn, self.ref)
 
-        self.assertCountEqual(result, sorted(self.matching_cp[:3] + self.matching_cp[4:] + [{
-            'cp': (100,),
-            'glyph': 'd',
-            'name': 'LATIN SMALL LETTER D',
-            'idn_table': True,
-            'reference_lgr': True,
-            'result': 'NOTE',
-            'remark': 'Tags not required in Reference LGR\nRules not required in Reference LGR'
-        }], key=lambda x: x['cp']))
+        self.assertDictEqual(result, {
+            'reports': sorted(self.matching_cp[:3] + self.matching_cp[4:] + [{
+                'cp': (100,),
+                'glyph': 'd',
+                'name': 'LATIN SMALL LETTER D',
+                'idn_table': True,
+                'reference_lgr': True,
+                'result': 'NOTE',
+                'remark': 'Tags not required in Reference LGR\nRules not required in Reference LGR'
+            }], key=lambda x: x['cp']),
+            'cp_in_sequences': []
+        })
 
     def test_repertoire_review_rules(self):
         idn = load_lgr('idn_table_review/repertoire', 'repertoire_review_rules.xml', unidb=self.unidb)
 
         result = generate_repertoire_report(idn, self.ref)
 
-        self.assertCountEqual(result, sorted(self.matching_cp[:2] + self.matching_cp[3:] + [{
-            'cp': (99,),
-            'glyph': 'c',
-            'name': 'LATIN SMALL LETTER C',
-            'idn_table': True,
-            'reference_lgr': True,
-            'result': 'REVIEW',
-            'remark': 'Rules do not match'
-        }], key=lambda x: x['cp']))
+        self.assertDictEqual(result, {
+            'reports': sorted(self.matching_cp[:2] + self.matching_cp[3:] + [{
+                'cp': (99,),
+                'glyph': 'c',
+                'name': 'LATIN SMALL LETTER C',
+                'idn_table': True,
+                'reference_lgr': True,
+                'result': 'REVIEW',
+                'remark': 'Rules do not match'
+            }], key=lambda x: x['cp']),
+            'cp_in_sequences': []
+        })
 
     def test_repertoire_review_rules_when_not_when(self):
         idn = load_lgr('idn_table_review/repertoire', 'repertoire_review_rules_when_not_when.xml', unidb=self.unidb)
 
         result = generate_repertoire_report(idn, self.ref)
 
-        self.assertCountEqual(result, sorted(self.matching_cp[:2] + self.matching_cp[3:] + [{
-            'cp': (99,),
-            'glyph': 'c',
-            'name': 'LATIN SMALL LETTER C',
-            'idn_table': True,
-            'reference_lgr': True,
-            'result': 'REVIEW',
-            'remark': 'Rules do not match'
-        }], key=lambda x: x['cp']))
+        self.assertDictEqual(result, {
+            'reports': sorted(self.matching_cp[:2] + self.matching_cp[3:] + [{
+                'cp': (99,),
+                'glyph': 'c',
+                'name': 'LATIN SMALL LETTER C',
+                'idn_table': True,
+                'reference_lgr': True,
+                'result': 'REVIEW',
+                'remark': 'Rules do not match'
+            }], key=lambda x: x['cp']),
+            'cp_in_sequences': []
+        })
 
     def test_repertoire_review_tag_missing(self):
         idn = load_lgr('idn_table_review/repertoire', 'repertoire_review_tag_missing.xml', unidb=self.unidb)
 
         result = generate_repertoire_report(idn, self.ref)
 
-        self.assertCountEqual(result, sorted(self.matching_cp[:9] + self.matching_cp[10:] + [{
-            'cp': (48,),
-            'glyph': '0',
-            'name': 'DIGIT ZERO',
-            'idn_table': True,
-            'reference_lgr': True,
-            'result': 'REVIEW',
-            'remark': 'Tags do not match'
-        }], key=lambda x: x['cp']))
+        self.assertDictEqual(result, {
+            'reports': sorted(self.matching_cp[:9] + self.matching_cp[10:] + [{
+                'cp': (48,),
+                'glyph': '0',
+                'name': 'DIGIT ZERO',
+                'idn_table': True,
+                'reference_lgr': True,
+                'result': 'REVIEW',
+                'remark': 'Tags do not match'
+            }], key=lambda x: x['cp']),
+            'cp_in_sequences': []
+        })
 
     def test_repertoire_review_tag(self):
         idn = load_lgr('idn_table_review/repertoire', 'repertoire_review_tag.xml', unidb=self.unidb)
 
         result = generate_repertoire_report(idn, self.ref)
 
-        self.assertCountEqual(result, sorted(self.matching_cp[:8] + self.matching_cp[9:] + [{
-            'cp': (105,),
-            'glyph': 'i',
-            'name': 'LATIN SMALL LETTER I',
-            'idn_table': True,
-            'reference_lgr': True,
-            'result': 'REVIEW',
-            'remark': 'Tags do not match'
-        }], key=lambda x: x['cp']))
+        self.assertDictEqual(result, {
+            'reports': sorted(self.matching_cp[:8] + self.matching_cp[9:] + [{
+                'cp': (105,),
+                'glyph': 'i',
+                'name': 'LATIN SMALL LETTER I',
+                'idn_table': True,
+                'reference_lgr': True,
+                'result': 'REVIEW',
+                'remark': 'Tags do not match'
+            }], key=lambda x: x['cp']),
+            'cp_in_sequences': []
+        })
 
     def test_repertoire_reviews_and_note(self):
         idn = load_lgr('idn_table_review/repertoire', 'repertoire_reviews_and_note.xml', unidb=self.unidb)
 
         result = generate_repertoire_report(idn, self.ref)
 
-        self.assertCountEqual(result, sorted(self.matching_cp[:9] + self.matching_cp[10:] + [{
-            'cp': (48,),
-            'glyph': '0',
-            'name': 'DIGIT ZERO',
-            'idn_table': True,
-            'reference_lgr': True,
-            'result': 'REVIEW',
-            'remark': 'Tags do not match\nRules do not match'
-        }], key=lambda x: x['cp']))
+        self.assertDictEqual(result, {
+            'reports': sorted(self.matching_cp[:9] + self.matching_cp[10:] + [{
+                'cp': (48,),
+                'glyph': '0',
+                'name': 'DIGIT ZERO',
+                'idn_table': True,
+                'reference_lgr': True,
+                'result': 'REVIEW',
+                'remark': 'Tags do not match\nRules do not match'
+            }], key=lambda x: x['cp']),
+            'cp_in_sequences': []
+        })
 
     def test_repertoire_subset(self):
         idn = load_lgr('idn_table_review/repertoire', 'repertoire_subset.xml', unidb=self.unidb)
 
         result = generate_repertoire_report(idn, self.ref)
 
-        self.assertCountEqual(result, sorted(self.matching_cp[:3] + self.matching_cp[4:] + [{
-            'cp': (100,),
-            'glyph': 'd',
-            'name': 'LATIN SMALL LETTER D',
-            'idn_table': False,
-            'reference_lgr': True,
-            'result': 'SUBSET',
-            'remark': 'Match as a subset of repertoire'
-        }], key=lambda x: x['cp']))
+        self.assertDictEqual(result, {
+            'reports': sorted(self.matching_cp[:3] + self.matching_cp[4:] + [{
+                'cp': (100,),
+                'glyph': 'd',
+                'name': 'LATIN SMALL LETTER D',
+                'idn_table': False,
+                'reference_lgr': True,
+                'result': 'SUBSET',
+                'remark': 'Match as a subset of repertoire'
+            }], key=lambda x: x['cp']),
+            'cp_in_sequences': []
+        })
 
     def test_repertoire_ignore_script_tag(self):
         idn = load_lgr('idn_table_review/repertoire', 'repertoire_script_tag.xml', unidb=self.unidb)
 
         result = generate_repertoire_report(idn, self.ref)
 
-        self.assertCountEqual(result, sorted(self.matching_cp, key=lambda x: x['cp']))
+        self.assertDictEqual(result, {
+            'reports': sorted(self.matching_cp, key=lambda x: x['cp']),
+            'cp_in_sequences': []
+        })
+
+    def test_repertoire_idn_cp_in_ref_sequence(self):
+        idn = load_lgr('idn_table_review/repertoire', 'repertoire_idn_cp_in_ref_sequence.xml', unidb=self.unidb)
+
+        result = generate_repertoire_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'reports': sorted(self.matching_cp + [{
+                'cp': (111,),
+                'glyph': 'o',
+                'name': 'LATIN SMALL LETTER O',
+                'idn_table': True,
+                'reference_lgr': False,
+                'result': 'MANUAL CHECK',
+                'remark': 'The code point only exists in the IDN Table but not in the reference LGR'
+            }], key=lambda x: x['cp']),
+            'cp_in_sequences': [{
+                'idn_cp': (111,),
+                'idn_glyph': 'o',
+                'idn_name': 'LATIN SMALL LETTER O',
+                'ref_cp': (111, 101),
+                'ref_glyph': 'oe',
+                'ref_name': 'LATIN SMALL LETTER O LATIN SMALL LETTER E'
+            }]
+        })

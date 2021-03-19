@@ -1,7 +1,7 @@
 #! /bin/env python
 # -*- coding: utf-8 -*-
 """
-test_variant_sets - 
+test_language_tag -
 """
 import logging
 from unittest import TestCase
