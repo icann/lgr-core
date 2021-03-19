@@ -12,22 +12,26 @@ from lgr.tools.idn_review.utils import IdnReviewResult
 logger = logging.getLogger(__name__)
 
 
-def handle_report(reports, result_keys=None, remark_keys=None):
+def handle_report(reports, keys=None):
     result = IdnReviewResult.MATCH.name
     remarks = Counter()
+    result_remarks = {}
 
-    result_keys = result_keys or ['result']
-    remark_keys = remark_keys or ['remark']
+    keys = keys or (('result', 'remark'),)
     for report in reports:
-        for k in result_keys:
-            result = report[k] if result and IdnReviewResult[report[k].replace(' ', '_')] > IdnReviewResult[
+        for res_k, rem_k in keys:
+            result = report[res_k] if result and IdnReviewResult[report[res_k].replace(' ', '_')] > IdnReviewResult[
                 result.replace(' ', '_')] else result
-        for k in remark_keys:
-            remarks.update((report[k],))
+            result_remarks[report[rem_k]] = report[res_k]
+            remarks.update((report[rem_k],))
 
     return {
-        'result': result,
-        'remark': {k: v for k, v in remarks.items()} if remarks else {'-': '-'}
+        'overall': result,
+        'results': [{
+            'result': result_remarks[k],
+            'remark': k,
+            'count': v
+        } for k, v in remarks.items()]
     }
 
 
@@ -35,8 +39,7 @@ def generate_summary(reports) -> Dict:
     return {'language_tag': handle_report(c for r in reports['language_tags'] for c in r['comparison']),
             'repertoire': handle_report(reports['repertoire']['reports']),
             'variant_sets': handle_report((c for r in reports['variant_sets']['reports'] for c in r['report']),
-                                          result_keys=('result_fwd', 'result_rev'),
-                                          remark_keys=('remark_fwd', 'remark_rev')),
+                                          keys=(('result_fwd', 'remark_fwd'), ('result_rev', 'remark_rev'))),
             'classes': handle_report(reports['classes']),
             'wle': handle_report(reports['wle']['comparison']),
             'actions': handle_report(reports['actions']['comparison'])}
