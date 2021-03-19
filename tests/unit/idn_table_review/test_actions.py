@@ -15,31 +15,31 @@ logger = logging.getLogger('test_actions')
 class Test(TestCase):
     ref = load_lgr('idn_table_review', 'reference_lgr.xml')
     matching_actions = [{
-        'name': '<Action: 0>',
+        'name': 'IDN Table-1 (0)',
         'idn_table': True,
         'reference_lgr': True,
         'result': 'MATCH',
         'remark': 'Exact Match (action name and content are the same)'
     }, {
-        'name': '<Action: 1>',
+        'name': 'IDN Table-2 (1)',
         'idn_table': True,
         'reference_lgr': True,
         'result': 'MATCH',
         'remark': 'Exact Match (action name and content are the same)'
     }, {
-        'name': '<Action: 2>',
+        'name': 'IDN Table-3 (2)',
         'idn_table': True,
         'reference_lgr': True,
         'result': 'MATCH',
         'remark': 'Exact Match (action name and content are the same)'
     }, {
-        'name': '<Action: 3>',
+        'name': 'IDN Table-4 (3)',
         'idn_table': True,
         'reference_lgr': True,
         'result': 'MATCH',
         'remark': 'Exact Match (action name and content are the same)'
     }, {
-        'name': '<Action: 4>',
+        'name': 'IDN Table-5 (4)',
         'idn_table': True,
         'reference_lgr': True,
         'result': 'MATCH',
@@ -66,32 +66,8 @@ class Test(TestCase):
         result = generate_actions_report(idn, self.ref)
 
         self.assertDictEqual(result, {
-            'comparison': [{
-                'name': '<Action: 0>',
-                'idn_table': True,
-                'reference_lgr': True,
-                'result': 'MATCH',
-                'remark': 'Exact Match (action name and content are the same)'
-            }, {
-                'name': '<Action: 1>',
-                'idn_table': True,
-                'reference_lgr': True,
-                'result': 'MATCH',
-                'remark': 'Exact Match (action name and content are the same)'
-            }, {
-                'name': '<Action: 2>',
-                'idn_table': True,
-                'reference_lgr': True,
-                'result': 'MATCH',
-                'remark': 'Exact Match (action name and content are the same)'
-            }, {
-                'name': '<Action: 3>',
-                'idn_table': True,
-                'reference_lgr': True,
-                'result': 'MATCH',
-                'remark': 'Exact Match (action name and content are the same)'
-            }, {
-                'name': '<Action: 1>',
+            'comparison': self.matching_actions[:4] + [{
+                'name': 'Ref. LGR-2 (1)',
                 'idn_table': False,
                 'reference_lgr': True,
                 'result': 'MANUAL CHECK',
@@ -106,13 +82,43 @@ class Test(TestCase):
         result = generate_actions_report(idn, self.ref)
 
         self.assertDictEqual(result, {
-            'comparison': self.matching_actions + [{
-                'name': '<Action: additional>',
+            'comparison': [{
+                'name': 'IDN Table-1 (0)',
+                'idn_table': True,
+                'reference_lgr': True,
+                'result': 'MATCH',
+                'remark': 'Exact Match (action name and content are the same)'
+            }, {
+                'name': 'IDN Table-2 (additional)',
                 'idn_table': True,
                 'reference_lgr': False,
                 'result': 'MANUAL CHECK',
                 'remark': 'Mismatch (additional action)'
-            }],
+            }, {
+                'name': 'IDN Table-3 (1)',
+                'idn_table': True,
+                'reference_lgr': True,
+                'result': 'MATCH',
+                'remark': 'Exact Match (action name and content are the same)'
+            }, {
+                'name': 'IDN Table-4 (2)',
+                'idn_table': True,
+                'reference_lgr': True,
+                'result': 'MATCH',
+                'remark': 'Exact Match (action name and content are the same)'
+            }, {
+                'name': 'IDN Table-5 (3)',
+                'idn_table': True,
+                'reference_lgr': True,
+                'result': 'MATCH',
+                'remark': 'Exact Match (action name and content are the same)'
+            }, {
+                'name': 'IDN Table-6 (4)',
+                'idn_table': True,
+                'reference_lgr': True,
+                'result': 'MATCH',
+                'remark': 'Exact Match (action name and content are the same)'
+            }, ],
             'sequence': 'MATCH'
         })
 
