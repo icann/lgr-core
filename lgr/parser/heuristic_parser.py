@@ -56,6 +56,7 @@ class HeuristicParser(LGRParser):
 
     def _check_rfc_format(self, rule_file, is_str):
         def get_source():
+            # be careful, calling this reset the file, therefore the parsing loop should stop after it
             if not is_str:
                 if hasattr(rule_file, "seek"):
                     rule_file.seek(0)
@@ -64,16 +65,27 @@ class HeuristicParser(LGRParser):
                 self.source.seek(0)
             return self.source
 
+        match = False
         for line in rule_file:
             if not is_str:
                 line = line.decode('utf-8')
-            if RFC4290_REGEX.match(line.strip()) or RFC3743_REGEX.match(line.strip()):
+            if RFC3743_REGEX.match(line) and not RFC4290_REGEX.match(line):
+                self.lgr_parser = RFC3743Parser(get_source(), self.filename)
+                break
+            elif RFC4290_REGEX.match(line.strip()):
+                match = True
                 if ';' in line:
                     self.lgr_parser = RFC3743Parser(get_source(), self.filename)
                     break
-                else:
+                elif '|' in line:
                     self.lgr_parser = RFC4290Parser(get_source(), self.filename)
                     break
+
+        if not self.lgr_parser and match:
+            # we got through the whole file and we got matches with RFC formats but we did not get a way to
+            # discriminate therefore select RFC4290
+            # Note: this is because we accept RFC3743 without semicolon on code point line
+            self.lgr_parser = RFC4290Parser(get_source(), self.filename)
 
     def _parse_doc(self, rule_file):
         """
