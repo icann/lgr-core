@@ -41,7 +41,7 @@ def check_label(lgr, label, generate_variants=False, merged_lgr=None, set_labels
 
     write_output("\nLabel: %s [%s]" % (label, format_cp(label_cp)))
 
-    (eligible, label_parts, label_invalid_parts, disp, _, _) = lgr.test_label_eligible(label_cp)
+    (eligible, label_parts, label_invalid_parts, disp, _, _) = lgr.test_label_eligible(label_cp, collect_log=False)
     write_output("\tEligible: %s" % eligible)
     write_output("\tDisposition: %s" % disp)
 
