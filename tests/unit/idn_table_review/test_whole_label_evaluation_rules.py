@@ -137,7 +137,7 @@ class Test(TestCase):
                 'idn_table': True,
                 'reference_lgr': True,
                 'result': 'MANUAL CHECK',
-                'remark': 'Mismatch class (content mismatch)'
+                'remark': 'Check the content of the rule'
             }, self.not_match_match],
             'additional_cp': [],
             'additional_general_rules': {
@@ -159,7 +159,7 @@ class Test(TestCase):
                 'idn_table': True,
                 'reference_lgr': True,
                 'result': 'MANUAL CHECK',
-                'remark': 'Mismatch class (content mismatch)'
+                'remark': 'Check the content of the rule'
             }, self.not_match_match],
             'additional_cp': [],
             'additional_general_rules': {
@@ -412,5 +412,28 @@ class Test(TestCase):
                     'applicable': True,
                     'exists': False
                 },
+            }
+        })
+
+    def test_wle_missing_in_idn_table_not_applied_to_cp(self):
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_missing_in_idn_table_not_applied_to_cp.xml',
+                       unidb=self.unidb)
+
+        result = generate_whole_label_evaluation_rules_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'comparison': [{
+                'name': 'all-match',
+                'idn_table': False,
+                'reference_lgr': True,
+                'result': 'MANUAL CHECK',
+                'remark': 'Mismatch (WLE rule only exists in Ref. LGR)'
+            }, self.match_match, self.not_match_match],
+            'additional_cp': [],
+            'additional_general_rules': {
+                'combining_mark': self.general_rules_combining_mark,
+                'consecutive_hyphens': self.general_rules_consecutive_hyphens,
+                'rtl': self.general_rules_rtl,
+                'digits_set': self.general_rules_digits_sets,
             }
         })
