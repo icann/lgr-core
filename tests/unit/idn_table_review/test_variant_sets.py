@@ -15,6 +15,67 @@ logger = logging.getLogger('test_variant_sets')
 
 class Test(TestCase):
     ref = load_lgr('idn_table_review', 'reference_lgr.xml')
+    report_abc = {
+        'idn_table': ((97,), (98,), (99,)),
+        'ref_lgr': ((97,), (98,), (99,)),
+        'relevant_idn_table_repertoire': ((97,), (98,), (99,)),
+        'symmetry_check': True,
+        'transitivity_check': True,
+        'report': [
+            {
+                'source_cp': (97,),
+                'source_glyph': 'a',
+                'dest_cp': (98,),
+                'dest_glyph': 'b',
+                'fwd_type_idn': 'blocked',
+                'fwd_type_ref': 'blocked',
+                'reverse': True,
+                'rev_type_idn': 'blocked',
+                'rev_type_ref': 'blocked',
+                'dest_in_idn': True,
+                'dest_in_ref': True,
+                'symmetric': True,
+                'result_fwd': 'MATCH',
+                'result_rev': 'MATCH',
+                'remark_fwd': 'Exact match (including type, conditional variant rule)',
+                'remark_rev': 'Exact match (including type, conditional variant rule)'
+            }, {
+                'source_cp': (97,),
+                'source_glyph': 'a',
+                'dest_cp': (99,),
+                'dest_glyph': 'c',
+                'fwd_type_idn': 'activated',
+                'fwd_type_ref': 'activated',
+                'reverse': True,
+                'rev_type_idn': 'blocked',
+                'rev_type_ref': 'blocked',
+                'dest_in_idn': True,
+                'dest_in_ref': True,
+                'symmetric': False,
+                'result_fwd': 'MATCH',
+                'result_rev': 'MATCH',
+                'remark_fwd': 'Exact match (including type, conditional variant rule)',
+                'remark_rev': 'Exact match (including type, conditional variant rule)'
+            }, {
+                'source_cp': (98,),
+                'source_glyph': 'b',
+                'dest_cp': (99,),
+                'dest_glyph': 'c',
+                'fwd_type_idn': 'blocked',
+                'fwd_type_ref': 'blocked',
+                'reverse': True,
+                'rev_type_idn': 'allocatable',
+                'rev_type_ref': 'allocatable',
+                'dest_in_idn': True,
+                'dest_in_ref': True,
+                'symmetric': False,
+                'result_fwd': 'MATCH',
+                'result_rev': 'MATCH',
+                'remark_fwd': 'Exact match (including type, conditional variant rule)',
+                'remark_rev': 'Exact match (including type, conditional variant rule)'
+            }
+        ]
+    }
     report_oe = {
         'idn_table': ((111, 101), (339,)),
         'ref_lgr': ((111, 101), (339,)),
@@ -54,67 +115,7 @@ class Test(TestCase):
         result = generate_variant_sets_report(idn, self.ref)
 
         self.assertDictEqual(result, {
-            'reports': [{
-                'idn_table': ((97,), (98,), (99,)),
-                'ref_lgr': ((97,), (98,), (99,)),
-                'relevant_idn_table_repertoire': ((97,), (98,), (99,)),
-                'symmetry_check': True,
-                'transitivity_check': True,
-                'report': [
-                    {
-                        'source_cp': (97,),
-                        'source_glyph': 'a',
-                        'dest_cp': (98,),
-                        'dest_glyph': 'b',
-                        'fwd_type_idn': 'blocked',
-                        'fwd_type_ref': 'blocked',
-                        'reverse': True,
-                        'rev_type_idn': 'blocked',
-                        'rev_type_ref': 'blocked',
-                        'dest_in_idn': True,
-                        'dest_in_ref': True,
-                        'symmetric': True,
-                        'result_fwd': 'MATCH',
-                        'result_rev': 'MATCH',
-                        'remark_fwd': 'Exact match (including type, conditional variant rule)',
-                        'remark_rev': 'Exact match (including type, conditional variant rule)'
-                    }, {
-                        'source_cp': (97,),
-                        'source_glyph': 'a',
-                        'dest_cp': (99,),
-                        'dest_glyph': 'c',
-                        'fwd_type_idn': 'activated',
-                        'fwd_type_ref': 'activated',
-                        'reverse': True,
-                        'rev_type_idn': 'blocked',
-                        'rev_type_ref': 'blocked',
-                        'dest_in_idn': True,
-                        'dest_in_ref': True,
-                        'symmetric': False,
-                        'result_fwd': 'MATCH',
-                        'result_rev': 'MATCH',
-                        'remark_fwd': 'Exact match (including type, conditional variant rule)',
-                        'remark_rev': 'Exact match (including type, conditional variant rule)'
-                    }, {
-                        'source_cp': (98,),
-                        'source_glyph': 'b',
-                        'dest_cp': (99,),
-                        'dest_glyph': 'c',
-                        'fwd_type_idn': 'blocked',
-                        'fwd_type_ref': 'blocked',
-                        'reverse': True,
-                        'rev_type_idn': 'allocatable',
-                        'rev_type_ref': 'allocatable',
-                        'dest_in_idn': True,
-                        'dest_in_ref': True,
-                        'symmetric': False,
-                        'result_fwd': 'MATCH',
-                        'result_rev': 'MATCH',
-                        'remark_fwd': 'Exact match (including type, conditional variant rule)',
-                        'remark_rev': 'Exact match (including type, conditional variant rule)'
-                    }
-                ]
-            }, self.report_oe],
+            'reports': [self.report_abc, self.report_oe],
             'additional': []
         })
 
@@ -759,6 +760,234 @@ class Test(TestCase):
                         'remark_fwd': 'Exact match (including type, conditional variant rule)',
                         'remark_rev': 'Exact match (including type, conditional variant rule)'
 
+                    }
+                ]
+            }, self.report_oe],
+            'additional': []
+        })
+
+    def test_generate_variant_sets_missing_variant_members_in_ref(self):
+        idn = load_lgr('idn_table_review/variant_sets', 'variant_sets_missing_variant_members_in_ref.xml',
+                       unidb=self.unidb)
+
+        result = generate_variant_sets_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'reports': [{
+                'idn_table': ((97,), (98,), (99,), (100,)),
+                'ref_lgr': ((97,), (98,), (99,)),
+                'relevant_idn_table_repertoire': ((97,), (98,), (99,), (100,)),
+                'symmetry_check': True,
+                'transitivity_check': True,
+                'report': [
+                    {
+                        'source_cp': (97,),
+                        'source_glyph': 'a',
+                        'dest_cp': (98,),
+                        'dest_glyph': 'b',
+                        'fwd_type_idn': 'blocked',
+                        'fwd_type_ref': 'blocked',
+                        'reverse': True,
+                        'rev_type_idn': 'blocked',
+                        'rev_type_ref': 'blocked',
+                        'dest_in_idn': True,
+                        'dest_in_ref': True,
+                        'symmetric': True,
+                        'result_fwd': 'MATCH',
+                        'result_rev': 'MATCH',
+                        'remark_fwd': 'Exact match (including type, conditional variant rule)',
+                        'remark_rev': 'Exact match (including type, conditional variant rule)'
+                    }, {
+                        'source_cp': (97,),
+                        'source_glyph': 'a',
+                        'dest_cp': (99,),
+                        'dest_glyph': 'c',
+                        'fwd_type_idn': 'activated',
+                        'fwd_type_ref': 'activated',
+                        'reverse': True,
+                        'rev_type_idn': 'blocked',
+                        'rev_type_ref': 'blocked',
+                        'dest_in_idn': True,
+                        'dest_in_ref': True,
+                        'symmetric': False,
+                        'result_fwd': 'MATCH',
+                        'result_rev': 'MATCH',
+                        'remark_fwd': 'Exact match (including type, conditional variant rule)',
+                        'remark_rev': 'Exact match (including type, conditional variant rule)'
+                    }, {
+                        'source_cp': (98,),
+                        'source_glyph': 'b',
+                        'dest_cp': (99,),
+                        'dest_glyph': 'c',
+                        'fwd_type_idn': 'blocked',
+                        'fwd_type_ref': 'blocked',
+                        'reverse': True,
+                        'rev_type_idn': 'allocatable',
+                        'rev_type_ref': 'allocatable',
+                        'dest_in_idn': True,
+                        'dest_in_ref': True,
+                        'symmetric': False,
+                        'result_fwd': 'MATCH',
+                        'result_rev': 'MATCH',
+                        'remark_fwd': 'Exact match (including type, conditional variant rule)',
+                        'remark_rev': 'Exact match (including type, conditional variant rule)'
+                    }, {
+                        'source_cp': (97,),
+                        'source_glyph': 'a',
+                        'dest_cp': (100,),
+                        'dest_glyph': 'd',
+                        'fwd_type_idn': 'allocatable',
+                        'fwd_type_ref': '',
+                        'reverse': True,
+                        'rev_type_idn': 'allocatable',
+                        'rev_type_ref': '',
+                        'dest_in_idn': True,
+                        'dest_in_ref': False,
+                        'symmetric': True,
+                        'result_fwd': 'MANUAL CHECK',
+                        'result_rev': 'MANUAL CHECK',
+                        'remark_fwd': 'Variant member exists in IDN Table but not in the reference LGR',
+                        'remark_rev': 'Variant member exists in IDN Table but not in the reference LGR'
+                    }, {
+                        'source_cp': (98,),
+                        'source_glyph': 'b',
+                        'dest_cp': (100,),
+                        'dest_glyph': 'd',
+                        'fwd_type_idn': 'allocatable',
+                        'fwd_type_ref': '',
+                        'reverse': True,
+                        'rev_type_idn': 'allocatable',
+                        'rev_type_ref': '',
+                        'dest_in_idn': True,
+                        'dest_in_ref': False,
+                        'symmetric': True,
+                        'result_fwd': 'MANUAL CHECK',
+                        'result_rev': 'MANUAL CHECK',
+                        'remark_fwd': 'Variant member exists in IDN Table but not in the reference LGR',
+                        'remark_rev': 'Variant member exists in IDN Table but not in the reference LGR'
+                    }, {
+                        'source_cp': (99,),
+                        'source_glyph': 'c',
+                        'dest_cp': (100,),
+                        'dest_glyph': 'd',
+                        'fwd_type_idn': 'allocatable',
+                        'fwd_type_ref': '',
+                        'reverse': True,
+                        'rev_type_idn': 'allocatable',
+                        'rev_type_ref': '',
+                        'dest_in_idn': True,
+                        'dest_in_ref': False,
+                        'symmetric': True,
+                        'result_fwd': 'MANUAL CHECK',
+                        'result_rev': 'MANUAL CHECK',
+                        'remark_fwd': 'Variant member exists in IDN Table but not in the reference LGR',
+                        'remark_rev': 'Variant member exists in IDN Table but not in the reference LGR'
+                    }
+                ]
+            }, self.report_oe],
+            'additional': []
+        })
+
+    def test_generate_variant_mismatch_contextual_rules(self):
+        idn = load_lgr('idn_table_review/variant_sets', 'variant_sets_mismatch_contextual_rules.xml', unidb=self.unidb)
+
+        result = generate_variant_sets_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'reports': [{
+                'idn_table': ((97,), (98,), (99,)),
+                'ref_lgr': ((97,), (98,), (99,)),
+                'relevant_idn_table_repertoire': ((97,), (98,), (99,)),
+                'symmetry_check': True,
+                'transitivity_check': True,
+                'report': [
+                    {
+                        'source_cp': (97,),
+                        'source_glyph': 'a',
+                        'dest_cp': (98,),
+                        'dest_glyph': 'b',
+                        'fwd_type_idn': 'allocatable - blocked',
+                        'fwd_type_ref': 'blocked',
+                        'reverse': True,
+                        'rev_type_idn': 'blocked',
+                        'rev_type_ref': 'blocked',
+                        'dest_in_idn': True,
+                        'dest_in_ref': True,
+                        'symmetric': False,
+                        'result_fwd': 'MANUAL CHECK',
+                        'result_rev': 'MANUAL CHECK',
+                        'remark_fwd': 'Variant contextual rules are different',
+                        'remark_rev': 'Variant contextual rules are different'
+                    }, {
+                        'source_cp': (97,),
+                        'source_glyph': 'a',
+                        'dest_cp': (99,),
+                        'dest_glyph': 'c',
+                        'fwd_type_idn': 'activated',
+                        'fwd_type_ref': 'activated',
+                        'reverse': True,
+                        'rev_type_idn': 'blocked',
+                        'rev_type_ref': 'blocked',
+                        'dest_in_idn': True,
+                        'dest_in_ref': True,
+                        'symmetric': False,
+                        'result_fwd': 'MATCH',
+                        'result_rev': 'MATCH',
+                        'remark_fwd': 'Exact match (including type, conditional variant rule)',
+                        'remark_rev': 'Exact match (including type, conditional variant rule)'
+                    }, {
+                        'source_cp': (98,),
+                        'source_glyph': 'b',
+                        'dest_cp': (99,),
+                        'dest_glyph': 'c',
+                        'fwd_type_idn': 'blocked',
+                        'fwd_type_ref': 'blocked',
+                        'reverse': True,
+                        'rev_type_idn': 'allocatable',
+                        'rev_type_ref': 'allocatable',
+                        'dest_in_idn': True,
+                        'dest_in_ref': True,
+                        'symmetric': False,
+                        'result_fwd': 'MATCH',
+                        'result_rev': 'MATCH',
+                        'remark_fwd': 'Exact match (including type, conditional variant rule)',
+                        'remark_rev': 'Exact match (including type, conditional variant rule)'
+                    }
+                ]
+            }, self.report_oe],
+            'additional': []
+        })
+
+    def test_generate_variant_sets_missing_in_ref(self):
+        idn = load_lgr('idn_table_review/variant_sets', 'variant_sets_missing_in_ref.xml', unidb=self.unidb)
+
+        result = generate_variant_sets_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'reports': [self.report_abc, {
+                'idn_table': ((100,), (101,)),
+                'ref_lgr': (),
+                'relevant_idn_table_repertoire': ((100,), (101,)),
+                'symmetry_check': True,
+                'transitivity_check': True,
+                'report': [
+                    {
+                        'source_cp': (100,),
+                        'source_glyph': 'd',
+                        'dest_cp': (101,),
+                        'dest_glyph': 'e',
+                        'fwd_type_idn': 'blocked',
+                        'fwd_type_ref': '',
+                        'reverse': True,
+                        'rev_type_idn': 'blocked',
+                        'rev_type_ref': '',
+                        'dest_in_idn': True,
+                        'dest_in_ref': False,
+                        'symmetric': True,
+                        'result_fwd': 'MANUAL CHECK',
+                        'result_rev': 'MANUAL CHECK',
+                        'remark_fwd': 'Variant set only exists in the IDN Table',
+                        'remark_rev': 'Variant set only exists in the IDN Table'
                     }
                 ]
             }, self.report_oe],

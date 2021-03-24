@@ -1,0 +1,35 @@
+<lgr xmlns="urn:ietf:params:xml:ns:lgr-1.0">
+    <meta>
+        <version comment="Sample LGR for French">1</version>
+        <date>2015-08-07</date>
+        <unicode-version>6.3.0</unicode-version>
+        <language>fr</language>
+        <scope type="domain">example</scope>
+        <description type="text/plain">LGR for Unit Tests</description>
+        <references>
+            <reference comment="http://www.unicode.org/versions/Unicode1.1.0/" id="0">The Unicode Standard 1.1</reference>
+        </references>
+    </meta>
+    <data>
+        <char cp="0061" ref="0">
+            <var cp="0062" type="blocked" when="test"/>
+            <var cp="0062" type="allocatable" not-when="not-test"/>
+            <var cp="0063" type="activated"/>
+        </char>
+        <char cp="0062" ref="0">
+            <var cp="0061" type="blocked" when="not-match"/>
+            <var cp="0063" type="blocked"/>
+        </char>
+        <char cp="0063" ref="0">
+            <var cp="0061" type="blocked"/>
+            <var cp="0062" type="allocatable"/>
+        </char>
+        <char cp="0153">
+            <var cp="006F 0065" type="blocked"/>
+        </char>
+        <char cp="006F 0065">
+            <var cp="0153" type="blocked"/>
+        </char>
+    </data>
+    <rules/>
+</lgr>
