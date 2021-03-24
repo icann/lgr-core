@@ -210,7 +210,7 @@ class WholeLabelEvaluationRuleReport:
     def compare_wle(self) -> Tuple[IdnReviewResult, str]:
         # compare rule regex for rule equality
         if not self.idn_table_rule:
-            if not (self.idn_table_repertoire & self.reference_lgr_context):
+            if self.reference_lgr_context and not (self.idn_table_repertoire & self.reference_lgr_context):
                 return (IdnReviewResult.SUBSET,
                         "Match as a subset (for the rules missing in IDN Table, "
                         "applicable code points in Ref. LGR are not in IDN Table)")
@@ -222,7 +222,7 @@ class WholeLabelEvaluationRuleReport:
             if not (self.idn_table_context ^ self.reference_lgr_context):
                 return IdnReviewResult.MATCH, "Exact Match (matched names and content)"
 
-        return IdnReviewResult.MANUAL_CHECK, "Mismatch class (content mismatch)"
+        return IdnReviewResult.MANUAL_CHECK, "Check the content of the rule"
 
     def to_dict(self) -> Dict:
         result, remark = self.compare_wle()
