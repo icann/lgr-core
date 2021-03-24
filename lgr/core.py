@@ -1117,7 +1117,8 @@ class LGR(object):
             # 8.3.  Determining a Disposition for a Label or Variant Label
             # Step 1
             eligible, _, variant_invalid_parts, _, idx, _ = self.test_label_eligible(variant_cp,
-                                                                                     is_variant=variant_cp != label)
+                                                                                     is_variant=variant_cp != label,
+                                                                                     collect_log=collect_log)
             if not eligible:
                 variant_disp = INVALID_DISPOSITION
             else:

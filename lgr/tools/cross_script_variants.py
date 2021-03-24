@@ -69,7 +69,7 @@ def cross_script_variants(lgr, labels_input):
             yield "Input label {}: {}\n".format(label, error)
         else:
             label_cp = tuple([ord(c) for c in label])
-            result, _, _, _, _, _ = lgr.test_label_eligible(label_cp)
+            result, _, _, _, _, _ = lgr.test_label_eligible(label_cp, collect_log=False)
             if not result:
                 continue
             label_displayed = False
