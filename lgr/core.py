@@ -1004,7 +1004,7 @@ class LGR(object):
         self.classes_lookup[cls.name] = cls
         self.classes.append(cls.name)
 
-    def test_label_eligible(self, label, collect_log=True):
+    def test_label_eligible(self, label, is_variant=False, collect_log=True):
         """
         Test label eligibility against an LGR.
 
@@ -1012,6 +1012,7 @@ class LGR(object):
         and test disposition of reflexive mappings.
 
         :param label: The label to test, as an array of codepoints.
+        :param is_variant: Whether we are testing a variant label eligibility.
         :param collect_log: If False, do not collect rule processing log.
         :return: (result, label_parts, label_invalid_parts, disposition, action_idx, log)
                  with:
@@ -1046,7 +1047,7 @@ class LGR(object):
             return False, label_parts, label_invalid_parts, INVALID_DISPOSITION, -1, log_output.getvalue()
 
         # Compute label disposition by analyzing reflexive mappings
-        (disposition, action_idx) = self._test_label_disposition(label)
+        (disposition, action_idx) = self._test_label_disposition(label, apply_reflexive_mapping=not is_variant)
         if disposition == INVALID_DISPOSITION:
             rule_logger.error("Invalid disposition for reflexive mapping, "
                               "triggered by action #%d", action_idx)
@@ -1115,7 +1116,8 @@ class LGR(object):
 
             # 8.3.  Determining a Disposition for a Label or Variant Label
             # Step 1
-            eligible, _, variant_invalid_parts, _, idx, _ = self.test_label_eligible(variant_cp)
+            eligible, _, variant_invalid_parts, _, idx, _ = self.test_label_eligible(variant_cp,
+                                                                                     is_variant=variant_cp != label)
             if not eligible:
                 variant_disp = INVALID_DISPOSITION
             else:
@@ -1143,7 +1145,7 @@ class LGR(object):
         if not original_label:
             # TODO: already computed since label MUST be eligible
             rule_logger.debug('Add original label')
-            (_, _, _, disposition, action_idx, log) = self.test_label_eligible(label, collect_log)
+            (_, _, _, disposition, action_idx, log) = self.test_label_eligible(label, collect_log=collect_log)
             original_label = label, disposition, None, action_idx, set(), log
 
         yield original_label
@@ -1404,7 +1406,7 @@ class LGR(object):
         else:
             return result, label_parts, label_invalid_parts, chars
 
-    def _test_label_disposition(self, label):
+    def _test_label_disposition(self, label, apply_reflexive_mapping=True):
         """
         Compute the final disposition of a label.
 
@@ -1413,6 +1415,8 @@ class LGR(object):
 
         :param label: Input label to test.
                       Must have passed the 'preliminary' eligibility test.
+        :param apply_reflexive_mapping: Whether the reflexive mapping should be considereed for disposition
+                                        (This should be True when evaluating a variant)
         :return: - original_disp: The final disposition of the original label.
                  - action_idx: The index of the action which triggered
                                the disposition.
@@ -1456,15 +1460,16 @@ class LGR(object):
 
                 is_variant = False
 
-                for var in char.get_reflexive_variants():
-                    if not self._test_context_rules(var, label, i):
-                        continue
+                if apply_reflexive_mapping:
+                    for var in char.get_reflexive_variants():
+                        if not self._test_context_rules(var, label, i):
+                            continue
 
-                    rule_logger.debug('Reflexive variant %s is valid', var)
-                    # Reflexive variant is valid, add disposition
-                    disp_set.add(var.type)
+                        rule_logger.debug('Reflexive variant %s is valid', var)
+                        # Reflexive variant is valid, add disposition
+                        disp_set.add(var.type)
 
-                    is_variant = True
+                        is_variant = True
 
                 # Label is composed of variants only if
                 # * current char has a valid variant
