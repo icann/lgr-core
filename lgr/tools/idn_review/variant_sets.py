@@ -59,10 +59,10 @@ class VariantData:
         return self.has_variant() and self.get_cp() in repertoire and self.has_reverse() and self.get_rev_cp() in repertoire
 
     def get_types(self) -> str:
-        return ' - '.join(sorted(c.type for c in self._fwd))
+        return ' - '.join(sorted(c.type for c in self._fwd if c.type is not None))
 
     def get_rev_types(self) -> str:
-        return ' - '.join(sorted(c.type for c in self._rev))
+        return ' - '.join(sorted(c.type for c in self._rev if c.type is not None))
 
     def get_when(self) -> str:
         for v in self.get_vars():
@@ -92,37 +92,37 @@ class VariantData:
         for v in self.get_vars():
             if v.when:
                 return v.type
-        return None
+        return ''
 
     def get_not_when_type(self) -> str:
         for v in self.get_vars():
             if v.not_when:
                 return v.type
-        return None
+        return ''
 
     def get_rev_when_type(self) -> str:
         for v in self.get_rev_vars():
             if v.when:
                 return v.type
-        return None
+        return ''
 
     def get_rev_not_when_type(self) -> str:
         for v in self.get_rev_vars():
             if v.not_when:
                 return v.type
-        return None
+        return ''
 
     def get_non_conditional_type(self) -> str:
         for v in self.get_vars():
             if not v.when and not v.not_when:
                 return v.type
-        return None
+        return ''
 
     def get_rev_non_conditional_type(self) -> str:
         for v in self.get_rev_vars():
             if not v.when and not v.not_when:
                 return v.type
-        return None
+        return ''
 
     @classmethod
     def none(cls):
@@ -235,7 +235,8 @@ class VariantComparison:
 
         result = None
         for r in ['when', 'not-when', 'none']:
-            if not idn_type[r] or not ref_type[r]:
+            if idn_type[r] == '' or ref_type[r] == '':
+                # '' means not applicable, None mean no type but applicable
                 continue
             try:
                 if self.VARIANT_TYPES_ORDER.index(idn_type[r]) < self.VARIANT_TYPES_ORDER.index(ref_type[r]):
@@ -341,7 +342,7 @@ class VariantReport:
             return (IdnReviewResult.NOTE.name,
                     "Variant types are mismatched. IDN Table is more conservative comparing to the Reference LGR")
 
-        assert type_check == VariantComparison.IdnTypeCheck.MATCH and rules_check == VariantComparison.IdnRuleCheck.MATCH
+        assert type_check in [VariantComparison.IdnTypeCheck.MATCH, None] and rules_check == VariantComparison.IdnRuleCheck.MATCH
         return IdnReviewResult.MATCH.name, "Exact match (including type, conditional variant rule)"
 
 
@@ -400,15 +401,12 @@ class VariantSetsReport:
             in_lgr = True
             if var.cp in reversed_variants.get(char.cp, []):
                 continue
+            var_var = []
             try:
-                var_var = repertoire.get_variant(var.cp, char.cp)
+                var_var = repertoire.get_variant(var.cp, char.cp) or []
+                reversed_variants.setdefault(var.cp, []).append(char.cp)
             except NotInLGR:
                 in_lgr = False
-                var_var = [None]
-            else:
-                if not var_var:
-                    var_var = [None]
-                reversed_variants.setdefault(var.cp, []).append(char.cp)
             variants.setdefault(var.cp, VariantData(in_lgr)).add_variant(var, var_var)
         return variants
 
