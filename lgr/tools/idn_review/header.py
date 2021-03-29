@@ -23,7 +23,9 @@ def generate_header(idn_table: LGR, reference_lgr: LGR) -> dict:
 
     return {
         'date': date.today(),
-        'disclaimer': 'Waiting for ICANN disclaimer',
+        'disclaimer': 'Please refer to the LGR (IDN Table) Review Tool disclaimer on this '
+                      '<a href="https://www.icann.org/resources/pages/lgr-toolset-2015-06-21-en" '
+                      'target="_blank" rel="noopener noreferrer">page</a>',
         'idn_table': {
             'filename': idn_table.name,
             'version': idn_table_version
