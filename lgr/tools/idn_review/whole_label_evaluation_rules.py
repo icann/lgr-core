@@ -256,7 +256,7 @@ class WholeLabelEvaluationRulesCheck:
 
     def check_rtl(self):
         self.is_rtl = False
-        for script in self.idn_table.metadata.get_scripts():
+        for script in self.idn_table.metadata.get_scripts(allow_invalid=True):
             if self.idn_table.unicode_database.is_script_rtl(script):
                 self.is_rtl = True
 
@@ -268,7 +268,7 @@ class WholeLabelEvaluationRulesCheck:
             tag = tags.tag(language_tag)
             if tag.language:
                 self.language_tags.append(tag.language.format)
-        self.language_tags.extend(self.idn_table.metadata.get_scripts())
+        self.language_tags.extend(self.idn_table.metadata.get_scripts(allow_invalid=True))
 
     def get_context_rules(self):
         nbr_digits = 0
@@ -321,7 +321,7 @@ class WholeLabelEvaluationRulesCheck:
 
         return {
             'applicable': applicable,
-            'exists': result if result is not None else None
+            'exists': result
         }
 
     def check_label_cp_in_repertoire(self, label):
