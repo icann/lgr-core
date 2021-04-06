@@ -62,7 +62,7 @@ def generate_actions_report(idn_table: LGR, reference_lgr: LGR) -> Dict:
             matching_ref_actions_ordered.append(action)
 
     sequence_match: IdnReviewResult.name = IdnReviewResult.MANUAL_CHECK.name
-    if matching_idn_actions_ordered == matching_ref_actions_ordered:
+    if idn_actions.values() and  matching_idn_actions_ordered == matching_ref_actions_ordered:
         sequence_match = IdnReviewResult.MATCH.name
 
     for name, action in idn_actions.items():
