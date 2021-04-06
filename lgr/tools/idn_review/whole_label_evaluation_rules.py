@@ -289,7 +289,7 @@ class WholeLabelEvaluationRulesCheck:
                 self.idn_table_char_without_rule.add(char)
 
         # we consider that there is more than one digit set if we have more than 9 digits
-        self.has_multiple_digits_sets = nbr_digits > 9
+        self.has_multiple_digits_sets = nbr_digits > 10
 
         for char in self.reference_lgr.repertoire:
             if char.when:
