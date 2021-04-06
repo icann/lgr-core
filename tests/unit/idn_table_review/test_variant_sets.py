@@ -590,7 +590,7 @@ class Test(TestCase):
                         'result_fwd': 'NOTE',
                         'result_rev': 'MATCH',
                         'remark_fwd': 'Variant types are mismatched. '
-                                      'IDN Table is more conservative comparing to the Reference LGR',
+                                      'IDN Table is more conservative compared to the Reference LGR',
                         'remark_rev': 'Exact match (including type, conditional variant rule)'
                     }, {
                         'source_cp': (98,),
@@ -609,7 +609,7 @@ class Test(TestCase):
                         'result_rev': 'NOTE',
                         'remark_fwd': 'Unknown variant type',
                         'remark_rev': 'Variant types are mismatched. '
-                                      'IDN Table is more conservative comparing to the Reference LGR'
+                                      'IDN Table is more conservative compared to the Reference LGR'
                     }
                 ]
             }, self.report_oe],

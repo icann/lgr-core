@@ -340,7 +340,7 @@ class VariantReport:
 
         if type_check == VariantComparison.IdnTypeCheck.MORE_CONSERVATIVE:
             return (IdnReviewResult.NOTE.name,
-                    "Variant types are mismatched. IDN Table is more conservative comparing to the Reference LGR")
+                    "Variant types are mismatched. IDN Table is more conservative compared to the Reference LGR")
 
         assert type_check in [VariantComparison.IdnTypeCheck.MATCH, None] and rules_check == VariantComparison.IdnRuleCheck.MATCH
         return IdnReviewResult.MATCH.name, "Exact match (including type, conditional variant rule)"
