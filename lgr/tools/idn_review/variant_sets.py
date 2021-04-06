@@ -182,7 +182,7 @@ class VariantComparison:
                 'not-when': self.idn_var_data.get_not_when()
             }
             ref_wle = {
-                'when': self.ref_var_data.get_when_type(),
+                'when': self.ref_var_data.get_when(),
                 'not-when': self.ref_var_data.get_not_when()
             }
         else:
