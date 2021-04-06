@@ -171,7 +171,7 @@ class Metadata(object):
     # be parsed instead of ~1sec.
     # The cache depends on the value of the "languages" attribute.
     @MethodAttributeMemoizer("languages")
-    def get_scripts(self):
+    def get_scripts(self, allow_invalid=False):
         """
         Retrieve the scripts defined in the metadata.
 
@@ -180,7 +180,7 @@ class Metadata(object):
         scripts = []
         for language in self.languages:
             lang_tag = rfc5646.tag(language)
-            if lang_tag.valid:
+            if allow_invalid or lang_tag.valid:
                 iso_script_tag = lang_tag.script
                 iso_script = None
                 if iso_script_tag is not None:
