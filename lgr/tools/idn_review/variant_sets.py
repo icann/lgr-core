@@ -200,9 +200,9 @@ class VariantComparison:
         # check multiple when/not-when
         if (idn_wle['when'] and idn_wle['not-when']) or (ref_wle['when'] and ref_wle['not-when']):
             return self.IdnRuleCheck.DIFFERENT
-        if (idn_wle['when'] and not ref_wle['when']) or (idn_wle['not-when'] and not ref_wle['not-when']):
+        if (idn_wle['when'] or idn_wle['not-when']) and not ref_wle['when'] and not ref_wle['not-when']:
             return self.IdnRuleCheck.LESS_CONSERVATIVE
-        if (not idn_wle['when'] and ref_wle['when']) or (not idn_wle['not-when'] and ref_wle['not-when']):
+        if not idn_wle['when'] and not idn_wle['not-when'] and (ref_wle['when']) or ref_wle['not-when']:
             return self.IdnRuleCheck.MISSING
         return self.IdnRuleCheck.DIFFERENT
 
