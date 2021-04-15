@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def handle_report(reports, keys=None):
-    result = IdnReviewResult.MATCH.name
+    result = IdnReviewResult.MANUAL_CHECK.name
     remarks = Counter()
     result_remarks = {}
 
