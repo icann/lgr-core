@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def handle_report(reports, keys=None):
-    result = IdnReviewResult.MANUAL_CHECK.name
+    result = IdnReviewResult.MATCH.name
     remarks = Counter()
     result_remarks = {}
 
@@ -25,6 +25,9 @@ def handle_report(reports, keys=None):
             result_remarks[report[rem_k]] = report[res_k]
             remarks.update((report[rem_k],))
 
+    if not remarks:
+        # default for nothing to review
+        result = IdnReviewResult.MANUAL_CHECK.name
     return {
         'overall': result,
         'results': [{
