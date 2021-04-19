@@ -25,6 +25,21 @@ class Test(TestCase):
         result = generate_language_tag_report(idn, self.ref)
 
         self.assertCountEqual(result, [{
+            'idn_table_language_tag': 'arab',
+            'comparison': [{
+                'reference_lgr_language_tag': 'ar',
+                'result': 'REVIEW',
+                'remark': 'The language tag in IDN Table and Reference LGR are mismatched'
+            }, {
+                'reference_lgr_language_tag': 'und-Arab',
+                'result': 'MATCH',
+                'remark': 'Exact match'
+            }, {
+                'reference_lgr_language_tag': 'zh-hani',
+                'result': 'REVIEW',
+                'remark': 'The language tag in IDN Table and Reference LGR are mismatched'
+            }]
+        }, {
             'idn_table_language_tag': 'ar',
             'comparison': [{
                 'reference_lgr_language_tag': 'ar',
@@ -98,5 +113,27 @@ class Test(TestCase):
                 'reference_lgr_language_tag': 'zh-hani',
                 'result': 'MATCH',
                 'remark': 'Exact match'
+            }]
+        }])
+
+    def test_language_tag_none(self):
+        idn = load_lgr('idn_table_review/language_tag', 'language_tag_none.xml')
+
+        result = generate_language_tag_report(idn, self.ref)
+
+        self.assertCountEqual(result, [{
+            'idn_table_language_tag': '-',
+            'comparison': [{
+                'reference_lgr_language_tag': 'ar',
+                'result': 'MANUAL CHECK',
+                'remark': 'Language tag may have been included in the comment'
+            }, {
+                'reference_lgr_language_tag': 'und-Arab',
+                'result': 'MANUAL CHECK',
+                'remark': 'Language tag may have been included in the comment'
+            }, {
+                'reference_lgr_language_tag': 'zh-hani',
+                'result': 'MANUAL CHECK',
+                'remark': 'Language tag may have been included in the comment'
             }]
         }])

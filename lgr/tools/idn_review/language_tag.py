@@ -25,7 +25,10 @@ class LanguageTagReport:
         return tag1.language and tag2.language and tag1.language.format == tag2.language.format
 
     def compare_with_tag(self, tag: str) -> Tuple[IdnReviewResult, str]:
-        if self.idn_table_tag == tag:
+        if self.idn_table_tag is None:
+            return IdnReviewResult.MANUAL_CHECK, "Language tag may have been included in the comment"
+
+        if self.idn_table_tag.lower().replace('und-', '') == tag.lower().replace('und-', ''):
             return IdnReviewResult.MATCH, "Exact match"
 
         idn_tag = tags.tag(self.idn_table_tag)
@@ -55,14 +58,17 @@ class LanguageTagReport:
                 'remark': remark
             })
         return {
-            'idn_table_language_tag': self.idn_table_tag,
+            'idn_table_language_tag': self.idn_table_tag or '-',
             'comparison': sorted(comparisons, key=lambda x: x['reference_lgr_language_tag'])
         }
 
 
 def generate_language_tag_report(idn_table: LGR, reference_lgr: LGR) -> List[Dict]:
     reports: List[Dict] = []
-    for language_tag in sorted(idn_table.metadata.languages):
+    language_tags = sorted(idn_table.metadata.languages)
+    for language_tag in language_tags:
         reports.append(LanguageTagReport(language_tag, reference_lgr.metadata.languages).to_dict())
+    if not language_tags:
+        reports.append(LanguageTagReport(None, reference_lgr.metadata.languages).to_dict())
 
     return reports
