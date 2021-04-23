@@ -26,7 +26,7 @@ class LanguageTagReport:
 
     def compare_with_tag(self, tag: str) -> Tuple[IdnReviewResult, str]:
         if self.idn_table_tag is None:
-            return IdnReviewResult.MANUAL_CHECK, "Language tag may have been included in the comment"
+            return IdnReviewResult.MANUAL_CHECK, "Language tag may be included in the comment"
 
         if self.idn_table_tag.lower().replace('und-', '') == tag.lower().replace('und-', ''):
             return IdnReviewResult.MATCH, "Exact match"
@@ -44,7 +44,7 @@ class LanguageTagReport:
             return IdnReviewResult.MATCH, "The language tag in IDN Table relevant to the script tag in Reference LGR"
 
         if idn_tag.ERR_UNKNOWN in [e.code for e in idn_tag.errors]:
-            return IdnReviewResult.MANUAL_CHECK, "Language tag may have been included in the comment"
+            return IdnReviewResult.MANUAL_CHECK, "Language tag may be included in the comment"
 
         return IdnReviewResult.REVIEW, "The language tag in IDN Table and Reference LGR are mismatched"
 

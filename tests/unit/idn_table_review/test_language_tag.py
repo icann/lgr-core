@@ -74,15 +74,15 @@ class Test(TestCase):
             'comparison': [{
                 'reference_lgr_language_tag': 'ar',
                 'result': 'MANUAL CHECK',
-                'remark': 'Language tag may have been included in the comment'
+                'remark': 'Language tag may be included in the comment'
             }, {
                 'reference_lgr_language_tag': 'und-Arab',
                 'result': 'MANUAL CHECK',
-                'remark': 'Language tag may have been included in the comment'
+                'remark': 'Language tag may be included in the comment'
             }, {
                 'reference_lgr_language_tag': 'zh-hani',
                 'result': 'MANUAL CHECK',
-                'remark': 'Language tag may have been included in the comment'
+                'remark': 'Language tag may be included in the comment'
             }]
         }, {
             'idn_table_language_tag': 'zh',
@@ -126,14 +126,14 @@ class Test(TestCase):
             'comparison': [{
                 'reference_lgr_language_tag': 'ar',
                 'result': 'MANUAL CHECK',
-                'remark': 'Language tag may have been included in the comment'
+                'remark': 'Language tag may be included in the comment'
             }, {
                 'reference_lgr_language_tag': 'und-Arab',
                 'result': 'MANUAL CHECK',
-                'remark': 'Language tag may have been included in the comment'
+                'remark': 'Language tag may be included in the comment'
             }, {
                 'reference_lgr_language_tag': 'zh-hani',
                 'result': 'MANUAL CHECK',
-                'remark': 'Language tag may have been included in the comment'
+                'remark': 'Language tag may be included in the comment'
             }]
         }])
