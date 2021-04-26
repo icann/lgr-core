@@ -7,7 +7,7 @@ This version conforms to the specification [RFC7940](https://www.rfc-editor.org/
 ## Acknowledgment
 
 This toolset was implemented by Viagenie (Audric Schiltknecht, Julien Bernard,
-David Drouin and Marc Blanchet) and Wil Tan on an ICANN contract.
+David Drouin, Guillaume Blanchet and Marc Blanchet) and Wil Tan on an ICANN contract.
 
 ## License
 
@@ -46,6 +46,7 @@ THE POSSIBILITY OF SUCH DAMAGE.
 * [LibXML2](http://www.xmlsoft.org/) [MIT License] used by the lxml Python bindings
 * [LXML](http://lxml.de/) for XML parsing/serializing [BSD License]
 * [language-tags](https://github.com/OnroerendErfgoed/language-tags) [MIT License]
+* [pycountry](https://github.com/flyingcircusio/pycountry) [L-GPL License]
 * [picu](https://pypi.python.org/pypi/picu) [MIT/X license]
 * [munidata](https://github.com/icann/munidata) for Unicode-related properties access [BSD License]
 
@@ -53,6 +54,7 @@ For testing:
 
 * [pytest](https://docs.pytest.org/)
 * [coverage](http://nedbatchelder.com/code/coverage/)
+* [idna](https://github.com/kjd/idna) [BSD License]
 
 For documentation generation:
 
@@ -106,6 +108,7 @@ Other tools are available to manipulate LGR files and labels:
 * `lgr_check_harmonized` checks that variants code points from a list of LGRs are symmetric and transitive in each LGR,
   and list missing variants from one LGR to another.
 * `lgr_cross_script_variants` takes some LGRs and generate the list of cross-script variants.
+* `lgr_idn_table_review.py` reviews IDN tables against reference LGRs.
 
 ## Testing and coverage
 
