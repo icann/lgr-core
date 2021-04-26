@@ -25,13 +25,13 @@ class PyTest(TestCommand):
 
 setup(
     name="lgr-core",
-    version='3.0.0',
+    version='4.0.0',
     author='Viagénie and Wil Tan',
     author_email='support@viagenie.ca',
     description="API for manipulating Label Generation Rules",
     long_description=open('README.md', encoding='utf-8').read(),
     license="TBD",
-    install_requires=['lxml', 'language-tags', 'munidata', 'picu'],
+    install_requires=['lxml', 'language-tags', 'pycountry', 'munidata', 'picu'],
     packages=find_packages(),
     scripts=[
         'tools/lgr_cli.py',
@@ -49,17 +49,17 @@ setup(
         'tools/lgr_cross_script_variants.py',
         'tools/lgr_harmonize',
         'tools/lgr_populate_variants.py',
-        'tools/rfc7940_validate.py'
+        'tools/rfc7940_validate.py',
+        'tools/lgr_idn_table_review.py'
     ],
     tests_require=['pytest', 'idna'],
     cmdclass={'test': PyTest},
     classifiers=[
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Topic :: Software Development :: Libraries'
     ]
 )

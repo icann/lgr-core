@@ -1,5 +1,17 @@
 # Changelog for lgr-core
 
+## 4.0.0 (2021-04-27)
+### New features
+- Add IDN table review tool
+- Add an heuristic parser for any RFC format
+- Drop compatibility for Python 2.7, 3.4 and 3.5
+- Add compatibility for Python 3.8
+### Improvements
+- Factorize and create helpers for CLI tools
+- Use Suppress-Script when retrieving LGR scripts from metadata
+### Fixes
+- Stop considering reflexive mapping when evaluating a variant label
+
 ## 3.0.0 (2020-12-04)
 ### New features
 - Add a way to provide a list of TLDs to collision tool
