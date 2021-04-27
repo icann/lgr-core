@@ -229,4 +229,7 @@ def tag_to_language_script(tag, use_suppress_script=False):
     if language.lower() == 'und':
         language = ''
 
+    # hard-code suppress-script for zh language
+    if language == 'zh' and not script:
+        script = 'Hani'
     return language, script
