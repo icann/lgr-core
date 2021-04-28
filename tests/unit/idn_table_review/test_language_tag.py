@@ -31,13 +31,13 @@ class Test(TestCase):
                 'result': 'REVIEW',
                 'remark': 'The language tag in IDN Table and Reference LGR are mismatched'
             }, {
+                'reference_lgr_language_tag': 'ja-hira',
+                'result': 'REVIEW',
+                'remark': 'The language tag in IDN Table and Reference LGR are mismatched'
+            }, {
                 'reference_lgr_language_tag': 'und-Arab',
                 'result': 'MATCH',
                 'remark': 'Exact match'
-            }, {
-                'reference_lgr_language_tag': 'zh-hani',
-                'result': 'REVIEW',
-                'remark': 'The language tag in IDN Table and Reference LGR are mismatched'
             }]
         }, {
             'idn_table_language_tag': 'ar',
@@ -46,13 +46,13 @@ class Test(TestCase):
                 'result': 'MATCH',
                 'remark': 'Exact match'
             }, {
+                'reference_lgr_language_tag': 'ja-hira',
+                'result': 'REVIEW',
+                'remark': 'The language tag in IDN Table and Reference LGR are mismatched'
+            }, {
                 'reference_lgr_language_tag': 'und-Arab',
                 'result': 'MATCH',
                 'remark': 'The language tag in IDN Table relevant to the script tag in Reference LGR'
-            }, {
-                'reference_lgr_language_tag': 'zh-hani',
-                'result': 'REVIEW',
-                'remark': 'The language tag in IDN Table and Reference LGR are mismatched'
             }]
         }, {
             'idn_table_language_tag': 'ar-arab',
@@ -61,13 +61,13 @@ class Test(TestCase):
                 'result': 'MATCH',
                 'remark': 'Consider minimizing the tag as per the RFC5646 and IANA subtag registry'
             }, {
+                'reference_lgr_language_tag': 'ja-hira',
+                'result': 'REVIEW',
+                'remark': 'The language tag in IDN Table and Reference LGR are mismatched'
+            }, {
                 'reference_lgr_language_tag': 'und-Arab',
                 'result': 'MATCH',
                 'remark': 'The language tag in IDN Table relevant to the script tag in Reference LGR'
-            }, {
-                'reference_lgr_language_tag': 'zh-hani',
-                'result': 'REVIEW',
-                'remark': 'The language tag in IDN Table and Reference LGR are mismatched'
             }]
         }, {
             'idn_table_language_tag': 'test-unexisting',
@@ -76,43 +76,43 @@ class Test(TestCase):
                 'result': 'MANUAL CHECK',
                 'remark': 'Language tag may be included in the comment'
             }, {
-                'reference_lgr_language_tag': 'und-Arab',
+                'reference_lgr_language_tag': 'ja-hira',
                 'result': 'MANUAL CHECK',
                 'remark': 'Language tag may be included in the comment'
             }, {
-                'reference_lgr_language_tag': 'zh-hani',
+                'reference_lgr_language_tag': 'und-Arab',
                 'result': 'MANUAL CHECK',
                 'remark': 'Language tag may be included in the comment'
             }]
         }, {
-            'idn_table_language_tag': 'zh',
+            'idn_table_language_tag': 'ja',
             'comparison': [{
                 'reference_lgr_language_tag': 'ar',
                 'result': 'REVIEW',
                 'remark': 'The language tag in IDN Table and Reference LGR are mismatched'
             }, {
-                'reference_lgr_language_tag': 'und-Arab',
-                'result': 'REVIEW',
-                'remark': 'The language tag in IDN Table and Reference LGR are mismatched'
-            }, {
-                'reference_lgr_language_tag': 'zh-hani',
+                'reference_lgr_language_tag': 'ja-hira',
                 'result': 'MATCH',
                 'remark': 'Language match'
+            }, {
+                'reference_lgr_language_tag': 'und-Arab',
+                'result': 'REVIEW',
+                'remark': 'The language tag in IDN Table and Reference LGR are mismatched'
             }]
         }, {
-            'idn_table_language_tag': 'zh-hani',
+            'idn_table_language_tag': 'ja-hira',
             'comparison': [{
                 'reference_lgr_language_tag': 'ar',
                 'result': 'REVIEW',
                 'remark': 'The language tag in IDN Table and Reference LGR are mismatched'
             }, {
+                'reference_lgr_language_tag': 'ja-hira',
+                'result': 'MATCH',
+                'remark': 'Exact match'
+            }, {
                 'reference_lgr_language_tag': 'und-Arab',
                 'result': 'REVIEW',
                 'remark': 'The language tag in IDN Table and Reference LGR are mismatched'
-            }, {
-                'reference_lgr_language_tag': 'zh-hani',
-                'result': 'MATCH',
-                'remark': 'Exact match'
             }]
         }])
 
@@ -128,11 +128,11 @@ class Test(TestCase):
                 'result': 'MANUAL CHECK',
                 'remark': 'Language tag may be included in the comment'
             }, {
-                'reference_lgr_language_tag': 'und-Arab',
+                'reference_lgr_language_tag': 'ja-hira',
                 'result': 'MANUAL CHECK',
                 'remark': 'Language tag may be included in the comment'
             }, {
-                'reference_lgr_language_tag': 'zh-hani',
+                'reference_lgr_language_tag': 'und-Arab',
                 'result': 'MANUAL CHECK',
                 'remark': 'Language tag may be included in the comment'
             }]

@@ -6,8 +6,8 @@
         <language>ar</language>
         <language>arab</language>
         <language>ar-arab</language>
-        <language>zh</language>
-        <language>zh-hani</language>
+        <language>ja</language>
+        <language>ja-hira</language>
         <language>test-unexisting</language>
         <scope type="domain">example</scope>
         <description type="text/plain">LGR for Unit Tests</description>
