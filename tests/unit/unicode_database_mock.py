@@ -19,7 +19,7 @@ logger = logging.getLogger('unicode_database_mock')
 
 class PatternMock:
 
-    def __init__(self, pattern: re.Pattern):
+    def __init__(self, pattern):
         self.pattern = pattern
         for method in [member for member in [getattr(self.pattern, attr) for attr in dir(self.pattern)] if
                        inspect.ismethod(member)]:
