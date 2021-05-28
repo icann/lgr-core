@@ -1,5 +1,9 @@
 # Changelog for lgr-core
 
+## 4.0.1 (2021-05-28)
+### Fixes
+- Change IDN review empty summary result status
+
 ## 4.0.0 (2021-04-27)
 ### New features
 - Add IDN table review tool
