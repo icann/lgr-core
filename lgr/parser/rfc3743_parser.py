@@ -21,7 +21,7 @@ VERSION_RE = re.compile(r'Version\s+(?P<version_no>\d)\s+(?P<date>\d{8})\s*(?:#\
 # RFC3743 defines a code point without the "U+" notation,
 # however some files use the "U+" prefix.
 # Try to support both.
-UNICODE_CODEPOINT_RE = re.compile(r'(?:U\+)?(?P<codepoint>[0-9a-fA-F]{4,6})(\((?P<references>\d(,\d)*)\))?')
+UNICODE_CODEPOINT_RE = re.compile(r'(?P<sequence>((?:U\+)?(?P<codepoint>[0-9a-fA-F]{4,6}) ?)+)(\((?P<references>\d(,\d)*)\))?')
 
 
 class RFC3743Parser(LGRParser):
@@ -152,16 +152,27 @@ def parse_char(char):
     :return list[(list[int], list[str])]: List of tuple (code point as a list of int,
                                                          list of associated references).
     :raises ValueError if one of the code point is not a valid Unicode code point.
+
+    >>> parse_char('1234(1,2),5678(0)')
+    [([4660], ['1', '2']), ([22136], ['0'])]
+    >>> parse_char('U+1234(0)')
+    [([4660], ['0'])]
+    >>> parse_char('U+1234')
+    [([4660], [])]
+    >>> parse_char('U+0926 U+094D U+0917(1,2)')
+    [([2342, 2381, 2327], ['1', '2'])]
+    >>> parse_char('U+0926 U+094D U+0917')
+    [([2342, 2381, 2327], [])]
     """
     codepoints = []
     for match in UNICODE_CODEPOINT_RE.finditer(char):
-        codepoint = int(match.group('codepoint'), 16)
+        cp_or_sequence = [int(cp.replace('U+', ''), 16) for cp in match.group('sequence').split(' ')]
         references = match.group('references')
 
         ref_list = []
         if references is not None:
             ref_list = references.split(',')
 
-        codepoints.append(([codepoint], ref_list))
+        codepoints.append((cp_or_sequence, ref_list))
 
     return codepoints
