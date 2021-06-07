@@ -1,5 +1,9 @@
 # Changelog for lgr-core
 
+## 4.0.2 (2021-06-07)
+### Fixes
+- Fix RFCi 3743 parsing to handle sequences
+
 ## 4.0.1 (2021-05-28)
 ### Fixes
 - Change IDN review empty summary result status
