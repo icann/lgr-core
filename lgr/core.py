@@ -1203,16 +1203,15 @@ class LGR(object):
         Generate the "index label" of a given label.
 
         The "index label" is used to test for collisions between 2 labels.
-        It associates to a code point an index of the set formed by
-        the code point and its variants.
+        It associates to a code point an index of the set formed by the code point and its variants.
 
         For more details, see Section 8.5 of RFC7940.
 
         Pre-requires: Symmetric and transitive LGR.
 
-        :param label: The label to compute the disposition of,
-                      as a sequence of code points.
-        :return: The index label, as a list.
+        :param label: The label to compute the disposition of, as a sequence of code points.
+
+        :return: The index label, as a list and the index computed with minimum code point algorithm if required.
         :raises NotInLgr: If the label is not in the LGR
                           (does not pass preliminary eligibility testing).
         :raises RuleError: If rule is invalid.
@@ -1231,11 +1230,12 @@ class LGR(object):
         for char in chars:
             logger.debug('Char CP: %s', format_cp(char.cp))
             # Index: smallest id of the char and its variants
-            ids = [id(char)]
+            # FIXME: This index algorithm has some problems when dealing with sequences and should be fixed
+            ids = [char.as_index()]
             for var in char.get_variants():
                 var_char = self.repertoire.get_char(var.cp)
                 logger.debug('Variant CP: %r', var_char)
-                ids.append(id(var_char))
+                ids.append(var_char.as_index())
             logger.debug('List of variant ids: %s', ids)
 
             index_label.append(min(ids))

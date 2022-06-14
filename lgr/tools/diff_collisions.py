@@ -19,7 +19,27 @@ PRIMARY = 'Primary'
 VARIANT = 'Variant'
 
 
-def _generate_indexes(lgr, labels, tlds=None, keep=False, quiet=False):
+def _compute_indexes(lgr, label_list, is_tld=False):
+    for label in label_list:
+        label_cp = tuple([ord(c) for c in label])
+        try:
+            label_index = lgr.generate_index_label(label_cp)
+        except NotInLGR:
+            if is_tld:
+                continue
+            yield label, label_cp, 'NotInLGR'
+            continue
+
+        yield label, label_cp, label_index
+
+
+def _get_cached_indexes(index_list):
+    for label, label_index in index_list.items():
+        label_cp = tuple([ord(c) for c in label])
+        yield label, label_cp, label_index
+
+
+def _generate_indexes(lgr, labels, tlds=None, keep=False, quiet=False, cached_indexes=None):
     """
     Generate indexes based on labels provided in the list
 
@@ -28,6 +48,7 @@ def _generate_indexes(lgr, labels, tlds=None, keep=False, quiet=False):
     :param tlds: The list of TLDs
     :param keep: Do we keep labels without collision in the output
     :param quiet: If True, do not collect rule log.
+    :param cached_indexes: The list of indexes already computed
 
     :return: (label_indexes, not_in_lgr), with:
               - label_indexes: the dictionary containing the primary labels
@@ -39,37 +60,40 @@ def _generate_indexes(lgr, labels, tlds=None, keep=False, quiet=False):
     not_in_lgr = []
 
     # Get the indexes and variants for all labels
-    def get_indexes(label_list, is_tld=False):
-        for label in label_list:
-            label_cp = tuple([ord(c) for c in label])
-            try:
-                label_index = lgr.generate_index_label(label_cp)
-            except NotInLGR:
-                if is_tld:
-                    continue
-                not_in_lgr.append(label)
+    def _get_indexes(label_list, is_tld=False, is_cache=False):
+        generator = _get_cached_indexes
+        generator_args = [label_list]
+        if not is_cache:
+            generator = _compute_indexes
+            generator_args = [lgr, label_list, is_tld]
+
+        for l, l_cp, l_idx in generator(*generator_args):
+            if isinstance(l_idx, str):
+                if l_idx == 'NotInLGR':
+                    not_in_lgr.append(l)
                 continue
 
-            label_cp_out = format_cp(label_cp)
-            if label_index not in label_indexes:
-                label_indexes[label_index] = []
-            label_indexes[label_index].append({'label': label,
-                                               'bidi': "%s'%s'%s" % (LRI,
-                                                                     label,
-                                                                     PDI),
-                                               'cat': PRIMARY,
-                                               'cp': label_cp,
-                                               'cp_out': label_cp_out,
-                                               'disp': {label: '-'},
-                                               'rules': {label: '-'},
-                                               'action_idx': {label: '-'},
-                                               'tld': is_tld
-                                               })
+            label_cp_out = format_cp(l_cp)
+            if l_idx not in label_indexes:
+                label_indexes[l_idx] = []
+            label_indexes[l_idx].append({'label': l,
+                                         'bidi': "%s'%s'%s" % (LRI, l, PDI),
+                                         'cat': PRIMARY,
+                                         'cp': l_cp,
+                                         'cp_out': label_cp_out,
+                                         'disp': {l: '-'},
+                                         'rules': {l: '-'},
+                                         'action_idx': {l: '-'},
+                                         'tld': False,
+                                         'index': l_idx
+                                         })
 
-    get_indexes(labels)
+    _get_indexes(labels)
+    if cached_indexes:
+        _get_indexes(cached_indexes, is_cache=True)
     if tlds:
         # remove labels from tlds as we do not want duplicated in label_indexes lists
-        get_indexes(tlds - labels, is_tld=True)
+        _get_indexes(tlds - labels, is_tld=True)
 
     for (label_index, primaries) in deepcopy(label_indexes).items():
         # only get variants for collided labels (if not keep)
@@ -571,7 +595,7 @@ def basic_collision(lgr, labels_input, tlds_input, with_annotations=False):
             yield not_in_lgr + '\n'
 
 
-def get_collisions(lgr, labels_input, quiet=True):
+def get_collisions(lgr, labels_input, quiet=True, cached_indexes=None):
     """
     Get collisions index in a list of labels for a given LGR
 
@@ -585,7 +609,7 @@ def get_collisions(lgr, labels_input, quiet=True):
     for label, valid, error in read_labels(labels_input, lgr.unicode_database):
         if valid:
             labels.add(label)
-    label_indexes, _ = _generate_indexes(lgr, labels, keep=False, quiet=quiet)
+    label_indexes, _ = _generate_indexes(lgr, labels, keep=False, quiet=quiet, cached_indexes=cached_indexes)
     return label_indexes
 
 
