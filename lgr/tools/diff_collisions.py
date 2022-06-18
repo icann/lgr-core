@@ -357,10 +357,6 @@ def _write_simple_output(labels, tlds, label_indexes):
         if len(colliding_labels) > 1:
             for y in yield_collisions(colliding_labels, colliding_labels, "label"):
                 yield y
-        if len(colliding_tlds) > 1:
-            for y in yield_collisions(colliding_tlds, colliding_tlds, "TLD",
-                                      "\n (WARNING: this should not append, your TLD file may be corrupted)"):
-                yield y
 
         for y in yield_collisions(colliding_labels, colliding_tlds, "TLD"):
             yield y
