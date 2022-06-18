@@ -91,7 +91,8 @@ class RFC3743Parser(LGRParser):
                 continue
 
             # Split base character from variant(s)
-            char_variant = line.split(';')
+            no_comment = line.split('#', 1)[0].strip()
+            char_variant = no_comment.split(';')
             char = char_variant[0]
 
             try:
