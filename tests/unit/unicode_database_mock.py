@@ -52,6 +52,8 @@ class UnicodeDatabaseMock(UnicodeDatabase):
         raise NotImplementedError
 
     def get_prop_value(self, cp, prop_name, prop_type=U_LONG_PROPERTY_NAME):
+        if prop_name == 'General_Category':
+            return unicodedata.category(cp_to_ulabel(cp))
         raise NotImplementedError
 
     def is_combining_mark(self, cp):

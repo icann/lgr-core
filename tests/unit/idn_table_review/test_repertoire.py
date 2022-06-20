@@ -205,7 +205,11 @@ class Test(TestCase):
                 'result': 'MANUAL CHECK',
                 'remark': 'The code point only exists in the IDN Table but not in the reference LGR'
             }], key=lambda x: x['cp']),
-            'cp_in_sequences': []
+            'cp_in_sequences': [],
+            'not_in_ref': [{'category': 'Ll',
+                            'cp': (106,),
+                            'glyph': 'j',
+                            'name': 'LATIN SMALL LETTER J'}],
         })
 
     def test_repertoire_note_rule(self):
@@ -223,7 +227,8 @@ class Test(TestCase):
                 'result': 'NOTE',
                 'remark': 'Rules not required in Reference LGR'
             }], key=lambda x: x['cp']),
-            'cp_in_sequences': []
+            'cp_in_sequences': [],
+            'not_in_ref': []
         })
 
     def test_repertoire_note_tag(self):
@@ -241,7 +246,8 @@ class Test(TestCase):
                 'result': 'NOTE',
                 'remark': 'Tags not required in Reference LGR'
             }], key=lambda x: x['cp']),
-            'cp_in_sequences': []
+            'cp_in_sequences': [],
+            'not_in_ref': []
         })
 
     def test_repertoire_notes(self):
@@ -259,7 +265,8 @@ class Test(TestCase):
                 'result': 'NOTE',
                 'remark': 'Tags not required in Reference LGR\nRules not required in Reference LGR'
             }], key=lambda x: x['cp']),
-            'cp_in_sequences': []
+            'cp_in_sequences': [],
+            'not_in_ref': []
         })
 
     def test_repertoire_review_rules(self):
@@ -277,7 +284,8 @@ class Test(TestCase):
                 'result': 'REVIEW',
                 'remark': 'Rules do not match'
             }], key=lambda x: x['cp']),
-            'cp_in_sequences': []
+            'cp_in_sequences': [],
+            'not_in_ref': []
         })
 
     def test_repertoire_review_rules_when_not_when(self):
@@ -295,7 +303,8 @@ class Test(TestCase):
                 'result': 'REVIEW',
                 'remark': 'Rules do not match'
             }], key=lambda x: x['cp']),
-            'cp_in_sequences': []
+            'cp_in_sequences': [],
+            'not_in_ref': []
         })
 
     def test_repertoire_review_tag_missing(self):
@@ -313,7 +322,8 @@ class Test(TestCase):
                 'result': 'REVIEW',
                 'remark': 'Tags do not match'
             }], key=lambda x: x['cp']),
-            'cp_in_sequences': []
+            'cp_in_sequences': [],
+            'not_in_ref': []
         })
 
     def test_repertoire_review_tag(self):
@@ -331,7 +341,8 @@ class Test(TestCase):
                 'result': 'REVIEW',
                 'remark': 'Tags do not match'
             }], key=lambda x: x['cp']),
-            'cp_in_sequences': []
+            'cp_in_sequences': [],
+            'not_in_ref': []
         })
 
     def test_repertoire_reviews_and_note(self):
@@ -349,7 +360,8 @@ class Test(TestCase):
                 'result': 'REVIEW',
                 'remark': 'Tags do not match\nRules do not match'
             }], key=lambda x: x['cp']),
-            'cp_in_sequences': []
+            'cp_in_sequences': [],
+            'not_in_ref': []
         })
 
     def test_repertoire_subset(self):
@@ -367,7 +379,8 @@ class Test(TestCase):
                 'result': 'SUBSET',
                 'remark': 'Match as a subset of repertoire'
             }], key=lambda x: x['cp']),
-            'cp_in_sequences': []
+            'cp_in_sequences': [],
+            'not_in_ref': []
         })
 
     def test_repertoire_ignore_script_tag(self):
@@ -377,7 +390,8 @@ class Test(TestCase):
 
         self.assertDictEqual(result, {
             'reports': sorted(self.matching_cp, key=lambda x: x['cp']),
-            'cp_in_sequences': []
+            'cp_in_sequences': [],
+            'not_in_ref': []
         })
 
     def test_repertoire_idn_cp_in_ref_sequence(self):
@@ -402,5 +416,9 @@ class Test(TestCase):
                 'ref_cp': (111, 101),
                 'ref_glyph': 'oe',
                 'ref_name': 'LATIN SMALL LETTER O LATIN SMALL LETTER E'
-            }]
+            }],
+            'not_in_ref': [{'category': 'Ll',
+                            'cp': (111,),
+                            'glyph': 'o',
+                            'name': 'LATIN SMALL LETTER O'}],
         })

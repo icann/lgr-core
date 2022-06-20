@@ -116,13 +116,22 @@ def generate_repertoire_report(idn_table: LGR, reference_lgr: LGR) -> Dict:
 
     unidb = idn_table.unicode_database or reference_lgr.unicode_database
     reports = []
+    only_in_idn_table = []
     for cp in sorted(idn_table_repertoire.keys() | reference_lgr_repertoire.keys()):
         idn_char = idn_table_repertoire.get(cp)
         ref_char = reference_lgr_repertoire.get(cp)
         report = RepertoireReport(idn_char, ref_char, set(reference_lgr.rules_lookup.keys()), unidb)
+        if not report.reference_lgr_char:
+            only_in_idn_table.append({
+                'cp': report.idn_table_char.cp,
+                'glyph': str(report.idn_table_char),
+                'name': " ".join(unidb.get_char_name(cp) for cp in report.idn_table_char.cp),
+                'category': unidb.get_prop_value(report.idn_table_char.cp, 'General_Category')
+            })
         reports.append(report.to_dict())
 
     return {
         'reports': reports,
-        'cp_in_sequences': get_idn_cp_in_ref_seq(idn_table, reference_lgr, unidb)
+        'cp_in_sequences': get_idn_cp_in_ref_seq(idn_table, reference_lgr, unidb),
+        'not_in_ref': only_in_idn_table
     }
