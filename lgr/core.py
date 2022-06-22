@@ -280,7 +280,11 @@ class LGR(object):
         """
         logger.debug("Add cp '%s' to LGR '%s'", cp_or_sequence, self)
 
-        cp_or_sequence = self._check_convert_cp(cp_or_sequence)
+        try:
+            cp_or_sequence = self._check_convert_cp(cp_or_sequence)
+        except CharInvalidIdnaProperty:
+            if not force:
+                raise
 
         if (not force) and (when is not None) and (not_when is not None):
             logger.error("Cannot add code point '%s' with both 'when' "
