@@ -686,11 +686,13 @@ class Test(TestCase):
             'additional': [{
                 'cp': (112,),
                 'glyph': 'p',
-                'name': 'LATIN SMALL LETTER P'
+                'name': 'LATIN SMALL LETTER P',
+                'category': 'Ll'
             }, {
                 'cp': (113,),
                 'glyph': 'q',
-                'name': 'LATIN SMALL LETTER Q'
+                'name': 'LATIN SMALL LETTER Q',
+                'category': 'Ll'
             }]
         })
 

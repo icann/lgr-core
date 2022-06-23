@@ -465,6 +465,7 @@ def get_additional_codepoints(idn_table, idn_table_variant_sets, reference_lgr) 
         'cp': char.cp,
         'glyph': str(char),
         'name': " ".join(unidb.get_char_name(cp) for cp in char.cp),
+        'category': unidb.get_prop_value(char.cp, 'General_Category')
     } for char in idn_table.repertoire if
         char.cp not in variants_flat and char not in reference_lgr.repertoire]
 
