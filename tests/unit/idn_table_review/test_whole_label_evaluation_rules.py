@@ -51,6 +51,18 @@ class Test(TestCase):
         'applicable': False,
         'exists': None
     }
+    general_rules_japanese_contextj = {
+        'applicable': False,
+        'exists': None
+    }
+    general_rules_arabic_no_end = {
+        'applicable': False,
+        'exists': None
+    }
+    general_rules_kannada_script = {
+        'applicable': False,
+        'exists': None
+    }
 
     def setUp(self) -> None:
         super().setUp()
@@ -78,6 +90,8 @@ class Test(TestCase):
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -100,6 +114,8 @@ class Test(TestCase):
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -123,6 +139,8 @@ class Test(TestCase):
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -145,6 +163,8 @@ class Test(TestCase):
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -167,6 +187,8 @@ class Test(TestCase):
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -195,6 +217,8 @@ class Test(TestCase):
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -221,6 +245,8 @@ class Test(TestCase):
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -244,6 +270,8 @@ class Test(TestCase):
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -269,6 +297,8 @@ class Test(TestCase):
                 },
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -294,6 +324,8 @@ class Test(TestCase):
                 },
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -313,6 +345,8 @@ class Test(TestCase):
                     'exists': False
                 },
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -338,6 +372,8 @@ class Test(TestCase):
                     'exists': True
                 },
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -375,6 +411,8 @@ class Test(TestCase):
                     'applicable': True,
                     'exists': True
                 },
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -412,11 +450,14 @@ class Test(TestCase):
                     'applicable': True,
                     'exists': False
                 },
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
     def test_wle_missing_in_idn_table_not_applied_to_cp(self):
-        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_missing_in_idn_table_not_applied_to_cp.xml',
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules',
+                       'wle_missing_in_idn_table_not_applied_to_cp.xml',
                        unidb=self.unidb)
 
         result = generate_whole_label_evaluation_rules_report(idn, self.ref)
@@ -435,5 +476,7 @@ class Test(TestCase):
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
