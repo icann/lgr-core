@@ -34,16 +34,17 @@ class RFC3743Parser(LGRParser):
         # No validation of document done for now
         return ""
 
-    def parse_document(self):
+    def parse_document(self, force=False):
         if not self.filename and isinstance(self.source, str):
             self.filename = os.path.basename(self.source)
 
-        return super().parse_document()
+        return super().parse_document(force=force)
 
-    def _parse_doc(self, rule_file):
+    def _parse_doc(self, rule_file, force=False):
         """
         Actual parsing of document.
 
+        :param force:
         :param rule_file: Content of the rule, as a file-like object.
         """
         line_num = 0
@@ -97,7 +98,7 @@ class RFC3743Parser(LGRParser):
 
             try:
                 [(codepoints, references)] = parse_char(char)
-                self._lgr.add_cp(codepoints, ref=references)
+                self._lgr.add_cp(codepoints, ref=references, force=force)
             except ValueError:
                 logger.error("Invalid character '%s' at line %d", char, line_num)
             except LGRException as exc:
@@ -116,14 +117,15 @@ class RFC3743Parser(LGRParser):
                     self.insert_variant(line_num,
                                         codepoints,
                                         preferred_variants,
-                                        var_type)
+                                        var_type,
+                                        force=force)
 
             if len(char_variant) > 2:
                 variants = char_variant[2].strip()
                 if len(variants) > 0 and variants[0] != '#':
-                    self.insert_variant(line_num, codepoints, variants)
+                    self.insert_variant(line_num, codepoints, variants, force=force)
 
-    def insert_variant(self, line_num, codepoints, var, var_type=None):
+    def insert_variant(self, line_num, codepoints, var, var_type=None, force=False):
         try:
             variants = parse_char(var)
         except ValueError:
@@ -133,7 +135,8 @@ class RFC3743Parser(LGRParser):
         for (var_codepoints, references) in variants:
             try:
                 self._lgr.add_variant(codepoints, var_codepoints,
-                                      ref=references, variant_type=var_type)
+                                      ref=references, variant_type=var_type,
+                                      force=force)
             except LGRException as exc:
                 logger.error("Cannot add variant '%s' to code point '%s' at line %d: %s",
                              format_cp(var_codepoints),

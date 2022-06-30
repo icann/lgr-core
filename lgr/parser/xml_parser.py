@@ -158,7 +158,7 @@ class XMLParser(LGRParser):
             self.source.seek(0)
         return unicode_version
 
-    def parse_document(self):
+    def parse_document(self, force=False):
         logger.debug('Start parsing of file: %s', self.filename)
 
         # Keep content intact, so do not strip CDATA section

@@ -63,7 +63,7 @@ class LGRParser(object):
         """
         raise NotImplementedError()
 
-    def parse_document(self):
+    def parse_document(self, force=False):
         """
         Actual parsing of the LGR document specified in constructor.
 
@@ -74,12 +74,12 @@ class LGRParser(object):
         logger.debug('Start parsing of file: %s', self.filename)
 
         if hasattr(self.source, "read"):
-            self._parse_doc(self.source)
+            self._parse_doc(self.source, force=force)
         else:
             with io.open(self.source, 'r', encoding='utf-8') as rule_file:
-                self._parse_doc(rule_file)
+                self._parse_doc(rule_file, force=force)
 
         return self._lgr
 
-    def _parse_doc(self, rule_file):
+    def _parse_doc(self, rule_file, force=False):
         raise NotImplementedError()

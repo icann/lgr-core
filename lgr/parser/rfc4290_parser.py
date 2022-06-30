@@ -26,16 +26,17 @@ class RFC4290Parser(LGRParser):
         # No validation of document done for now
         return True
 
-    def parse_document(self):
+    def parse_document(self, force=False):
         if not self.filename and isinstance(self.source, str):
             self.filename = os.path.basename(self.source)
 
-        return super().parse_document()
+        return super().parse_document(force=force)
 
-    def _parse_doc(self, rule_file):
+    def _parse_doc(self, rule_file, force=False):
         """
         Actual parsing of document.
     
+        :param force:
         :param rule_file: Content of the rule, as a file-like object.
         """
         line_num = 0

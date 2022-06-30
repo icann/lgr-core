@@ -45,6 +45,8 @@ class HeuristicParser(LGRParser):
         if self._is_lgr(first_line):
             self.lgr_parser = XMLParser(self.source, self.filename)
         else:
+            if hasattr(rule_file, "seek"):
+                rule_file.seek(0)
             self._check_rfc_format(rule_file, is_str)
 
         if not self.lgr_parser:
@@ -87,15 +89,16 @@ class HeuristicParser(LGRParser):
             # Note: this is because we accept RFC3743 without semicolon on code point line
             self.lgr_parser = RFC4290Parser(get_source(), self.filename)
 
-    def _parse_doc(self, rule_file):
+    def _parse_doc(self, rule_file, force=False):
         """
         Actual parsing of document.
 
+        :param force:
         :param rule_file: Content of the rule, as a file-like object.
         """
         self._find_parser(rule_file)
 
-        self._lgr = self.lgr_parser.parse_document()
+        self._lgr = self.lgr_parser.parse_document(force=force)
 
     def _is_lgr(self, first_line):
         return '<?xml' in first_line or '<lgr' in first_line or str(self.filename).endswith('.xml')

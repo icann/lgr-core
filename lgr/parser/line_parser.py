@@ -28,10 +28,11 @@ class LineParser(LGRParser):
         # No validation for now
         return True
 
-    def _parse_doc(self, rule_file):
+    def _parse_doc(self, rule_file, force=False):
         """
         Actual parsing of document.
 
+        :param force:
         :param rule_file: Content of the rule, as a file-like object.
         """
         line_num = 0
