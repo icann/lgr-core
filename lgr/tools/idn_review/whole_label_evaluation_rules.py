@@ -448,8 +448,8 @@ class WholeLabelEvaluationRulesCheck:
         return [{
             'cp': char.cp,
             'glyph': str(char),
-            'name': " ".join(self.idn_table.unicode_database.get_char_name(cp) for cp in char.cp),
-            'category': unidb.get_prop_value(char.cp, 'General_Category')
+            'name': ' '.join(self.idn_table.unicode_database.get_char_name(cp) for cp in char.cp),
+            'category': ' '.join(unidb.get_prop_value(cp, 'General_Category') for cp in char.cp)
         } for char in sorted(self.idn_table_char_without_rule, key=lambda x: x.cp)]
 
 
