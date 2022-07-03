@@ -417,7 +417,10 @@ class VariantSetsReport:
             lgr = LGR()
             for cp in self.idn_table_variant_set:
                 lgr.add_cp(cp)
-                char: Char = self.idn_repertoire.get_char(cp)
+                try:
+                    char: Char = self.idn_repertoire.get_char(cp)
+                except NotInLGR:
+                    return False, False
                 for var in char.get_variants():
                     try:
                         lgr.add_variant(cp, var.cp)
@@ -471,8 +474,8 @@ def get_additional_codepoints(idn_table, idn_table_variant_sets, reference_lgr) 
 
 
 def generate_variant_sets_report(idn_table: LGR, reference_lgr: LGR) -> Dict:
-    idn_table_variant_sets = {s[0]: s for s in idn_table.repertoire.get_variant_sets()}
-    reference_lgr_variant_sets = {s[0]: s for s in reference_lgr.repertoire.get_variant_sets()}
+    idn_table_variant_sets = {s[0]: s for s in idn_table.repertoire.get_variant_sets(force=True)}
+    reference_lgr_variant_sets = {s[0]: s for s in reference_lgr.repertoire.get_variant_sets(force=True)}
 
     # if some variant sets from IDN table or Ref. LGR are included respectively in Ref. LGR or IDN table but does not
     # have the same index, try to update the indexes to make them match

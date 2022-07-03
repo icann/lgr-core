@@ -778,15 +778,14 @@ class Repertoire(object):
         char = self.get_char(cp_or_sequence)
         return char.get_variant(var_cp)
 
-    def get_variant_sets(self):
+    def get_variant_sets(self, force=False):
         """
         Return the list of variants set contained in the repertoire.
-
-        This function assumes the repertoire is symmetric and transitive.
 
         Note: This function is very stupid and NOT optimised in complexity
         nor memory consumption.
 
+        :param force: Include variant sets which are not symmetric or transitive.
         :returns: List of variant set, with a variant set being
                   a list of code points included in the set.
         """
@@ -802,6 +801,8 @@ class Repertoire(object):
                 try:
                     reverse_char = self.get_char(variant.cp)
                 except NotInLGR:
+                    if force:
+                        dfs(CharBase(variant.cp), visited)
                     # Ignore invalid LGR
                     continue
                 dfs(reverse_char, visited)
