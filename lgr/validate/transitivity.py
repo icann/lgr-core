@@ -24,7 +24,7 @@ def check_transitivity(lgr, options):
 
     Note: This test assumes the LGR is symmetric.
 
-    :param LGR lgr: The LGR to check.
+    :param lgr: The LGR to check.
     :param options: Dictionary of options to the validation function - unused.
     :return True is LGR transitivity is achieved, False otherwise.
     """

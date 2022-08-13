@@ -107,14 +107,7 @@ class XMLParser(LGRParser):
                       'remove_comments': True}
 
     def __init__(self, *args, **kwargs):
-        if 'force_mode' in kwargs:
-            force_mode = kwargs['force_mode']
-            del kwargs['force_mode']
-        else:
-            force_mode = True
-
         super(XMLParser, self).__init__(*args, **kwargs)
-        self.force_mode = force_mode
         self.rfc7940_checks = LGRFormatTestResults()
 
     def validate_document(self, rng_schema_path):
@@ -158,7 +151,7 @@ class XMLParser(LGRParser):
             self.source.seek(0)
         return unicode_version
 
-    def parse_document(self, force=False):
+    def parse_document(self):
         logger.debug('Start parsing of file: %s', self.filename)
 
         # Keep content intact, so do not strip CDATA section
@@ -184,14 +177,10 @@ class XMLParser(LGRParser):
         metadata = Metadata(self.rfc7940_checks)
         reference_manager = ReferenceManager()
         MAPPER = {
-            DATE_TAG: lambda d: metadata.set_date(d,
-                                                  force=self.force_mode),
-            VALIDITY_START_TAG: lambda d: metadata.set_validity_start(d,
-                                                                      force=self.force_mode),
-            VALIDITY_END_TAG: lambda d: metadata.set_validity_end(d,
-                                                                  force=self.force_mode),
-            UNICODE_VERSION_TAG: lambda d: metadata.set_unicode_version(d,
-                                                                        force=self.force_mode),
+            DATE_TAG: lambda d: metadata.set_date(d, force=self.force),
+            VALIDITY_START_TAG: lambda d: metadata.set_validity_start(d, force=self.force),
+            VALIDITY_END_TAG: lambda d: metadata.set_validity_end(d, force=self.force),
+            UNICODE_VERSION_TAG: lambda d: metadata.set_unicode_version(d, force=self.force),
         }
         unicode_version_tag_found = False
         for child in elem:
@@ -205,7 +194,7 @@ class XMLParser(LGRParser):
                 metadata.version = Version(child.text,
                                            child.get('comment', None))
             elif tag == LANGUAGE_TAG:
-                metadata.add_language(child.text, force=self.force_mode)
+                metadata.add_language(child.text, force=self.force)
             elif tag == SCOPE_TAG:
                 metadata.scopes.append(
                     Scope(child.text, child.get('type', None)))
@@ -236,7 +225,8 @@ class XMLParser(LGRParser):
         self._lgr = LGR(name=self.filename,
                         metadata=metadata,
                         reference_manager=reference_manager,
-                        unicode_database=self._unicode_database)
+                        unicode_database=self._unicode_database,
+                        allow_invalid_property=self.allow_invalid_property)
 
     def _process_data(self, elem):
         """
@@ -275,13 +265,13 @@ class XMLParser(LGRParser):
                     self._lgr.add_cp(codepoint, comment=comment,
                                      ref=ref, tag=tag,
                                      when=when, not_when=not_when,
-                                     force=self.force_mode)
+                                     force=self.force)
                 except LGRException as exc:
                     logger.error("Cannot add code point '%s': %s",
                                  format_cp(codepoint), exc)
                     self.rfc7940_checks.error('parse_xml')
                     self.rfc7940_checks.error('codepoint_valid')
-                    if not self.force_mode:
+                    if not self.force:
                         raise
 
                 # Variants of char
@@ -302,7 +292,7 @@ class XMLParser(LGRParser):
                                               when=when, not_when=not_when,
                                               comment=comment,
                                               ref=ref,
-                                              force=self.force_mode)
+                                              force=self.force)
                     except LGRException as exc:
                         logger.error("Cannot add variant '%s' "
                                      "to code point '%s': %s",
@@ -311,7 +301,7 @@ class XMLParser(LGRParser):
                                      exc)
                         self.rfc7940_checks.error('parse_xml')
                         self.rfc7940_checks.error('codepoint_valid')
-                        if not self.force_mode:
+                        if not self.force:
                             raise
             elif child.tag == RANGE_TAG:
                 first_cp = int(child.get('first-cp'), 16)
@@ -321,7 +311,7 @@ class XMLParser(LGRParser):
                     self._lgr.add_range(first_cp, last_cp, comment=comment,
                                         ref=ref, tag=tag,
                                         when=when, not_when=not_when,
-                                        force=self.force_mode)
+                                        force=self.force)
                 except LGRException as exc:
                     self.rfc7940_checks.error('parse_xml')
                     self.rfc7940_checks.error('codepoint_valid')
@@ -329,7 +319,7 @@ class XMLParser(LGRParser):
                                  format_cp(first_cp),
                                  format_cp(last_cp),
                                  exc)
-                    if not self.force_mode:
+                    if not self.force:
                         raise
 
             child.clear()
@@ -345,17 +335,17 @@ class XMLParser(LGRParser):
         for child in elem:
             if child.tag in COMBINATOR_TAGS + (CLASS_TAG, ):
                 cls = self._parse_class(child)
-                self._lgr.add_class(cls, force=self.force_mode)
+                self._lgr.add_class(cls, force=self.force)
                 child = drop_ns(child)
                 self._lgr.classes_xml.append(etree.tostring(child, encoding=text_type))
             elif child.tag == RULE_TAG:
                 rule = self._parse_rule(child)
-                self._lgr.add_rule(rule, force=self.force_mode)
+                self._lgr.add_rule(rule, force=self.force)
                 child = drop_ns(child)
                 self._lgr.rules_xml.append(etree.tostring(child, encoding=text_type))
             elif child.tag == ACTION_TAG:
                 action = self._parse_action(child)
-                self._lgr.add_action(action, force=self.force_mode)
+                self._lgr.add_action(action, force=self.force)
                 child = drop_ns(child)
                 self._lgr.actions_xml.append(etree.tostring(child, encoding=text_type))
             else:

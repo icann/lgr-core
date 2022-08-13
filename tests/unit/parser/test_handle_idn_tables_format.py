@@ -58,8 +58,8 @@ class Test(TestCase):
         self.assertListEqual([], [c.cp for c in lgr.get_variants((0x32,))])
 
     def test_rfc3743_1cp_semicolon_ref(self):
-        parser = self.load_parser('3743-1cp-semicolon-ref.txt')
-        lgr: LGR = parser.parse_document(force=True)
+        parser = self.load_parser('3743-1cp-semicolon-ref.txt', force=True)
+        lgr: LGR = parser.parse_document()
         self.assertListEqual([(0x31,)], [c.cp for c in lgr.repertoire])
         char: Char = lgr.get_char((0x31,))
         # self.assertListEqual([0], char.references)  # XXX ref is not set as not defined in IDN table
@@ -72,21 +72,21 @@ class Test(TestCase):
         self.assertListEqual([(0x39,)], [c.cp for c in lgr.get_variants((0x38,))])
 
     def test_rfc3743_2cp_1line_refs(self):
-        parser = self.load_parser('3743-2cp-1line-refs.txt')
-        lgr: LGR = parser.parse_document(force=True)
+        parser = self.load_parser('3743-2cp-1line-refs.txt', force=True)
+        lgr: LGR = parser.parse_document()
         self.assertListEqual([(0x38,)], [c.cp for c in lgr.repertoire])
         self.assertListEqual([(0x39,)], [c.cp for c in lgr.get_variants((0x38,))])
 
     def test_rfc3743_2vars_ref(self):
-        parser = self.load_parser('3743-2vars-ref.txt')
-        lgr: LGR = parser.parse_document(force=True)
+        parser = self.load_parser('3743-2vars-ref.txt', force=True)
+        lgr: LGR = parser.parse_document()
         self.assertListEqual([(0x3447,), (0x3473,)], [c.cp for c in lgr.repertoire])
         self.assertListEqual([(0x3447,), (0x3473,)], [c.cp for c in lgr.get_variants((0x3447,))])
         self.assertListEqual([(0x3447,)], [c.cp for c in lgr.get_variants((0x3473,))])
 
     def test_rfc3743_missing_var_ref(self):
-        parser = self.load_parser('3743-missing-var-ref.txt')
-        lgr: LGR = parser.parse_document(force=True)
+        parser = self.load_parser('3743-missing-var-ref.txt', force=True)
+        lgr: LGR = parser.parse_document()
         self.assertListEqual([(0x3447,)], [c.cp for c in lgr.repertoire])
         self.assertListEqual([(0x3447,), (0x3473,)], [c.cp for c in lgr.get_variants((0x3447,))])
 
@@ -114,9 +114,10 @@ class Test(TestCase):
         self.assertListEqual([(0x2237,)], [c.cp for c in lgr.repertoire])
         self.assertListEqual([(0x003A, 0x003A)], [c.cp for c in lgr.get_variants((0x2237,))])
 
-    def load_parser(self, name, unidb=None):
+    def load_parser(self, name, unidb=None, force=False):
         parser = HeuristicParser(
-            os.path.join(os.path.dirname(__file__), '..', '..', 'inputs', 'parser', name))
+            os.path.join(os.path.dirname(__file__), '..', '..', 'inputs', 'parser', name),
+            force=force)
         if unidb:
             parser.unicode_database = unidb
         return parser

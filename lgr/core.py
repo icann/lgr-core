@@ -80,7 +80,8 @@ class LGR(object):
                  name='New File',
                  metadata=None,
                  reference_manager=None,
-                 unicode_database=None):
+                 unicode_database=None,
+                 allow_invalid_property=False):
         """
         Create an LGR object.
 
@@ -91,6 +92,8 @@ class LGR(object):
                                                  If no database is used,
                                                  all Unicode-related checks
                                                  are skipped.
+        :param allow_invalid_property: Whether an exception should be raised when cp_or_sequence is or contains an
+                                       invalid IDNA2008 property
         """
         self.name = name or 'New File'
 
@@ -102,6 +105,8 @@ class LGR(object):
         self.repertoire = Repertoire()
 
         self._unicode_database = unicode_database
+
+        self.raise_on_invalid_property = not allow_invalid_property
 
         # Used to store types of variants used.
         # Not updated on variant deletion
@@ -280,12 +285,7 @@ class LGR(object):
         """
         logger.debug("Add cp '%s' to LGR '%s'", cp_or_sequence, self)
 
-        try:
-            cp_or_sequence = self._check_convert_cp(cp_or_sequence)
-        except CharInvalidIdnaProperty:
-            if not force:
-                raise
-
+        cp_or_sequence = self._check_convert_cp(cp_or_sequence)
         if (not force) and (when is not None) and (not_when is not None):
             logger.error("Cannot add code point '%s' with both 'when' "
                          "and 'not-when' attributes", format_cp(cp_or_sequence))
@@ -434,8 +434,7 @@ class LGR(object):
         :param override_repertoire: If True, insert code point into LGR
                                     even if the code point is not in
                                     the validating repertoire.
-        :param force: If True, insert the code point in the LGR
-                      the best way possible.
+        :param force: If True, insert the code point in the LGR the best way possible.
                       This implies override_repertoire=True.
         :raises LGRApiInvalidParameter: If first_cp > last_cp.
         :raises NotInRepertoire: If one of the code point in the range
@@ -483,7 +482,9 @@ class LGR(object):
                     codepoints.append(cp)
             elif isinstance(status, CharInvalidIdnaProperty):
                 logger.error("CP '%s' is not IDNA valid", format_cp(cp))
-                if not force:
+                if not self.raise_on_invalid_property:
+                    codepoints.append(cp)
+                elif not force:
                     raise status
             elif isinstance(status, CharAlreadyExists):
                 logger.error("CP '%s' is already present in repertoire",
@@ -647,8 +648,7 @@ class LGR(object):
         :param override_repertoire: If True, insert code point into LGR
                                     even if the code point is not in
                                     the validating repertoire.
-        :param force: If True, insert the variant in the LGR
-                      the best way possible.
+        :param force: If True, insert the variant in the LGR the best way possible.
                       This implies override_repertoire=True.
         :raises LGRApiInvalidParameter: If cp_or_sequence is empty list,
                                         or non-supported input type.
@@ -889,12 +889,17 @@ class LGR(object):
         for cp in range(first_cp, last_cp + 1):
 
             # Test validity of code point (IDNA)
+            keep_raise = self.raise_on_invalid_property
             try:
+                # we need the method to raise exception in that case
+                self.raise_on_invalid_property = True
                 # No need to force since it is the aim of this function
                 cp_ = self._check_convert_cp(cp)
             except CharInvalidIdnaProperty as invalid:
                 result.append((cp, invalid))
                 continue
+            finally:
+                self.raise_on_invalid_property = keep_raise
 
             # Test validity of code point (reference repertoire)
             if validating_repertoire is not None:
@@ -1810,7 +1815,8 @@ class LGR(object):
                 if idna_prop in ['UNASSIGNED', 'DISALLOWED']:
                     logger.error("Code point %s is not IDNA-valid",
                                  format_cp(cp))
-                    raise CharInvalidIdnaProperty(cp)
+                    if self.raise_on_invalid_property:
+                        raise CharInvalidIdnaProperty(cp)
             in_script, _ = self.cp_in_script(cp_or_sequence)
             if assert_in_script:
                 raise CharNotInScript(cp_or_sequence)

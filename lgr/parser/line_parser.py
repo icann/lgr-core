@@ -7,7 +7,6 @@ import logging
 import io
 import re
 
-from lgr.core import LGR
 from lgr.exceptions import LGRException
 from lgr.utils import format_cp
 from lgr.parser.parser import LGRParser
@@ -24,15 +23,14 @@ class LineParser(LGRParser):
         # No Unicode version defined for now
         return ""
 
-    def validate_document(self, schema):
+    def validate_document(self, schema=None):
         # No validation for now
         return True
 
-    def _parse_doc(self, rule_file, force=False):
+    def _parse_doc(self, rule_file):
         """
         Actual parsing of document.
 
-        :param force:
         :param rule_file: Content of the rule, as a file-like object.
         """
         line_num = 0

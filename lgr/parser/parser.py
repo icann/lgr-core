@@ -16,8 +16,10 @@ class LGRParser(object):
     This class is intended to define a base class to be inherited by actual parser classses.
     """
 
-    def __init__(self, source, filename=None):
+    def __init__(self, source, filename=None, force=True, allow_invalid_property=False):
         self.source = source
+        self.force = force
+        self.allow_invalid_property = allow_invalid_property
 
         if not filename and isinstance(self.source, str):
             self.filename = os.path.basename(self.source)
@@ -63,23 +65,23 @@ class LGRParser(object):
         """
         raise NotImplementedError()
 
-    def parse_document(self, force=False):
+    def parse_document(self):
         """
         Actual parsing of the LGR document specified in constructor.
 
         :return: The LGR structure.
         """
-        self._lgr = LGR(name=self.filename)
+        self._lgr = LGR(name=self.filename, allow_invalid_property=self.allow_invalid_property)
 
         logger.debug('Start parsing of file: %s', self.filename)
 
         if hasattr(self.source, "read"):
-            self._parse_doc(self.source, force=force)
+            self._parse_doc(self.source)
         else:
             with io.open(self.source, 'r', encoding='utf-8') as rule_file:
-                self._parse_doc(rule_file, force=force)
+                self._parse_doc(rule_file)
 
         return self._lgr
 
-    def _parse_doc(self, rule_file, force=False):
+    def _parse_doc(self, rule_file):
         raise NotImplementedError()

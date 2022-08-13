@@ -26,17 +26,16 @@ class RFC4290Parser(LGRParser):
         # No validation of document done for now
         return True
 
-    def parse_document(self, force=False):
+    def parse_document(self):
         if not self.filename and isinstance(self.source, str):
             self.filename = os.path.basename(self.source)
 
-        return super().parse_document(force=force)
+        return super().parse_document()
 
-    def _parse_doc(self, rule_file, force=False):
+    def _parse_doc(self, rule_file):
         """
         Actual parsing of document.
     
-        :param force:
         :param rule_file: Content of the rule, as a file-like object.
         """
         line_num = 0
@@ -58,7 +57,7 @@ class RFC4290Parser(LGRParser):
 
             try:
                 codepoints = parse_char(char)
-                self._lgr.add_cp(codepoints)
+                self._lgr.add_cp(codepoints, force=self.force)
             except ValueError:
                 logger.error("Invalid character '%s' at line %d", char,
                              line_num)
@@ -75,7 +74,7 @@ class RFC4290Parser(LGRParser):
                 for var in variants:
                     try:
                         var_codepoints = parse_char(var)
-                        self._lgr.add_variant(codepoints, var_codepoints)
+                        self._lgr.add_variant(codepoints, var_codepoints, force=self.force)
                     except ValueError:
                         logger.error("Invalid variant '%s' at line %d", var,
                                      line_num)
