@@ -45,8 +45,8 @@ class UnicodeDatabaseMock(UnicodeDatabase):
         raise NotImplementedError
 
     def get_script(self, cp, alpha4=False):
-        # TODO
-        return 'Latn'
+        from tests.unit.unidb_get_script_mock import script
+        return script(cp)
 
     def get_script_extensions(self, cp, alpha4=False):
         raise NotImplementedError
