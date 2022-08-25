@@ -1195,7 +1195,7 @@ class LGR(object):
                                        in label_dispositions])
         return summary, label_dispositions
 
-    def estimate_variant_number(self, label):
+    def estimate_variant_number(self, label, hide_mixed_script_variants=False):
         """
         Given a label, return the estimated number of variants.
 
@@ -1203,12 +1203,20 @@ class LGR(object):
 
         :param label: The label to compute the disposition of,
                       as a sequence of code points.
+        :param hide_mixed_script_variants: Whether we count mixed scripts variants.
         :return: Estimated number of generated variants.
         """
         (_, _, _, chars) = self._test_preliminary_eligibility(label, generate_chars=True)
         variant_number = 1
-        for char in chars:
-            variant_number *= len(list(char.get_variants())) + 1  # Take into account original code point
+        if hide_mixed_script_variants:
+            mixed_script_filter = MixedScriptsVariantFilter(label, unidb=self._unicode_database)
+            for char in chars:
+                variant_number *= len(
+                    [v for v in char.get_variants() if mixed_script_filter.cp_in_scripts(v.cp)]
+                ) + 1  # Take into account original code point
+        else:
+            for char in chars:
+                variant_number *= len(list(char.get_variants())) + 1  # Take into account original code point
         return variant_number
 
     def generate_index_label(self, label):
@@ -1541,7 +1549,7 @@ class LGR(object):
     def _generate_label_variants(self, label,
                                  orig_label=None, label_prefix=None,
                                  has_variant=False,
-                                 scripts=None,
+                                 mixed_script_filter=None,
                                  hide_mixed_script_variants=False):
         """
         Generate a list of all the variants for a given label.
@@ -1560,6 +1568,7 @@ class LGR(object):
         :param label_prefix: The prefix of the label (used for recursion).
         :param has_variant: True if the prefix has at least one variant
                             (used for recursion).
+        :param mixed_script_filter: Filter for mixed script (used for recursion).
         :param hide_mixed_script_variants: Whether we hide mixed scripts variants.
         :return: A generator of (variant_cp, variant_disp, only_variants),
                  with:
@@ -1588,10 +1597,8 @@ class LGR(object):
             rule_logger.debug("Empty label")
             return
 
-        if hide_mixed_script_variants:
-            mixed_scr_filtr = MixedScriptsVariantFilter(unidb=self._unicode_database)
-            if scripts is None:
-                scripts = mixed_scr_filtr.get_base_scripts(label)
+        if hide_mixed_script_variants and not mixed_script_filter:
+            mixed_script_filter = MixedScriptsVariantFilter(orig_label, unidb=self._unicode_database)
 
         try:
             same_prefix = self._get_prefix_list(label, label_prefix)
@@ -1639,7 +1646,7 @@ class LGR(object):
                 # the variant code point from the label.
                 variant_label = label_prefix + var.cp + tuple(label[len(char):])
 
-                if hide_mixed_script_variants and not mixed_scr_filtr.label_in_scripts(variant_label, scripts):
+                if hide_mixed_script_variants and not mixed_script_filter.cp_in_scripts(var.cp):
                     rule_logger.debug("Variant %s contains mixed-scripts", format_cp(var.cp))
                     continue
                 # Test when/not-when rules - Use variant label
@@ -1680,7 +1687,7 @@ class LGR(object):
                                                           label_prefix + cp,
                                                           # Mark if prefix is part of a variant
                                                           is_variant | has_variant,
-                                                          scripts=scripts):
+                                                          mixed_script_filter=mixed_script_filter):
                         yield (cp + perm_cps,
                                # Construct new set of types
                                perm_disp | disp,

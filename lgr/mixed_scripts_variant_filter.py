@@ -18,18 +18,19 @@ def get_permitted_scripts(base_scripts: Set[str]):
 class MixedScriptsVariantFilter:
     UNKNOWN_SCRIPT = 'Common'
 
-    def __init__(self, unidb: UnicodeDatabase) -> None:
+    def __init__(self, label: Tuple[int], unidb: UnicodeDatabase) -> None:
         super().__init__()
         self.unidb = unidb
+        self.base_scripts: Set[str] = self._get_base_scripts(label)
 
-    def label_in_scripts(self, variant_label: Tuple[ord], base_scripts: Set[str]) -> bool:
-        for char in variant_label:
+    def cp_in_scripts(self, cp: Tuple[ord]) -> bool:
+        for char in cp:
             script = self.unidb.get_script(char)
-            if script not in base_scripts:
+            if script not in self.base_scripts:
                 return False
         return True
 
-    def get_base_scripts(self, label: Tuple[int]):
+    def _get_base_scripts(self, label: Tuple[int]) -> Set[str]:
         scripts = set()
         for c in label:
             script = self.unidb.get_script(c)

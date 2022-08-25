@@ -1,4 +1,4 @@
-from typing import List, Tuple
+from typing import List
 from unittest import TestCase
 
 from lgr.mixed_scripts_variant_filter import MixedScriptsVariantFilter, get_permitted_scripts
@@ -13,11 +13,8 @@ def to_chars(label):
 class TestMixedScriptVariantFilter(TestCase):
     UNKNOWN_SCRIPT = 'Common'
     c_label = '赤a'  # han - latin (chineese)
-    c_label_variants = ['赤á', '赤ά', '赤α', '赤а', '赤a']
-    j_label = 'テゃa'  # han - katakana - hiragana - latin (japaneese)
-    j_label_variants = ['テゃá', 'テゃά', 'テゃα', 'テゃа', 'テゃa']
+    j_label = 'テゃa'  # han - katakana - hiragana - latin (japanese)
     k_label = '보a'  # han - hangul - latin (korean)
-    k_label_variants = ['보á', '보ά', '보α', '보а', '보a']
 
     CHINEESE_SCRIPTS_SET = {'Han', 'Latin'}
     JAPENEESE_SCRIPTS_SET = {'Han', 'Katakana', 'Hiragana', 'Latin'}
@@ -27,7 +24,6 @@ class TestMixedScriptVariantFilter(TestCase):
         super().setUp()
         self.maxDiff = None
         self.unidb = UnicodeDatabaseMock()
-        self.filter = MixedScriptsVariantFilter(self.unidb)
 
     def test_C_permitted_scripts(self):
         self.assertCountEqual(get_permitted_scripts({'Han'}), self.CHINEESE_SCRIPTS_SET)
@@ -42,62 +38,55 @@ class TestMixedScriptVariantFilter(TestCase):
         self.assertCountEqual(get_permitted_scripts({'Hangul'}), self.KOREAN_SCRIPTS_SET)
 
     def test_conversion_hypothesis(self):
-        latin = self.unidb.get_script(ord('á'))  # á in latin
-        assert latin == 'Latin'
-        latin = self.unidb.get_script(ord('ά'))  # ά in Greek
-        assert latin == 'Greek'
-        latin = self.unidb.get_script(ord('а'))  # а in Cyrillic
-        assert latin == 'Cyrillic'
-        greek = self.unidb.get_script(ord('α'))  # α (alpha) in Greek
-        assert greek == 'Greek'
+        script = self.unidb.get_script(ord('á'))  # á in latin
+        assert script == 'Latin'
+        script = self.unidb.get_script(ord('ά'))  # ά in Greek
+        assert script == 'Greek'
+        script = self.unidb.get_script(ord('а'))  # а in Cyrillic
+        assert script == 'Cyrillic'
+        script = self.unidb.get_script(ord('α'))  # α (alpha) in Greek
+        assert script == 'Greek'
         cp = parse_single_cp_input('U+03B1')
-        assert greek == self.unidb.get_script(cp)
+        assert script == self.unidb.get_script(cp)
 
     def test_get_base_scripts(self):
-        base_scripts = self.filter.get_base_scripts(to_chars('com'))
-        self.assertCountEqual(base_scripts, {'Latin'})
+        fltr = MixedScriptsVariantFilter(to_chars('com'), self.unidb)
+        self.assertCountEqual(fltr.base_scripts, {'Latin'})
 
     def test_C_get_base_scripts(self):
-        base_scripts = self.filter.get_base_scripts(to_chars(self.c_label))
-        self.assertCountEqual(base_scripts, self.CHINEESE_SCRIPTS_SET)
+        fltr = MixedScriptsVariantFilter(to_chars(self.c_label), self.unidb)
+        self.assertCountEqual(fltr.base_scripts, self.CHINEESE_SCRIPTS_SET)
 
     def test_J_get_base_scripts(self):
-        base_scripts = self.filter.get_base_scripts(to_chars(self.j_label))
-        self.assertCountEqual(base_scripts, self.JAPENEESE_SCRIPTS_SET)
+        fltr = MixedScriptsVariantFilter(to_chars(self.j_label), self.unidb)
+        self.assertCountEqual(fltr.base_scripts, self.JAPENEESE_SCRIPTS_SET)
 
     def test_K_get_base_scripts(self):
-        base_scripts = self.filter.get_base_scripts(to_chars(self.k_label))
-        self.assertCountEqual(base_scripts, self.KOREAN_SCRIPTS_SET)
+        fltr = MixedScriptsVariantFilter(to_chars(self.k_label), self.unidb)
+        self.assertCountEqual(fltr.base_scripts, self.KOREAN_SCRIPTS_SET)
 
     def test_get_base_scripts_special_char(self):
-        base_scripts = self.filter.get_base_scripts(to_chars('œuf'))
-        self.assertCountEqual(base_scripts, {'Latin'})
+        fltr = MixedScriptsVariantFilter(to_chars('œuf'), self.unidb)
+        self.assertCountEqual(fltr.base_scripts, {'Latin'})
 
     def test_filter(self):
-        self.filter_base(label='a', variants=['á', 'ά', 'α', 'a'], expected_list=['a', 'á'])
+        self.filter_base(label='a', chars=['á', 'ά', 'α', 'a', '赤', 'テ', 'ゃ', '보'], expected_list=['a', 'á'])
 
     def test_C_filter(self):
-        self.filter_base(label='赤a', variants=self.c_label_variants, expected_list=['赤a', '赤á'])
+        self.filter_base(label='赤', chars=['á', 'ά', 'α', 'a', '赤', 'テ', 'ゃ', '보'], expected_list=['a', 'á', '赤'])
 
     def test_J_filter(self):
-        self.filter_base(label='テゃa', variants=self.j_label_variants, expected_list=['テゃá', 'テゃa'])
+        self.filter_base(label='テゃ', chars=['á', 'ά', 'α', 'a', '赤', 'テ', 'ゃ', '보'],
+                         expected_list=['á', 'a', '赤', 'テ', 'ゃ'])
 
     def test_K_filter(self):
-        self.filter_base(label='보a', variants=self.k_label_variants, expected_list=['보á', '보a'])
+        self.filter_base(label='보', chars=['á', 'ά', 'α', 'a', '赤', 'テ', 'ゃ', '보'],
+                         expected_list=['á', 'a', '赤', '보'])
 
     def test_special_char_filter(self):
-        self.filter_base(label='œ', variants=['œ', 'oe'], expected_list=['œ', 'oe'])
+        self.filter_base(label='œ', chars=['œ', 'oe'], expected_list=['œ', 'oe'])
 
-    def filter_base(self, label: str, variants: List[str], expected_list: List[str]):
-        filtered_list = self.filter_mixed_script_variants(
-            to_chars(label),
-            [to_chars(v) for v in variants])
-        self.assertCountEqual(filtered_list, [to_chars(e) for e in expected_list])
-
-    def filter_mixed_script_variants(self, label: Tuple[int], variants: List[Tuple[int]]):
-        base_scripts = self.filter.get_base_scripts(label)
-        filtered_variants = set()
-        for v in variants:
-            if self.filter.label_in_scripts(v, base_scripts):
-                filtered_variants.add(v)
-        return filtered_variants
+    def filter_base(self, label: str, chars: List[str], expected_list: List[str]):
+        fltr = MixedScriptsVariantFilter(to_chars(label), self.unidb)
+        filtered_list = [c for c in chars if fltr.cp_in_scripts(to_chars(c))]
+        self.assertCountEqual(filtered_list, expected_list)
