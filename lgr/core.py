@@ -27,6 +27,7 @@ from lgr.exceptions import (LGRApiInvalidParameter,
                             LGRFormatException,
                             LGRApiException,
                             LGRException)
+from lgr.mixed_scripts_variant_filter import MixedScriptsVariantFilter
 from lgr.validate import validate_lgr
 from lgr.populate import populate_lgr
 from lgr.utils import (collapse_codepoints,
@@ -1069,7 +1070,7 @@ class LGR(object):
         return True, label, [], disposition, action_idx, log_output.getvalue()
 
     def compute_label_disposition(self, label, include_invalid=False,
-                                  collect_log=True):
+                                  collect_log=True, hide_mixed_script_variants=False):
         """
         Given a label, compute its disposition and its variants.
 
@@ -1083,6 +1084,7 @@ class LGR(object):
                                 disposition, which are normally eliminated
                                 during the generation process.
         :param collect_log: If False, do not collect rule processing log.
+        :param hide_mixed_script_variants: Whether we hide mixed scripts variants.
         :return: Generator of (variant_cp, variant_invalid_parts, disp, action_idx, disp_set, log)
                  with:
                      - variant_cp: The code point sequence of a variant.
@@ -1110,7 +1112,7 @@ class LGR(object):
 
         # 8.2 Determining Variants for a Label
         # Step 1 - 2 - 3
-        variant_set = self._generate_label_variants(label)
+        variant_set = self._generate_label_variants(label, hide_mixed_script_variants=hide_mixed_script_variants)
 
         original_label = None
 
@@ -1160,7 +1162,7 @@ class LGR(object):
 
         yield original_label
 
-    def compute_label_disposition_summary(self, label, include_invalid=False):
+    def compute_label_disposition_summary(self, label, include_invalid=False, hide_mixed_script_variants=False):
         """
         Given a label compute its disposition and variants along with a summary.
 
@@ -1170,6 +1172,7 @@ class LGR(object):
         :param include_invalid: If True, also return variants with "invalid"
                                 disposition, which are normally eliminated
                                 during the generation process.
+        :param hide_mixed_script_variants: Whether we hide mixed scripts variants.
         :return: Generator of (variant_cp, variant_invalid_parts, disp, action_idx, disp_set, log)
                  with:
 
@@ -1185,7 +1188,8 @@ class LGR(object):
         # We have to resolve _ALL_ labels here...
         # This might cause some issues with memory/time computation.
         label_dispositions = list(self.compute_label_disposition(label,
-                                                                 include_invalid=include_invalid))
+                                                                 include_invalid=include_invalid,
+                                                                 hide_mixed_script_variants=hide_mixed_script_variants))
 
         summary = collections.Counter([disp for (_, disp, _, _, _, _)
                                        in label_dispositions])
@@ -1536,14 +1540,16 @@ class LGR(object):
 
     def _generate_label_variants(self, label,
                                  orig_label=None, label_prefix=None,
-                                 has_variant=False):
+                                 has_variant=False,
+                                 scripts=None,
+                                 hide_mixed_script_variants=False):
         """
         Generate a list of all the variants for a given label.
 
         Takes a label as input, and output the _variants_ of the label.
         If there is no code point with at least one variant defined,
         then the output is empty.
-        Output may contained the reflexive variant of a label, if any reflexive
+        Output may contain the reflexive variant of a label, if any reflexive
         mapping is defined and valid in the label context.
 
         :param label: The label to generate the variants of,
@@ -1554,6 +1560,7 @@ class LGR(object):
         :param label_prefix: The prefix of the label (used for recursion).
         :param has_variant: True if the prefix has at least one variant
                             (used for recursion).
+        :param hide_mixed_script_variants: Whether we hide mixed scripts variants.
         :return: A generator of (variant_cp, variant_disp, only_variants),
                  with:
 
@@ -1580,6 +1587,11 @@ class LGR(object):
         if len(label) == 0:
             rule_logger.debug("Empty label")
             return
+
+        if hide_mixed_script_variants:
+            mixed_scr_filtr = MixedScriptsVariantFilter(unidb=self._unicode_database)
+            if scripts is None:
+                scripts = mixed_scr_filtr.get_base_scripts(label)
 
         try:
             same_prefix = self._get_prefix_list(label, label_prefix)
@@ -1627,6 +1639,9 @@ class LGR(object):
                 # the variant code point from the label.
                 variant_label = label_prefix + var.cp + tuple(label[len(char):])
 
+                if hide_mixed_script_variants and not mixed_scr_filtr.label_in_scripts(variant_label, scripts):
+                    rule_logger.debug("Variant %s contains mixed-scripts", format_cp(var.cp))
+                    continue
                 # Test when/not-when rules - Use variant label
                 if not self._test_context_rules(var,
                                                 variant_label,
@@ -1664,7 +1679,8 @@ class LGR(object):
                                                           orig_label,
                                                           label_prefix + cp,
                                                           # Mark if prefix is part of a variant
-                                                          is_variant | has_variant):
+                                                          is_variant | has_variant,
+                                                          scripts=scripts):
                         yield (cp + perm_cps,
                                # Construct new set of types
                                perm_disp | disp,
