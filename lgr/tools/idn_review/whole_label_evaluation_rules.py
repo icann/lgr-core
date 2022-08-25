@@ -49,6 +49,9 @@ SAME_SCRIPTS = {
     'ojp': 'ja',
     'jpx': 'ja',
     'jsl': 'ja',
+    'Jpan': 'ja',
+    'Kana': 'ja',
+    'Hira': 'ja',
     'Latg': 'Latn',
     'Latf': 'Latn'
 }
@@ -65,8 +68,8 @@ COMBINING_MARK_LABELS = {
     'Gujr': [[0x0ABC, 0x0AAC]],  # Gujarati script
     'Guru': [[0x0A02, 0x0A20]],  # Gurmukhi script
     'zh': [],  # Chinese language
+    'Knda': [],  # kannada
     'ko': [],  # Korean language
-    'ka': [],  # kannada
     'Hebr': [],  # Hebrew
     'ja': [],  # Japanese language
     'Khmr': [[0x17B7, 0x178A]],  # Khmer script
@@ -106,9 +109,10 @@ CONSECUTIVE_HYPHEN_LABELS = {
              [0x0A20, 0x0A20, 0x002D, 0x002D, 0x0A20, 0x0A20]],  # Gurmukhi script
     'zh': [[0x002D, 0x4E24, 0x4E24], [0x4E24, 0x4E24, 0x002D],
            [0x4E24, 0x4E24, 0x002D, 0x002D, 0x4E24, 0x4E24]],  # Chinese language
+    'Knda': [[0x002D, 0x0C95, 0x0C95], [0x0C95, 0x0C95, 0x002D],  # kannada
+             [0x0C95, 0x0C95, 0x002D, 0x002D, 0x0C95, 0x0C95]],
     'ko': [[0x002D, 0xAC00, 0xAC00], [0xAC00, 0xAC00, 0x002D],
            [0xAC00, 0xAC00, 0x002D, 0x002D, 0xAC00, 0xAC00]],  # Korean language
-    'ka': [],  # kannada
     'Hebr': [[0x002D, 0x05D1, 0x05D1], [0x05D1, 0x05D1, 0x002D],
              [0x05D1, 0x05D1, 0x002D, 0x002D, 0x05D1, 0x05D1]],  # Hebrew
     'ja': [[0x002D, 0x3064, 0x3064], [0x3064, 0x3064, 0x002D],
@@ -215,7 +219,7 @@ JAPANESE_CONTEXTJ_LABELS = {
     'ko': [],  # Korean language
     'ka': [],  # kannada
     'Hebr': [],  # Hebrew
-    'ja': [['''TODO''']],  # Japanese language
+    'ja': [[0x0062, 0x30FB, 0x0061]],  # Japanese language
     'Khmr': [],  # Khmer script
     'Laoo': [],  # Lao script
     'Latn': [],  # Latin script
@@ -472,6 +476,6 @@ def generate_whole_label_evaluation_rules_report(idn_table: LGR, reference_lgr: 
             'rtl': check.rtl_report(),
             'digits_set': check.digits_set_report(),
             'japanese_contextj': check.japanese_contextj_report(),
-            'arabic_no_extended_end': check.arabic_no_extended_report(),
+            # 'arabic_no_extended_end': check.arabic_no_extended_report(),  # TODO disabled for now
         }
     }
