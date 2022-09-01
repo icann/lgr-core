@@ -1687,7 +1687,8 @@ class LGR(object):
                                                           label_prefix + cp,
                                                           # Mark if prefix is part of a variant
                                                           is_variant | has_variant,
-                                                          mixed_script_filter=mixed_script_filter):
+                                                          mixed_script_filter=mixed_script_filter,
+                                                          hide_mixed_script_variants=hide_mixed_script_variants):
                         yield (cp + perm_cps,
                                # Construct new set of types
                                perm_disp | disp,
