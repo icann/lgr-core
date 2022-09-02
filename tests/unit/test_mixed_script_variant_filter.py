@@ -88,5 +88,5 @@ class TestMixedScriptVariantFilter(TestCase):
 
     def filter_base(self, label: str, chars: List[str], expected_list: List[str]):
         fltr = MixedScriptsVariantFilter(to_chars(label), self.unidb)
-        filtered_list = [c for c in chars if fltr.cp_in_scripts(to_chars(c))]
+        filtered_list = [c for c in chars if fltr.cp_in_base_scripts(to_chars(c))]
         self.assertCountEqual(filtered_list, expected_list)

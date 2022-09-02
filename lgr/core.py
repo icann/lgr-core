@@ -27,7 +27,7 @@ from lgr.exceptions import (LGRApiInvalidParameter,
                             LGRFormatException,
                             LGRApiException,
                             LGRException)
-from lgr.mixed_scripts_variant_filter import MixedScriptsVariantFilter
+from lgr.mixed_scripts_variant_filter import MixedScriptsVariantFilter, BaseMixedScriptsVariantFilter
 from lgr.validate import validate_lgr
 from lgr.populate import populate_lgr
 from lgr.utils import (collapse_codepoints,
@@ -1209,11 +1209,18 @@ class LGR(object):
         (_, _, _, chars) = self._test_preliminary_eligibility(label, generate_chars=True)
         variant_number = 1
         if hide_mixed_script_variants:
-            mixed_script_filter = MixedScriptsVariantFilter(label, unidb=self._unicode_database)
+            mixed_script_filter = MixedScriptsVariantFilter(label, self.repertoire, unidb=self._unicode_database)
             for char in chars:
                 variant_number *= len(
-                    [v for v in char.get_variants() if mixed_script_filter.cp_in_scripts(v.cp)]
+                    [v for v in char.get_variants() if mixed_script_filter.cp_in_base_scripts(v.cp)]
                 ) + 1  # Take into account original code point
+            for script in mixed_script_filter.other_scripts:
+                other_script_number = 1
+                for char in chars:
+                    other_script_number *= len(
+                        [v for v in char.get_variants() if mixed_script_filter.cp_in_scripts(v.cp, {script})]
+                    )
+                variant_number += other_script_number
         else:
             for char in chars:
                 variant_number *= len(list(char.get_variants())) + 1  # Take into account original code point
@@ -1549,7 +1556,7 @@ class LGR(object):
     def _generate_label_variants(self, label,
                                  orig_label=None, label_prefix=None,
                                  has_variant=False,
-                                 mixed_script_filter=None,
+                                 mixed_script_filter: BaseMixedScriptsVariantFilter=None,
                                  hide_mixed_script_variants=False):
         """
         Generate a list of all the variants for a given label.
@@ -1588,7 +1595,9 @@ class LGR(object):
 
         # current `label` will be consumed by recursion,
         # so need to save the original.
+        first_call = False
         if orig_label is None:
+            first_call = True
             orig_label = label
         if label_prefix is None:
             label_prefix = tuple()
@@ -1598,7 +1607,7 @@ class LGR(object):
             return
 
         if hide_mixed_script_variants and not mixed_script_filter:
-            mixed_script_filter = MixedScriptsVariantFilter(orig_label, unidb=self._unicode_database)
+            mixed_script_filter = MixedScriptsVariantFilter(label, self.repertoire, unidb=self._unicode_database)
 
         try:
             same_prefix = self._get_prefix_list(label, label_prefix)
@@ -1620,12 +1629,11 @@ class LGR(object):
                         same_prefix = [cp]
                         break
 
-        for char in same_prefix[:]:
-            if isinstance(char, CharSequence):
-                # char is a sequence, if first code point of the sequence is in the LGR we need to consider it
-                for cp in self.repertoire.get_chars_from_prefix(label[0]):
-                    if len(cp) < len(char) and cp.is_prefix_of(label):
-                        same_prefix.append(cp)
+        for char in [ch for ch in same_prefix if isinstance(ch, CharSequence)]:
+            # char is a sequence, if first code point of the sequence is in the LGR we need to consider it
+            for cp in self.repertoire.get_chars_from_prefix(label[0]):
+                if len(cp) < len(char) and cp.is_prefix_of(label):
+                    same_prefix.append(cp)
 
         # Iterate through characters matching the start of the label
         for char in same_prefix:
@@ -1638,6 +1646,7 @@ class LGR(object):
             char_perms = []
 
             for var in char.get_variants():
+                script_filter: BaseMixedScriptsVariantFilter = mixed_script_filter
                 rule_logger.debug("Variant %s", format_cp(var.cp))
 
                 # Generate variant label:
@@ -1646,9 +1655,14 @@ class LGR(object):
                 # the variant code point from the label.
                 variant_label = label_prefix + var.cp + tuple(label[len(char):])
 
-                if hide_mixed_script_variants and not mixed_script_filter.cp_in_scripts(var.cp):
-                    rule_logger.debug("Variant %s contains mixed-scripts", format_cp(var.cp))
-                    continue
+                if hide_mixed_script_variants:
+                    if first_call and mixed_script_filter.cp_in_other_scripts(var.cp):
+                        rule_logger.debug("Variant script is eligible for non mixed-scripts", format_cp(var.cp))
+                        script_filter = mixed_script_filter.get_filter_for_other_script(
+                            self.unicode_database.get_script(var.cp[0]))
+                    elif not mixed_script_filter.cp_in_base_scripts(var.cp):
+                        rule_logger.debug("Variant %s contains mixed-scripts", format_cp(var.cp))
+                        continue
                 # Test when/not-when rules - Use variant label
                 if not self._test_context_rules(var,
                                                 variant_label,
@@ -1664,7 +1678,7 @@ class LGR(object):
 
                 if var.cp == char.cp:
                     has_reflexive_mapping = True
-                char_perms.append((var.cp, var_disp, True))
+                char_perms.append((var.cp, var_disp, True, script_filter))
 
             # Add original code point in permutation list
             # ONLY if the character has no defined reflexive mapping.
@@ -1675,11 +1689,13 @@ class LGR(object):
             # the type associated with a reflexive variant mapping
             # is applied to any of the permuted labels containing
             # the original code point.
-            if not has_reflexive_mapping:
-                char_perms.insert(0, (char.cp, frozenset(), False))
+            # Also ignore char that are not part of the label in the current script if required
+            if not has_reflexive_mapping and (not hide_mixed_script_variants or first_call or
+                                              mixed_script_filter.cp_in_base_scripts(char.cp)):
+                char_perms.insert(0, (char.cp, frozenset(), False, mixed_script_filter))
 
             if len(label) > len(char):
-                for (cp, disp, is_variant) in char_perms:
+                for (cp, disp, is_variant, script_filter) in char_perms:
                     # Generate variants for reminder of label
                     for (perm_cps, perm_disp, perm_only_variants) in \
                             self._generate_label_variants(label[len(char):],
@@ -1687,7 +1703,7 @@ class LGR(object):
                                                           label_prefix + cp,
                                                           # Mark if prefix is part of a variant
                                                           is_variant | has_variant,
-                                                          mixed_script_filter=mixed_script_filter,
+                                                          mixed_script_filter=script_filter,
                                                           hide_mixed_script_variants=hide_mixed_script_variants):
                         yield (cp + perm_cps,
                                # Construct new set of types
@@ -1695,8 +1711,8 @@ class LGR(object):
                                is_variant & perm_only_variants)
             elif has_variant or char.has_variant():
                 # Do not output the same un-permuted label
-                for (cp, disp, is_variant) in char_perms:
-                    yield (cp, disp, is_variant)
+                for (cp, disp, is_variant, _) in char_perms:
+                    yield cp, disp, is_variant
 
     def _apply_actions(self, label, disp_set, only_variants):
         """
