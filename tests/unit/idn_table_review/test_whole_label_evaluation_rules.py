@@ -335,27 +335,6 @@ class Test(TestCase):
         result = generate_whole_label_evaluation_rules_report(idn, self.ref)
 
         self.assertDictEqual(result, {
-            'comparison': [self.all_match_match, self.match_match, self.not_match_match],
-            'additional_cp': [{'cp': (1489,), 'glyph': 'ב', 'name': 'HEBREW LETTER BET', 'category': 'Lo'}],
-            'additional_general_rules': {
-                'combining_mark': self.general_rules_combining_mark,
-                'consecutive_hyphens': self.general_rules_consecutive_hyphens,
-                'rtl': {
-                    'applicable': True,
-                    'exists': False
-                },
-                'digits_set': self.general_rules_digits_sets,
-                'japanese_contextj': self.general_rules_japanese_contextj,
-                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
-            }
-        })
-
-    def test_wle_rtl_digit_applicable_not_ok(self):
-        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_rtl_wrong.xml', unidb=self.unidb)
-
-        result = generate_whole_label_evaluation_rules_report(idn, self.ref)
-
-        self.assertDictEqual(result, {
             'comparison': [self.all_match_match, {
                 'name': 'leading-digit',
                 'idn_table': True,
@@ -370,6 +349,27 @@ class Test(TestCase):
                 'rtl': {
                     'applicable': True,
                     'exists': True
+                },
+                'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
+            }
+        })
+
+    def test_wle_rtl_digit_applicable_not_ok(self):
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_rtl_wrong.xml', unidb=self.unidb)
+
+        result = generate_whole_label_evaluation_rules_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'comparison': [self.all_match_match, self.match_match, self.not_match_match],
+            'additional_cp': [{'cp': (1489,), 'glyph': 'ב', 'name': 'HEBREW LETTER BET', 'category': 'Lo'}],
+            'additional_general_rules': {
+                'combining_mark': self.general_rules_combining_mark,
+                'consecutive_hyphens': self.general_rules_consecutive_hyphens,
+                'rtl': {
+                    'applicable': True,
+                    'exists': False
                 },
                 'digits_set': self.general_rules_digits_sets,
                 'japanese_contextj': self.general_rules_japanese_contextj,
@@ -451,6 +451,93 @@ class Test(TestCase):
                     'exists': False
                 },
                 'japanese_contextj': self.general_rules_japanese_contextj,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
+            }
+        })
+
+    def test_japanese_contextj_applicable_ok(self):
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_japanese_contextj.xml', unidb=self.unidb)
+
+        result = generate_whole_label_evaluation_rules_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'comparison': [self.all_match_match, {
+                'name': 'contextj',
+                'idn_table': True,
+                'reference_lgr': False,
+                'result': 'MANUAL CHECK',
+                'remark': 'Mismatch (WLE rule only exists in IDN Table)'
+            }, {
+                'name': 'match',
+                'idn_table': True,
+                'reference_lgr': True,
+                'result': 'MANUAL CHECK',
+                'remark': 'Check the content of the rule'
+            }, self.not_match_match],
+            'additional_cp': [
+                {'cp': (12353,), 'glyph': 'ぁ', 'name': 'HIRAGANA LETTER SMALL A', 'category': 'Lo'},
+            ],
+            'additional_general_rules': {
+                'combining_mark': self.general_rules_combining_mark,
+                'consecutive_hyphens': self.general_rules_consecutive_hyphens,
+                'rtl': self.general_rules_rtl,
+                'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': {
+                    'applicable': True,
+                    'exists': True
+                },
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
+            }
+        })
+
+    def test_japanese_contextj_missing_cp(self):
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_japanese_contextj_missing_cp.xml',
+                       unidb=self.unidb)
+
+        result = generate_whole_label_evaluation_rules_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'comparison': [self.all_match_match, self.match_match, self.not_match_match],
+            'additional_cp': [],
+            'additional_general_rules': {
+                'combining_mark': self.general_rules_combining_mark,
+                'consecutive_hyphens': self.general_rules_consecutive_hyphens,
+                'rtl': self.general_rules_rtl,
+                'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': {
+                    'applicable': True,
+                    'exists': None
+                },
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
+            }
+        })
+
+    def test_japanese_contextj_applicable_not_ok(self):
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_japanese_contextj_wrong.xml',
+                       unidb=self.unidb)
+
+        result = generate_whole_label_evaluation_rules_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'comparison': [self.all_match_match, {
+                'name': 'match',
+                'idn_table': True,
+                'reference_lgr': True,
+                'result': 'MANUAL CHECK',
+                'remark': 'Check the content of the rule'
+            }, self.not_match_match],
+            'additional_cp': [
+                {'cp': (12539,), 'glyph': '・', 'name': 'KATAKANA MIDDLE DOT', 'category': 'Po'},
+            ],
+            'additional_general_rules': {
+                'combining_mark': self.general_rules_combining_mark,
+                'consecutive_hyphens': self.general_rules_consecutive_hyphens,
+                'rtl': self.general_rules_rtl,
+                'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': {
+                    'applicable': True,
+                    'exists': False
+                },
                 # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })

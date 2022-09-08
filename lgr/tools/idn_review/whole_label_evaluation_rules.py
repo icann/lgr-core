@@ -430,7 +430,9 @@ class WholeLabelEvaluationRulesCheck:
 
     def japanese_contextj_report(self) -> Dict:
         is_jp = self.check_language('ja')
-        return self.make_report(is_jp, JAPANESE_CONTEXTJ_LABELS)
+        contains_katakana_middle_dot = 0x30FB in self.idn_table.repertoire
+        return self.make_report(is_jp and contains_katakana_middle_dot, JAPANESE_CONTEXTJ_LABELS,
+                                applicable=is_jp)
 
     def arabic_no_extended_report(self):
         is_arabic = self.check_language('Arab')

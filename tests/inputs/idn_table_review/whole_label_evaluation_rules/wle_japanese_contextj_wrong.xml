@@ -3,7 +3,7 @@
         <version comment="Sample LGR for French">1</version>
         <date>2015-08-07</date>
         <unicode-version>6.3.0</unicode-version>
-        <language>und-Hebr</language>
+        <language>und-Jpan</language>
         <scope type="domain">example</scope>
         <description type="text/plain">LGR for Unit Tests</description>
         <references>
@@ -12,8 +12,8 @@
         </references>
     </meta>
     <data>
-        <char cp="0061" ref="0" when="match"/>
-        <char cp="0062" ref="0" when="match"/>
+        <char cp="0061" ref="0"/>
+        <char cp="0062" ref="0"/>
         <char cp="0063" ref="0" not-when="not-match"/>
         <char cp="0064" ref="0"/>
         <char cp="0065" ref="0"/>
@@ -23,8 +23,7 @@
         <char cp="0069" ref="0"/>
         <char cp="0153"/>
         <char cp="006F 0065" not-when="not-match"/>
-        <char cp="0033" not-when="leading-digit"/>
-        <char cp="05D1"/>
+        <char cp="30FB"/>
     </data>
     <rules>
         <class name="bc">0062 0063</class>
@@ -43,12 +42,6 @@
         <rule name="all-match">
             <start/>
             <char cp="0153"/>
-        </rule>
-        <rule name="leading-digit" ref="160" comment="RFC 5893 RTL labels cannot start with a digit ⍟">
-            <look-behind>
-                <start/>
-            </look-behind>
-            <anchor/>
         </rule>
         <action comment="0" disp="match" match="match"/>
         <action comment="1" disp="not-match" not-match="not-match"/>
