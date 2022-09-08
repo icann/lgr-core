@@ -1556,7 +1556,7 @@ class LGR(object):
     def _generate_label_variants(self, label,
                                  orig_label=None, label_prefix=None,
                                  has_variant=False,
-                                 mixed_script_filter: BaseMixedScriptsVariantFilter=None,
+                                 mixed_script_filter: BaseMixedScriptsVariantFilter = None,
                                  hide_mixed_script_variants=False):
         """
         Generate a list of all the variants for a given label.
@@ -1711,6 +1711,10 @@ class LGR(object):
                                is_variant & perm_only_variants)
             elif has_variant or char.has_variant():
                 # Do not output the same un-permuted label
+                # TODO for consistency another or condition should be added:
+                #          or orig_label != label_prefix + char.cp
+                #      in order to include the original label in output in case the last char has no variants which
+                #      won't be the case without this condition
                 for (cp, disp, is_variant, _) in char_perms:
                     yield cp, disp, is_variant
 

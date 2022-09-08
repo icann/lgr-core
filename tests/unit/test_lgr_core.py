@@ -537,8 +537,20 @@ class TestLGRCore(unittest.TestCase):
         self.assertEqual(11, self.lgr.estimate_variant_number([0x0063]))
         self.assertEqual(2 * 2 * 11, self.lgr.estimate_variant_number([0x0061, 0x0062, 0x0063]))
 
-        self.assertEqual(1, self.lgr.estimate_variant_number([0x0063], hide_mixed_script_variants=True))
         self.assertEqual(4, self.lgr.estimate_variant_number([0x0061, 0x0062, 0x0063], hide_mixed_script_variants=True))
+        # check that other script variants are also taken into account
+        self.lgr.add_cp([0x0064])
+        self.lgr.add_variant([0x0064], [0x3078], 'disp')
+        self.lgr.add_cp([0x3078])
+        self.lgr.add_variant([0x3078], [0x0064], 'disp')
+        self.lgr.add_cp([0x0065])
+        self.lgr.add_variant([0x0065], [0x3079], 'disp')
+        self.lgr.add_cp([0x3079])
+        self.lgr.add_variant([0x3079], [0x0065], 'disp')
+        # 0x0063 has not Japanese variant, so only all Latin variants can be generated
+        self.assertEqual(1, self.lgr.estimate_variant_number([0x0064, 0x0065, 0x0063], hide_mixed_script_variants=True))
+        # there is an all Japanese variant as well as the all Latin variant
+        self.assertEqual(2, self.lgr.estimate_variant_number([0x0064, 0x0065], hide_mixed_script_variants=True))
 
     def test_generate_variants_mixed_scripts(self):
         self.lgr.add_cp([0x0061])
@@ -550,14 +562,14 @@ class TestLGRCore(unittest.TestCase):
         self.lgr.add_variant([0x0061], [ord('ά')], variant_type="disp")
         self.lgr.add_variant([0x0061], [ord('α')], variant_type="disp")
 
-        self.assertEqual(set([((ord('á'),), frozenset(['disp']), True),
-                              ((ord('ά'),), frozenset(['disp']), True),
-                              ((ord('α'),), frozenset(['disp']), True),
-                              ((0x0061,), frozenset([]), False)]),
-                         set(self.lgr._generate_label_variants([0x0061])))
-        self.assertEqual(set([((ord('á'),), frozenset(['disp']), True),
-                              ((0x0061,), frozenset([]), False)]),
-                         set(self.lgr._generate_label_variants([0x0061], hide_mixed_script_variants=True)))
+        self.lgr.add_cp([0x0062])
+
+        self.assertEqual(set([((ord('á'), 0x0062), frozenset(['disp']), False),
+                              ((ord('ά'), 0x0062), frozenset(['disp']), False),
+                              ((ord('α'), 0x0062), frozenset(['disp']), False)]),
+                         set(self.lgr._generate_label_variants([0x0061, 0x0062])))
+        self.assertEqual(set([((ord('á'), 0x0062), frozenset(['disp']), False)]),
+                         set(self.lgr._generate_label_variants([0x0061, 0x0062], hide_mixed_script_variants=True)))
 
 
 if __name__ == '__main__':

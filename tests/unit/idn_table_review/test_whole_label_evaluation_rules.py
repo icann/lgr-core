@@ -91,7 +91,7 @@ class Test(TestCase):
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
                 'japanese_contextj': self.general_rules_japanese_contextj,
-                'arabic_no_extended_end': self.general_rules_arabic_no_end,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -115,7 +115,7 @@ class Test(TestCase):
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
                 'japanese_contextj': self.general_rules_japanese_contextj,
-                'arabic_no_extended_end': self.general_rules_arabic_no_end,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -140,7 +140,7 @@ class Test(TestCase):
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
                 'japanese_contextj': self.general_rules_japanese_contextj,
-                'arabic_no_extended_end': self.general_rules_arabic_no_end,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -164,7 +164,7 @@ class Test(TestCase):
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
                 'japanese_contextj': self.general_rules_japanese_contextj,
-                'arabic_no_extended_end': self.general_rules_arabic_no_end,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -188,7 +188,7 @@ class Test(TestCase):
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
                 'japanese_contextj': self.general_rules_japanese_contextj,
-                'arabic_no_extended_end': self.general_rules_arabic_no_end,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -218,7 +218,7 @@ class Test(TestCase):
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
                 'japanese_contextj': self.general_rules_japanese_contextj,
-                'arabic_no_extended_end': self.general_rules_arabic_no_end,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -246,7 +246,7 @@ class Test(TestCase):
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
                 'japanese_contextj': self.general_rules_japanese_contextj,
-                'arabic_no_extended_end': self.general_rules_arabic_no_end,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -271,7 +271,7 @@ class Test(TestCase):
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
                 'japanese_contextj': self.general_rules_japanese_contextj,
-                'arabic_no_extended_end': self.general_rules_arabic_no_end,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -298,7 +298,7 @@ class Test(TestCase):
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
                 'japanese_contextj': self.general_rules_japanese_contextj,
-                'arabic_no_extended_end': self.general_rules_arabic_no_end,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -325,7 +325,7 @@ class Test(TestCase):
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
                 'japanese_contextj': self.general_rules_japanese_contextj,
-                'arabic_no_extended_end': self.general_rules_arabic_no_end,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -346,7 +346,7 @@ class Test(TestCase):
                 },
                 'digits_set': self.general_rules_digits_sets,
                 'japanese_contextj': self.general_rules_japanese_contextj,
-                'arabic_no_extended_end': self.general_rules_arabic_no_end,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -373,7 +373,7 @@ class Test(TestCase):
                 },
                 'digits_set': self.general_rules_digits_sets,
                 'japanese_contextj': self.general_rules_japanese_contextj,
-                'arabic_no_extended_end': self.general_rules_arabic_no_end,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -412,7 +412,7 @@ class Test(TestCase):
                     'exists': True
                 },
                 'japanese_contextj': self.general_rules_japanese_contextj,
-                'arabic_no_extended_end': self.general_rules_arabic_no_end,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -451,7 +451,7 @@ class Test(TestCase):
                     'exists': False
                 },
                 'japanese_contextj': self.general_rules_japanese_contextj,
-                'arabic_no_extended_end': self.general_rules_arabic_no_end,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -477,6 +477,6 @@ class Test(TestCase):
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
                 'japanese_contextj': self.general_rules_japanese_contextj,
-                'arabic_no_extended_end': self.general_rules_arabic_no_end,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
