@@ -4,6 +4,7 @@
 variant_sets -
 """
 import logging
+from collections import Counter
 from enum import Enum, auto
 from typing import Dict, List, Tuple, Set
 
@@ -481,16 +482,29 @@ def generate_variant_sets_report(idn_table: LGR, reference_lgr: LGR) -> Dict:
     # have the same index, try to update the indexes to make them match
     only_in_idn = [k for k in idn_table_variant_sets.keys() if k not in reference_lgr_variant_sets.keys()]
     only_in_ref = [k for k in reference_lgr_variant_sets.keys() if k not in idn_table_variant_sets.keys()]
+    updated_ref_sets = Counter()
+    new_set_ids = set()
     for idn_set_id in only_in_idn:
         idn_cps = idn_table_variant_sets[idn_set_id]
         for ref_set_id in only_in_ref:
             ref_cps = reference_lgr_variant_sets[ref_set_id]
             if set(idn_cps) <= set(ref_cps) or set(idn_cps) >= set(ref_cps):
                 new_set_id = min(idn_set_id, ref_set_id)
+                new_set_ids.add(new_set_id)
                 if new_set_id not in idn_table_variant_sets:
                     idn_table_variant_sets[new_set_id] = idn_table_variant_sets.pop(idn_set_id)
                 if new_set_id not in reference_lgr_variant_sets:
-                    reference_lgr_variant_sets[new_set_id] = reference_lgr_variant_sets.pop(reference_lgr_variant_sets)
+                    reference_lgr_variant_sets[new_set_id] = reference_lgr_variant_sets[ref_set_id]
+                    updated_ref_sets.update([ref_set_id])
+
+    # remove reference sets that were updated
+    for ref_id, count in updated_ref_sets.items():
+        if ref_id in new_set_ids:
+            continue
+        if count > 1:
+            logger.warning(f'Reference variant set {ref_id} will be duplicated as it overlaps {count} variant sets in '
+                           f'IDN table')
+        reference_lgr_variant_sets.pop(ref_id)
 
     reports = []
     for set_id in sorted(idn_table_variant_sets.keys() | reference_lgr_variant_sets.keys()):
