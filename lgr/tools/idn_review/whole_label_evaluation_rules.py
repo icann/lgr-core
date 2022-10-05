@@ -315,7 +315,7 @@ class WholeLabelEvaluationRulesCheck:
         self.reference_lgr_context_rules: Dict[str, Set] = dict()
         self.combining_mark = False
         self.has_hyphen = 0x002D in self.idn_table.repertoire
-        self.digits = set()
+        self.has_digits = False
         self.has_multiple_digits_sets = False
         self.get_context_rules()
         self.is_rtl = False
@@ -346,8 +346,7 @@ class WholeLabelEvaluationRulesCheck:
                 cp = char.cp[0]
                 if self.idn_table.unicode_database.is_digit(cp):
                     nbr_digits += 1
-                    if str(cp) not in self.digits:
-                        self.digits.add(str(cp))
+                    self.has_digits = True
                 if self.idn_table.unicode_database.is_combining_mark(cp):
                     self.combining_mark = True
             if char.when:
@@ -375,8 +374,7 @@ class WholeLabelEvaluationRulesCheck:
                 labels.extend(l)
         return labels
 
-    def make_report(self, condition, collection, applicable=None):
-        applicable = applicable or condition
+    def make_report(self, condition, collection, display=True):
         result = None
         if condition:
             for label in self.get_labels(collection):
@@ -389,8 +387,9 @@ class WholeLabelEvaluationRulesCheck:
                     break
 
         return {
-            'applicable': applicable,
-            'exists': result
+            'applicable': condition,
+            'exists': result,
+            'display': display
         }
 
     def check_label_cp_in_repertoire(self, label):
@@ -423,7 +422,7 @@ class WholeLabelEvaluationRulesCheck:
         return self.make_report(self.has_hyphen, CONSECUTIVE_HYPHEN_LABELS)
 
     def rtl_report(self) -> Dict:
-        return self.make_report(self.is_rtl and self.digits, BEGIN_DIGIT_LABELS, applicable=self.is_rtl)
+        return self.make_report(self.is_rtl and self.has_digits, BEGIN_DIGIT_LABELS)
 
     def digits_set_report(self) -> Dict:
         return self.make_report(self.has_multiple_digits_sets, MULTIPLE_DIGIT_SETS_LABELS)
@@ -431,8 +430,7 @@ class WholeLabelEvaluationRulesCheck:
     def japanese_contextj_report(self) -> Dict:
         is_jp = self.check_language('ja')
         contains_katakana_middle_dot = 0x30FB in self.idn_table.repertoire
-        return self.make_report(is_jp and contains_katakana_middle_dot, JAPANESE_CONTEXTJ_LABELS,
-                                applicable=is_jp)
+        return self.make_report(contains_katakana_middle_dot, JAPANESE_CONTEXTJ_LABELS, display=is_jp)
 
     def arabic_no_extended_report(self):
         is_arabic = self.check_language('Arab')
