@@ -17,6 +17,7 @@ PDI = '\u2069'
 
 PRIMARY = 'Primary'
 VARIANT = 'Variant'
+TLD = 'TLD'
 
 
 def _compute_indexes(lgr, label_list, is_tld=False):
@@ -78,13 +79,12 @@ def _generate_indexes(lgr, labels, tlds=None, keep=False, quiet=False, cached_in
                 label_indexes[l_idx] = []
             label_indexes[l_idx].append({'label': l,
                                          'bidi': "%s'%s'%s" % (LRI, l, PDI),
-                                         'cat': PRIMARY,
+                                         'cat': PRIMARY if not is_tld else TLD,
                                          'cp': l_cp,
                                          'cp_out': label_cp_out,
                                          'disp': {l: '-'},
                                          'rules': {l: '-'},
                                          'action_idx': {l: '-'},
-                                         'tld': False,
                                          'index': l_idx
                                          })
 
@@ -99,6 +99,8 @@ def _generate_indexes(lgr, labels, tlds=None, keep=False, quiet=False, cached_in
         # only get variants for collided labels (if not keep)
         if len(primaries) < 2 and not keep:
             del label_indexes[label_index]
+            continue
+        if not keep and quiet:
             continue
         for primary in primaries:
             label_cp = primary['cp']
@@ -260,7 +262,7 @@ def _get_new_variants(new_labels, old_labels):
     return new_list
 
 
-def _write_complete_output(label_indexes):
+def _write_complete_output(labels, label_indexes, tlds=None):
     """
     Output the collisions information between labels
     :param label_indexes: the dictionary containing the primary labels and
@@ -274,68 +276,81 @@ def _write_complete_output(label_indexes):
     output_dr = ("{cat} {label} [{label_cp}]:\n"
                  "\tDisposition: {label_disp}\n"
                  "\tRules:\n{label_rules}")
+
+    def yield_collision(label, variant):
+        return output_labels.format(label="%s" % label['bidi'],
+                                    variant="%s" % variant['bidi'],
+                                    label_cp="[%s]" % label['cp_out'],
+                                    variant_cp="[%s]" % variant['cp_out'],
+                                    label_cat=label['cat'],
+                                    variant_cat=variant['cat'],
+                                    len=max(len(label['label']),
+                                            len(label['cat']),
+                                            len(label['cp_out'])) + 2)
+
     collided = False
+    tlds = tlds or set()
     for collisions in label_indexes.values():
+        colliding_labels = [l for l in collisions if l['label'] in labels]
+        colliding_tlds = [l for l in collisions if l['label'] in tlds]
+
         # do not output anything if there is not at least 2 primaries colliding
-        if len(collisions) < 2 or \
-                len([lbl for lbl in collisions if lbl['cat'] == PRIMARY]) < 2:
-            continue
-        idx = 0
-        collided = True
-        primaries = [label for label in collisions if label['cat'] == PRIMARY]
-        for label in collisions:
-            idx += 1
-            for variant in collisions[idx:]:
-                yield output_labels.format(label="%s" % label['bidi'],
-                                           variant="%s" % variant['bidi'],
-                                           label_cp="[%s]" % label['cp_out'],
-                                           variant_cp="[%s]" % variant['cp_out'],
-                                           label_cat=label['cat'],
-                                           variant_cat=variant['cat'],
-                                           len=max(len(label['label']),
-                                                   len(label['cat']),
-                                                   len(label['cp_out'])) + 2)
+        if len(colliding_labels) > 1:
+            collided = True
+            primaries = [label for label in collisions if label['cat'] == PRIMARY]
+            idx = 0
+            for label in colliding_labels:
+                idx += 1
+                for variant in colliding_labels[idx:]:
+                    yield yield_collision(label, variant)
 
-                # do not output disposition and rules if both labels are
-                # primaries
-                if label['cat'] == PRIMARY and variant['cat'] == PRIMARY:
-                    continue
+                    # do not output disposition and rules if both labels are
+                    # primaries
+                    if label['cat'] == PRIMARY and variant['cat'] == PRIMARY:
+                        continue
 
-                # output the disposition and rules for each primary
-                for primary in primaries:
-                    prim = primary['label']
-                    cp_out = primary['cp_out']
-                    try:
-                        ldisp = label['disp'][prim]
-                        lrules = label['rules'][prim]
-                        vdisp = variant['disp'][prim]
-                        vrules = variant['rules'][prim]
-                    except KeyError:
-                        raise InvalidSymmetry()
+                    # output the disposition and rules for each primary
+                    for primary in primaries:
+                        prim = primary['label']
+                        cp_out = primary['cp_out']
+                        try:
+                            ldisp = label['disp'][prim]
+                            lrules = label['rules'][prim]
+                            vdisp = variant['disp'][prim]
+                            vrules = variant['rules'][prim]
+                        except KeyError:
+                            raise InvalidSymmetry()
 
-                    yield "\n### Details for label" \
-                          " {label} [{cp}] ###\n".format(label=primary['bidi'],
-                                                         cp=cp_out)
-                    if label['label'] != prim and label['cat'] != PRIMARY:
-                        yield MD
-                        yield output_dr.format(cat=label['cat'],
-                                               label="%s" % label['bidi'],
-                                               label_cp=label['cp_out'],
-                                               label_disp=ldisp,
-                                               label_rules=lrules)
-                        yield MD
-                    if variant['label'] != prim and variant['cat'] != PRIMARY:
-                        yield MD
-                        yield output_dr.format(cat=variant['cat'],
-                                               label="%s" % variant['bidi'],
-                                               label_cp=variant['cp_out'],
-                                               label_disp=vdisp,
-                                               label_rules=vrules)
-                        yield MD
-    if not collided:
-        yield MD
-        yield "No collision in the list of labels"
-        yield MD
+                        yield "\n### Details for label" \
+                              " {label} [{cp}] ###\n".format(label=primary['bidi'],
+                                                             cp=cp_out)
+                        if label['label'] != prim and label['cat'] != PRIMARY:
+                            yield MD
+                            yield output_dr.format(cat=label['cat'],
+                                                   label="%s" % label['bidi'],
+                                                   label_cp=label['cp_out'],
+                                                   label_disp=ldisp,
+                                                   label_rules=lrules)
+                            yield MD
+                        if variant['label'] != prim and variant['cat'] != PRIMARY:
+                            yield MD
+                            yield output_dr.format(cat=variant['cat'],
+                                                   label="%s" % variant['bidi'],
+                                                   label_cp=variant['cp_out'],
+                                                   label_disp=vdisp,
+                                                   label_rules=vrules)
+                            yield MD
+
+        for label in colliding_labels:
+            for variant in colliding_tlds:
+                if label != variant:
+                    collided = True
+                    yield yield_collision(label, variant)
+
+        if not collided:
+            yield MD
+            yield "No collision in the list of labels"
+            yield MD
 
 
 def _write_simple_output(labels, tlds, label_indexes):
@@ -345,15 +360,21 @@ def _write_simple_output(labels, tlds, label_indexes):
                           their variants (with various information) for each index.
     """
 
-    def yield_collisions(colliding1, colliding2, label_type, warn=""):
+    def yield_collisions(colliding1, colliding2, label_type):
+        idx = 0
         for l1 in colliding1:
-            for l2 in colliding2:
+            idx += 1
+            list2 = colliding2
+            if label_type == 'label':
+                # do not display the same collision permuted
+                list2 = colliding2[idx:]
+            for l2 in list2:
                 if l1 != l2:
-                    yield '{}: collides with {} {}{}\n'.format(l1, label_type, l2, warn)
+                    yield f'{l1}: collides with {label_type} {l2}\n'
 
     for collisions in label_indexes.values():
-        colliding_labels = labels.intersection(set([l['label'] for l in collisions]))
-        colliding_tlds = tlds.intersection(set([l['label'] for l in collisions]))
+        colliding_labels = list(labels.intersection(set([l['label'] for l in collisions])))
+        colliding_tlds = list(tlds.intersection(set([l['label'] for l in collisions])))
         if len(colliding_labels) > 1:
             for y in yield_collisions(colliding_labels, colliding_labels, "label"):
                 yield y
@@ -458,19 +479,33 @@ def diff(lgr_1, lgr_2, labels_input, show_collision=True,
     # output collisions
     if show_collision:
         yield "\n\n# Collisions for LGR1 #\n"
-        for output in _write_complete_output(label1_indexes):
+        for output in _write_complete_output(labels, label1_indexes):
             yield output
         if show_dump:
             yield "\n# Summary for LGR1 #\n"
             for output in _full_dump(label1_indexes):
                 yield output
         yield "\n\n# Collisions for LGR2 #\n"
-        for output in _write_complete_output(label2_indexes):
+        for output in _write_complete_output(labels, label2_indexes):
             yield output
         if show_dump:
             yield "\n# Summary for LGR2 #\n\n"
             for output in _full_dump(label2_indexes):
                 yield output
+
+
+def _read_tlds(lgr, tlds_input):
+    from lgr.tools.utils import read_labels
+
+    tlds = set()
+    errors = []
+    for label, valid, error in read_labels(tlds_input, lgr.unicode_database):
+        if valid:
+            tlds.add(label)
+        else:
+            errors.append("TLD {}: {}\n (WARNING: this should not append, your TLD file may be corrupted)".format(
+                label, error))
+    return tlds, errors
 
 
 def collision(lgr, labels_input, tlds_input, show_dump=False, quiet=False):
@@ -493,14 +528,10 @@ def collision(lgr, labels_input, tlds_input, show_dump=False, quiet=False):
 
     tlds = None
     if tlds_input:
-        tlds = set()
-        for label, valid, error in read_labels(tlds_input, lgr.unicode_database):
-            if valid:
-                tlds.add(label)
-            else:
-                yield "TLD {}: {}\n (WARNING: this should not append, your TLD file may be corrupted)".format(label,
-                                                                                                              error)
-    if tlds_input:
+        tlds, errors = _read_tlds(lgr, tlds_input)
+        for err in errors:
+            yield err
+
         in_tld = labels & tlds
         if in_tld:
             yield "\n# Labels that are TLDs #\n\n"
@@ -517,7 +548,7 @@ def collision(lgr, labels_input, tlds_input, show_dump=False, quiet=False):
 
     # output collisions
     yield "\n# Collisions #\n\n"
-    for output in _write_complete_output(label_indexes):
+    for output in _write_complete_output(labels, label_indexes, tlds=tlds):
         yield output
     if show_dump:
         yield "\n# Summary #\n\n"
@@ -532,7 +563,7 @@ def basic_collision(lgr, labels_input, tlds_input, with_annotations=False):
     :param lgr: The LGR object.
     :param labels_input: The file containing the labels
     :param tlds_input: The file containing the TLDs
-    :param annotate: Add label annotation
+    :param with_annotations: Add label annotation
     """
     from lgr.tools.utils import read_labels
     from lgr.tools.annotate import annotate
@@ -551,12 +582,9 @@ def basic_collision(lgr, labels_input, tlds_input, with_annotations=False):
         else:
             label_errors.append("{}: {}".format(label, error))
 
-    tlds = set()
-    for label, valid, error in read_labels(tlds_input, lgr.unicode_database):
-        if valid:
-            tlds.add(label)
-        else:
-            yield "TLD {}: {}\n (WARNING: this should not append, your TLD file may be corrupted)".format(label, error)
+    tlds, errors = _read_tlds(lgr, tlds_input)
+    for err in errors:
+        yield err
 
     yield "# Collisions #\n\n"
     has_one = False
