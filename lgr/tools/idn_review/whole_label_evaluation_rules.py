@@ -79,7 +79,7 @@ COMBINING_MARK_LABELS = {
     'Mlym': [[0x0D02, 0x0D1C]],  # Malayalam script
     'Mymr': [[0x1032, 0x1005]],  # Myanmar script
     'Orya': [[0x0B03, 0x0B15]],  # Oriya script
-    # '': [[0x0D82, 0x0DA8]],  # Sinala script
+    'Sinh': [[0x0D82, 0x0DA8]],  # Sinala script
     'Taml': [[0x0BBE, 0x0B9A]],  # Tamil script
     'Telu': [[0x0C03, 0x0C16]],  # Telugu script
     'Thaa': [[0x07A6, 0x0786]],  # Thaana script
@@ -130,8 +130,8 @@ CONSECUTIVE_HYPHEN_LABELS = {
              [0x1005, 0x1005, 0x002D, 0x002D, 0x1005, 0x1005]],  # Myanmar script
     'Orya': [[0x002D, 0x0B15, 0x0B15], [0x0B15, 0x0B15, 0x002D],
              [0x0B15, 0x0B15, 0x002D, 0x002D, 0x0B15, 0x0B15]],  # Oriya script
-    # '': [[0x002D, 0x0DA8, 0x0DA8], [0x0DA8, 0x0DA8, 0x002D],
-    #         [0x0DA8, 0x0DA8, 0x002D, 0x002D, 0x0DA8, 0x0DA8]],  # Sinala script
+    'Sinh': [[0x002D, 0x0DA8, 0x0DA8], [0x0DA8, 0x0DA8, 0x002D],
+             [0x0DA8, 0x0DA8, 0x002D, 0x002D, 0x0DA8, 0x0DA8]],  # Sinala script
     'Taml': [[0x002D, 0x0B9A, 0x0B9A], [0x0B9A, 0x0B9A, 0x002D],
              [0x0B9A, 0x0B9A, 0x002D, 0x002D, 0x0B9A, 0x0B9A]],  # Tamil script
     'Telu': [[0x002D, 0x0C16, 0x0C16], [0x0C16, 0x0C16, 0x002D],
@@ -197,7 +197,7 @@ MULTIPLE_DIGIT_SETS_LABELS = {
     'Mlym': [],  # Malayalam script
     'Mymr': [[0x1005, 0x1042, 0x0035], [0x1005, 0x0035, 0x1095], [0x1005, 0x1042, 0x1095]],  # Myanmar script
     'Orya': [],  # Oriya script
-    # '': [],  # Sinala script
+    'Sinh': [],  # Sinala script
     'Taml': [],  # Tamil script
     'Telu': [],  # Telugu script
     'Thaa': [],  # Thaana script
@@ -227,7 +227,7 @@ JAPANESE_CONTEXTJ_LABELS = {
     'Mlym': [],  # Malayalam script
     'Mymr': [],  # Myanmar script
     'Orya': [],  # Oriya script
-    # '': [],  # Sinala script
+    'Sinh': [],  # Sinala script
     'Taml': [],  # Tamil script
     'Telu': [],  # Telugu script
     'Thaa': [],  # Thaana script
@@ -257,7 +257,7 @@ ARABIC_NO_EXTENDED_END_LABELS = {
     'Mlym': [],  # Malayalam script
     'Mymr': [],  # Myanmar script
     'Orya': [],  # Oriya script
-    # '': [],  # Sinala script
+    'Sinh': [],  # Sinala script
     'Taml': [],  # Tamil script
     'Telu': [],  # Telugu script
     'Thaa': [],  # Thaana script
