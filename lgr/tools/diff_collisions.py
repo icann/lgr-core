@@ -111,7 +111,8 @@ def _generate_indexes(lgr, labels, tlds=None, keep=False, quiet=False, cached_in
                  action_idx, _,
                  log) in lgr.compute_label_disposition(label_cp,
                                                        include_invalid=True,
-                                                       collect_log=not quiet):
+                                                       collect_log=not quiet,
+                                                       with_labels=[l['cp'] for l in primaries] if not keep else None):
                 variant = cp_to_ulabel(variant_cp)
                 log = log.strip()
                 if quiet:

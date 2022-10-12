@@ -1070,7 +1070,8 @@ class LGR(object):
         return True, label, [], disposition, action_idx, log_output.getvalue()
 
     def compute_label_disposition(self, label, include_invalid=False,
-                                  collect_log=True, hide_mixed_script_variants=False):
+                                  collect_log=True, hide_mixed_script_variants=False,
+                                  with_labels=None):
         """
         Given a label, compute its disposition and its variants.
 
@@ -1085,6 +1086,7 @@ class LGR(object):
                                 during the generation process.
         :param collect_log: If False, do not collect rule processing log.
         :param hide_mixed_script_variants: Whether we hide mixed scripts variants.
+        :param with_labels: Compute disposition of selected labels only, all if None
         :return: Generator of (variant_cp, variant_invalid_parts, disp, action_idx, disp_set, log)
                  with:
                      - variant_cp: The code point sequence of a variant.
@@ -1118,6 +1120,8 @@ class LGR(object):
 
         # Step 4 - 8.3.  Determining a Disposition for a Label or Variant Label
         for (variant_cp, disp_set, only_variants) in variant_set:
+            if with_labels and variant_cp not in with_labels:
+                continue
             # Configure log system to redirect logs to local attribute
             log_output = StringIO()
             if collect_log:
