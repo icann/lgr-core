@@ -42,7 +42,8 @@ SAME_SCRIPTS = {
     'kvk': 'ko',
     'oko': 'ko',
     'okm': 'ko',
-    'kan': 'ka',
+    'ka': 'Knda',
+    'kan': 'Knda',
     'he': 'Hebr',
     'iw': 'Hebr',
     'hbo': 'Hebr',
@@ -68,7 +69,7 @@ COMBINING_MARK_LABELS = {
     'Gujr': [[0x0ABC, 0x0AAC]],  # Gujarati script
     'Guru': [[0x0A02, 0x0A20]],  # Gurmukhi script
     'zh': [],  # Chinese language
-    'Knda': [],  # kannada
+    'Knda': [[0x0C83, 0x0C96]],  # kannada
     'ko': [],  # Korean language
     'Hebr': [],  # Hebrew
     'ja': [],  # Japanese language
@@ -156,7 +157,7 @@ BEGIN_DIGIT_LABELS = {
     'Guru': [],  # Gurmukhi script
     'zh': [],  # Chinese language
     'ko': [],  # Korean language
-    'ka': [],  # kannada
+    'Knda': [],  # kannada
     'Hebr': [[0x0033, 0x05D1, 0x05D1]],  # Hebrew
     'ja': [],  # Japanese language
     'Khmr': [],  # Khmer script
@@ -187,7 +188,7 @@ MULTIPLE_DIGIT_SETS_LABELS = {
     'Guru': [],  # Gurmukhi script
     'zh': [],  # Chinese language
     'ko': [],  # Korean language
-    'ka': [],  # kannada
+    'Knda': [[0x0C85, 0x0CE7, 0x0031]],  # kannada
     'Hebr': [],  # Hebrew
     'ja': [],  # Japanese language
     'Khmr': [[0x178A, 0x0032, 0x17E5]],  # Khmer script
@@ -217,7 +218,7 @@ JAPANESE_CONTEXTJ_LABELS = {
     'Guru': [],  # Gurmukhi script
     'zh': [],  # Chinese language
     'ko': [],  # Korean language
-    'ka': [],  # kannada
+    'Knda': [],  # kannada
     'Hebr': [],  # Hebrew
     'ja': [[0x0062, 0x30FB, 0x0061]],  # Japanese language
     'Khmr': [],  # Khmer script
@@ -247,7 +248,7 @@ ARABIC_NO_EXTENDED_END_LABELS = {
     'Guru': [],  # Gurmukhi script
     'zh': [],  # Chinese language
     'ko': [],  # Korean language
-    'ka': [],  # kannada
+    'Knda': [],  # kannada
     'Hebr': [],  # Hebrew
     'ja': [],  # Japanese language
     'Khmr': [],  # Khmer script
