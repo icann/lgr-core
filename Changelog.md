@@ -1,8 +1,21 @@
 # Changelog for lgr-core
 
+## 5.0.0 (2022-10-26)
+### New features
+- Allow using pre-computed index in collision calculation
+- Allow filtering mixed-script variants in variants computation
+### Improvements
+- Update variant index computation algorithm
+- Add new general rules check in IDN tables review
+- Make RFC parsers handle asymetric variants sets
+- Make collision tools less verbose and display only relevant data
+- Enhance collision computation performance
+### Fixes
+- Correctly ignore comments in RFC3743 parser
+
 ## 4.0.2 (2021-06-07)
 ### Fixes
-- Fix RFCi 3743 parsing to handle sequences
+- Fix RFC 3743 parsing to handle sequences
 
 ## 4.0.1 (2021-05-28)
 ### Fixes

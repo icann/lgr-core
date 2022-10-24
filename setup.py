@@ -25,7 +25,7 @@ class PyTest(TestCommand):
 
 setup(
     name="lgr-core",
-    version='4.0.2',
+    version='5.0.0',
     author='Viagénie and Wil Tan',
     author_email='support@viagenie.ca',
     description="API for manipulating Label Generation Rules",
@@ -60,6 +60,8 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Topic :: Software Development :: Libraries'
     ]
 )
