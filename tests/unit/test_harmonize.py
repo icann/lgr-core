@@ -127,6 +127,19 @@ class TestHarmonize(unittest.TestCase):
             for cp in all_cp - {(0x0063, )}:
                 self.assertIn(cp, c_variants)
 
+    def test_fix_char_already_exists(self):
+        """
+        When 2 cp have the same variant in both LGRs to be harmonized, along with other variants,
+        we ended up adding the other variants twice in the repertoire, leading to CharAlreadyExists exception
+        """
+        french = load_lgr('harmonization', 'lgr-second-level-french-language-31may22-en.xml')
+        cyrillic = load_lgr('harmonization', 'lgr-second-level-cyrillic-script-31may22-en.xml')
+
+        french_harmonized, cyrillic_harmonized, (log_french, log_cyrillic) = harmonize(french, cyrillic)
+
+        self.assertEqual(len(french_harmonized.repertoire), 3)
+        self.assertEqual(len(cyrillic_harmonized.repertoire), 3)
+
 
 if __name__ == '__main__':
     logging.getLogger('lgr').addHandler(logging.NullHandler())

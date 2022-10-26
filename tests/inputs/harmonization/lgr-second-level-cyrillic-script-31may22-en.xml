@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<lgr xmlns="urn:ietf:params:xml:ns:lgr-1.0">
+  <meta>
+    <version comment="Second Level Reference LGR">1</version>
+    <date>2022-05-31</date>
+    <language>und-Cyrl</language>
+    <unicode-version>6.3.0</unicode-version>
+  </meta>
+  <data>
+    <char cp="0061" tag="sc:Latn" comment="Not part of repertoire">
+      <var cp="0061" type="out-of-repertoire-var" comment="Out-of-repertoire" />
+      <var cp="00E1" type="blocked" />
+      <var cp="03AC" type="blocked" />
+    </char>
+    <char cp="00E1" tag="sc:Latn" comment="Not part of repertoire">
+      <var cp="0061" type="blocked" />
+      <var cp="00E1" type="out-of-repertoire-var" comment="Out-of-repertoire" />
+      <var cp="03AC" type="blocked" />
+    </char>
+    <char cp="03AC" tag="sc:Grek" comment="Not part of repertoire">
+      <var cp="0061" type="blocked" />
+      <var cp="00E1" type="blocked" />
+      <var cp="03AC" type="out-of-repertoire-var" comment="Out-of-repertoire" />
+    </char>
+  </data>
+  <rules/>
+</lgr>
