@@ -16,8 +16,10 @@ class LGRParser(object):
     This class is intended to define a base class to be inherited by actual parser classses.
     """
 
-    def __init__(self, source, filename=None):
+    def __init__(self, source, filename=None, force=True, allow_invalid_property=False):
         self.source = source
+        self.force = force
+        self.allow_invalid_property = allow_invalid_property
 
         if not filename and isinstance(self.source, str):
             self.filename = os.path.basename(self.source)
@@ -69,7 +71,7 @@ class LGRParser(object):
 
         :return: The LGR structure.
         """
-        self._lgr = LGR(name=self.filename)
+        self._lgr = LGR(name=self.filename, allow_invalid_property=self.allow_invalid_property)
 
         logger.debug('Start parsing of file: %s', self.filename)
 

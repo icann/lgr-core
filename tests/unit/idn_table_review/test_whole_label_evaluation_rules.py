@@ -37,19 +37,38 @@ class Test(TestCase):
     }
     general_rules_combining_mark = {
         'applicable': False,
-        'exists': None
+        'exists': None,
+        'display': True
     }
     general_rules_consecutive_hyphens = {
         'applicable': False,
-        'exists': None
+        'exists': None,
+        'display': True
     }
     general_rules_rtl = {
         'applicable': False,
-        'exists': None
+        'exists': None,
+        'display': True
     }
     general_rules_digits_sets = {
         'applicable': False,
-        'exists': None
+        'exists': None,
+        'display': True
+    }
+    general_rules_japanese_contextj = {
+        'applicable': False,
+        'exists': None,
+        'display': False
+    }
+    general_rules_arabic_no_end = {
+        'applicable': False,
+        'exists': None,
+        'display': True
+    }
+    general_rules_kannada_script = {
+        'applicable': False,
+        'exists': None,
+        'display': True
     }
 
     def setUp(self) -> None:
@@ -78,6 +97,8 @@ class Test(TestCase):
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -100,6 +121,8 @@ class Test(TestCase):
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -123,6 +146,8 @@ class Test(TestCase):
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -145,6 +170,8 @@ class Test(TestCase):
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -167,6 +194,8 @@ class Test(TestCase):
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -184,17 +213,20 @@ class Test(TestCase):
                 'remark': 'Mismatch (WLE rule only exists in IDN Table)'
             }, self.match_match, self.not_match_match],
             'additional_cp': [
-                {'cp': (2478,), 'glyph': 'ম', 'name': 'BENGALI LETTER MA'},
-                {'cp': (2497,), 'glyph': 'ু', 'name': 'BENGALI VOWEL SIGN U'}
+                {'cp': (2478,), 'glyph': 'ম', 'name': 'BENGALI LETTER MA', 'category': 'Lo'},
+                {'cp': (2497,), 'glyph': 'ু', 'name': 'BENGALI VOWEL SIGN U', 'category': 'Mn'}
             ],
             'additional_general_rules': {
                 'combining_mark': {
                     'applicable': True,
-                    'exists': True
+                    'exists': True,
+                    'display': True
                 },
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -212,15 +244,18 @@ class Test(TestCase):
                 'result': 'MANUAL CHECK',
                 'remark': 'Mismatch (WLE rule only exists in IDN Table)'
             }, self.match_match, self.not_match_match],
-            'additional_cp': [{'cp': (2497,), 'glyph': 'ু', 'name': 'BENGALI VOWEL SIGN U'}],
+            'additional_cp': [{'cp': (2497,), 'glyph': 'ু', 'name': 'BENGALI VOWEL SIGN U', 'category': 'Mn'}],
             'additional_general_rules': {
                 'combining_mark': {
                     'applicable': True,
-                    'exists': None
+                    'exists': None,
+                    'display': True
                 },
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -233,17 +268,20 @@ class Test(TestCase):
         self.assertDictEqual(result, {
             'comparison': [self.all_match_match, self.match_match, self.not_match_match],
             'additional_cp': [
-                {'cp': (2478,), 'glyph': 'ম', 'name': 'BENGALI LETTER MA'},
-                {'cp': (2497,), 'glyph': 'ু', 'name': 'BENGALI VOWEL SIGN U'}
+                {'cp': (2478,), 'glyph': 'ম', 'name': 'BENGALI LETTER MA', 'category': 'Lo'},
+                {'cp': (2497,), 'glyph': 'ু', 'name': 'BENGALI VOWEL SIGN U', 'category': 'Mn'}
             ],
             'additional_general_rules': {
                 'combining_mark': {
                     'applicable': True,
-                    'exists': False
+                    'exists': False,
+                    'display': True
                 },
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -260,15 +298,18 @@ class Test(TestCase):
                 'result': 'MANUAL CHECK',
                 'remark': 'Mismatch (WLE rule only exists in IDN Table)'
             }, self.match_match, self.not_match_match],
-            'additional_cp': [{'cp': (109,), 'glyph': 'm', 'name': 'LATIN SMALL LETTER M'}],
+            'additional_cp': [{'cp': (109,), 'glyph': 'm', 'name': 'LATIN SMALL LETTER M', 'category': 'Ll'}],
             'additional_general_rules': {
                 'combining_mark': self.general_rules_combining_mark,
                 'consecutive_hyphens': {
                     'applicable': True,
-                    'exists': True
+                    'exists': True,
+                    'display': True
                 },
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -285,39 +326,23 @@ class Test(TestCase):
                 'result': 'MANUAL CHECK',
                 'remark': 'Mismatch (WLE rule only exists in IDN Table)'
             }, self.match_match, self.not_match_match],
-            'additional_cp': [{'cp': (109,), 'glyph': 'm', 'name': 'LATIN SMALL LETTER M'}],
+            'additional_cp': [{'cp': (109,), 'glyph': 'm', 'name': 'LATIN SMALL LETTER M', 'category': 'Ll'}],
             'additional_general_rules': {
                 'combining_mark': self.general_rules_combining_mark,
                 'consecutive_hyphens': {
                     'applicable': True,
-                    'exists': False
+                    'exists': False,
+                    'display': True
                 },
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
     def test_wle_rtl_digit_applicable_ok(self):
         idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_rtl.xml', unidb=self.unidb)
-
-        result = generate_whole_label_evaluation_rules_report(idn, self.ref)
-
-        self.assertDictEqual(result, {
-            'comparison': [self.all_match_match, self.match_match, self.not_match_match],
-            'additional_cp': [{'cp': (1489,), 'glyph': 'ב', 'name': 'HEBREW LETTER BET'}],
-            'additional_general_rules': {
-                'combining_mark': self.general_rules_combining_mark,
-                'consecutive_hyphens': self.general_rules_consecutive_hyphens,
-                'rtl': {
-                    'applicable': True,
-                    'exists': False
-                },
-                'digits_set': self.general_rules_digits_sets,
-            }
-        })
-
-    def test_wle_rtl_digit_applicable_not_ok(self):
-        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_rtl_wrong.xml', unidb=self.unidb)
 
         result = generate_whole_label_evaluation_rules_report(idn, self.ref)
 
@@ -329,15 +354,40 @@ class Test(TestCase):
                 'result': 'MANUAL CHECK',
                 'remark': 'Mismatch (WLE rule only exists in IDN Table)'
             }, self.match_match, self.not_match_match],
-            'additional_cp': [{'cp': (1489,), 'glyph': 'ב', 'name': 'HEBREW LETTER BET'}],
+            'additional_cp': [{'cp': (1489,), 'glyph': 'ב', 'name': 'HEBREW LETTER BET', 'category': 'Lo'}],
             'additional_general_rules': {
                 'combining_mark': self.general_rules_combining_mark,
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': {
                     'applicable': True,
-                    'exists': True
+                    'exists': True,
+                    'display': True
                 },
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
+            }
+        })
+
+    def test_wle_rtl_digit_applicable_not_ok(self):
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_rtl_wrong.xml', unidb=self.unidb)
+
+        result = generate_whole_label_evaluation_rules_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'comparison': [self.all_match_match, self.match_match, self.not_match_match],
+            'additional_cp': [{'cp': (1489,), 'glyph': 'ב', 'name': 'HEBREW LETTER BET', 'category': 'Lo'}],
+            'additional_general_rules': {
+                'combining_mark': self.general_rules_combining_mark,
+                'consecutive_hyphens': self.general_rules_consecutive_hyphens,
+                'rtl': {
+                    'applicable': True,
+                    'exists': False,
+                    'display': True
+                },
+                'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -355,17 +405,17 @@ class Test(TestCase):
                 'remark': 'Mismatch (WLE rule only exists in IDN Table)'
             }, self.match_match, self.not_match_match],
             'additional_cp': [
-                {'cp': (2478,), 'glyph': 'ম', 'name': 'BENGALI LETTER MA'},
-                {'cp': (2534,), 'glyph': '০', 'name': 'BENGALI DIGIT ZERO'},
-                {'cp': (2535,), 'glyph': '১', 'name': 'BENGALI DIGIT ONE'},
-                {'cp': (2536,), 'glyph': '২', 'name': 'BENGALI DIGIT TWO'},
-                {'cp': (2537,), 'glyph': '৩', 'name': 'BENGALI DIGIT THREE'},
-                {'cp': (2538,), 'glyph': '৪', 'name': 'BENGALI DIGIT FOUR'},
-                {'cp': (2539,), 'glyph': '৫', 'name': 'BENGALI DIGIT FIVE'},
-                {'cp': (2540,), 'glyph': '৬', 'name': 'BENGALI DIGIT SIX'},
-                {'cp': (2541,), 'glyph': '৭', 'name': 'BENGALI DIGIT SEVEN'},
-                {'cp': (2542,), 'glyph': '৮', 'name': 'BENGALI DIGIT EIGHT'},
-                {'cp': (2543,), 'glyph': '৯', 'name': 'BENGALI DIGIT NINE'},
+                {'cp': (2478,), 'glyph': 'ম', 'name': 'BENGALI LETTER MA', 'category': 'Lo'},
+                {'cp': (2534,), 'glyph': '০', 'name': 'BENGALI DIGIT ZERO', 'category': 'Nd'},
+                {'cp': (2535,), 'glyph': '১', 'name': 'BENGALI DIGIT ONE', 'category': 'Nd'},
+                {'cp': (2536,), 'glyph': '২', 'name': 'BENGALI DIGIT TWO', 'category': 'Nd'},
+                {'cp': (2537,), 'glyph': '৩', 'name': 'BENGALI DIGIT THREE', 'category': 'Nd'},
+                {'cp': (2538,), 'glyph': '৪', 'name': 'BENGALI DIGIT FOUR', 'category': 'Nd'},
+                {'cp': (2539,), 'glyph': '৫', 'name': 'BENGALI DIGIT FIVE', 'category': 'Nd'},
+                {'cp': (2540,), 'glyph': '৬', 'name': 'BENGALI DIGIT SIX', 'category': 'Nd'},
+                {'cp': (2541,), 'glyph': '৭', 'name': 'BENGALI DIGIT SEVEN', 'category': 'Nd'},
+                {'cp': (2542,), 'glyph': '৮', 'name': 'BENGALI DIGIT EIGHT', 'category': 'Nd'},
+                {'cp': (2543,), 'glyph': '৯', 'name': 'BENGALI DIGIT NINE', 'category': 'Nd'},
             ],
             'additional_general_rules': {
                 'combining_mark': self.general_rules_combining_mark,
@@ -373,8 +423,11 @@ class Test(TestCase):
                 'rtl': self.general_rules_digits_sets,
                 'digits_set': {
                     'applicable': True,
-                    'exists': True
+                    'exists': True,
+                    'display': True
                 },
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
@@ -392,17 +445,17 @@ class Test(TestCase):
                 'remark': 'Mismatch (WLE rule only exists in IDN Table)'
             }, self.match_match, self.not_match_match],
             'additional_cp': [
-                {'cp': (2478,), 'glyph': 'ম', 'name': 'BENGALI LETTER MA'},
-                {'cp': (2534,), 'glyph': '০', 'name': 'BENGALI DIGIT ZERO'},
-                {'cp': (2535,), 'glyph': '১', 'name': 'BENGALI DIGIT ONE'},
-                {'cp': (2536,), 'glyph': '২', 'name': 'BENGALI DIGIT TWO'},
-                {'cp': (2537,), 'glyph': '৩', 'name': 'BENGALI DIGIT THREE'},
-                {'cp': (2538,), 'glyph': '৪', 'name': 'BENGALI DIGIT FOUR'},
-                {'cp': (2539,), 'glyph': '৫', 'name': 'BENGALI DIGIT FIVE'},
-                {'cp': (2540,), 'glyph': '৬', 'name': 'BENGALI DIGIT SIX'},
-                {'cp': (2541,), 'glyph': '৭', 'name': 'BENGALI DIGIT SEVEN'},
-                {'cp': (2542,), 'glyph': '৮', 'name': 'BENGALI DIGIT EIGHT'},
-                {'cp': (2543,), 'glyph': '৯', 'name': 'BENGALI DIGIT NINE'},
+                {'cp': (2478,), 'glyph': 'ম', 'name': 'BENGALI LETTER MA', 'category': 'Lo'},
+                {'cp': (2534,), 'glyph': '০', 'name': 'BENGALI DIGIT ZERO', 'category': 'Nd'},
+                {'cp': (2535,), 'glyph': '১', 'name': 'BENGALI DIGIT ONE', 'category': 'Nd'},
+                {'cp': (2536,), 'glyph': '২', 'name': 'BENGALI DIGIT TWO', 'category': 'Nd'},
+                {'cp': (2537,), 'glyph': '৩', 'name': 'BENGALI DIGIT THREE', 'category': 'Nd'},
+                {'cp': (2538,), 'glyph': '৪', 'name': 'BENGALI DIGIT FOUR', 'category': 'Nd'},
+                {'cp': (2539,), 'glyph': '৫', 'name': 'BENGALI DIGIT FIVE', 'category': 'Nd'},
+                {'cp': (2540,), 'glyph': '৬', 'name': 'BENGALI DIGIT SIX', 'category': 'Nd'},
+                {'cp': (2541,), 'glyph': '৭', 'name': 'BENGALI DIGIT SEVEN', 'category': 'Nd'},
+                {'cp': (2542,), 'glyph': '৮', 'name': 'BENGALI DIGIT EIGHT', 'category': 'Nd'},
+                {'cp': (2543,), 'glyph': '৯', 'name': 'BENGALI DIGIT NINE', 'category': 'Nd'},
             ],
             'additional_general_rules': {
                 'combining_mark': self.general_rules_combining_mark,
@@ -410,13 +463,107 @@ class Test(TestCase):
                 'rtl': self.general_rules_digits_sets,
                 'digits_set': {
                     'applicable': True,
-                    'exists': False
+                    'exists': False,
+                    'display': True
                 },
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
+            }
+        })
+
+    def test_japanese_contextj_applicable_ok(self):
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_japanese_contextj.xml', unidb=self.unidb)
+
+        result = generate_whole_label_evaluation_rules_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'comparison': [self.all_match_match, {
+                'name': 'contextj',
+                'idn_table': True,
+                'reference_lgr': False,
+                'result': 'MANUAL CHECK',
+                'remark': 'Mismatch (WLE rule only exists in IDN Table)'
+            }, {
+                'name': 'match',
+                'idn_table': True,
+                'reference_lgr': True,
+                'result': 'MANUAL CHECK',
+                'remark': 'Check the content of the rule'
+            }, self.not_match_match],
+            'additional_cp': [
+                {'cp': (12353,), 'glyph': 'ぁ', 'name': 'HIRAGANA LETTER SMALL A', 'category': 'Lo'},
+            ],
+            'additional_general_rules': {
+                'combining_mark': self.general_rules_combining_mark,
+                'consecutive_hyphens': self.general_rules_consecutive_hyphens,
+                'rtl': self.general_rules_rtl,
+                'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': {
+                    'applicable': True,
+                    'exists': True,
+                    'display': True
+                },
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
+            }
+        })
+
+    def test_japanese_contextj_missing_cp(self):
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_japanese_contextj_missing_cp.xml',
+                       unidb=self.unidb)
+
+        result = generate_whole_label_evaluation_rules_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'comparison': [self.all_match_match, self.match_match, self.not_match_match],
+            'additional_cp': [],
+            'additional_general_rules': {
+                'combining_mark': self.general_rules_combining_mark,
+                'consecutive_hyphens': self.general_rules_consecutive_hyphens,
+                'rtl': self.general_rules_rtl,
+                'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': {
+                    'applicable': False,
+                    'exists': None,
+                    'display': True
+                },
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
+            }
+        })
+
+    def test_japanese_contextj_applicable_not_ok(self):
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_japanese_contextj_wrong.xml',
+                       unidb=self.unidb)
+
+        result = generate_whole_label_evaluation_rules_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'comparison': [self.all_match_match, {
+                'name': 'match',
+                'idn_table': True,
+                'reference_lgr': True,
+                'result': 'MANUAL CHECK',
+                'remark': 'Check the content of the rule'
+            }, self.not_match_match],
+            'additional_cp': [
+                {'cp': (12539,), 'glyph': '・', 'name': 'KATAKANA MIDDLE DOT', 'category': 'Po'},
+            ],
+            'additional_general_rules': {
+                'combining_mark': self.general_rules_combining_mark,
+                'consecutive_hyphens': self.general_rules_consecutive_hyphens,
+                'rtl': self.general_rules_rtl,
+                'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': {
+                    'applicable': True,
+                    'exists': False,
+                    'display': True
+                },
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })
 
     def test_wle_missing_in_idn_table_not_applied_to_cp(self):
-        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_missing_in_idn_table_not_applied_to_cp.xml',
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules',
+                       'wle_missing_in_idn_table_not_applied_to_cp.xml',
                        unidb=self.unidb)
 
         result = generate_whole_label_evaluation_rules_report(idn, self.ref)
@@ -435,5 +582,7 @@ class Test(TestCase):
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
         })

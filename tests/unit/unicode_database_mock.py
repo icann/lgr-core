@@ -45,13 +45,15 @@ class UnicodeDatabaseMock(UnicodeDatabase):
         raise NotImplementedError
 
     def get_script(self, cp, alpha4=False):
-        # TODO
-        return 'Latn'
+        from tests.unit.unidb_get_script_mock import script
+        return script(cp)
 
     def get_script_extensions(self, cp, alpha4=False):
         raise NotImplementedError
 
     def get_prop_value(self, cp, prop_name, prop_type=U_LONG_PROPERTY_NAME):
+        if prop_name == 'General_Category':
+            return unicodedata.category(cp_to_ulabel(cp))
         raise NotImplementedError
 
     def is_combining_mark(self, cp):

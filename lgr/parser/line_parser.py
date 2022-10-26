@@ -7,7 +7,6 @@ import logging
 import io
 import re
 
-from lgr.core import LGR
 from lgr.exceptions import LGRException
 from lgr.utils import format_cp
 from lgr.parser.parser import LGRParser
@@ -24,7 +23,7 @@ class LineParser(LGRParser):
         # No Unicode version defined for now
         return ""
 
-    def validate_document(self, schema):
+    def validate_document(self, schema=None):
         # No validation for now
         return True
 

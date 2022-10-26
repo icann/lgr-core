@@ -27,6 +27,7 @@ from lgr.exceptions import (LGRApiInvalidParameter,
                             LGRFormatException,
                             LGRApiException,
                             LGRException)
+from lgr.mixed_scripts_variant_filter import MixedScriptsVariantFilter, BaseMixedScriptsVariantFilter
 from lgr.validate import validate_lgr
 from lgr.populate import populate_lgr
 from lgr.utils import (collapse_codepoints,
@@ -80,7 +81,8 @@ class LGR(object):
                  name='New File',
                  metadata=None,
                  reference_manager=None,
-                 unicode_database=None):
+                 unicode_database=None,
+                 allow_invalid_property=False):
         """
         Create an LGR object.
 
@@ -91,6 +93,8 @@ class LGR(object):
                                                  If no database is used,
                                                  all Unicode-related checks
                                                  are skipped.
+        :param allow_invalid_property: Whether an exception should be raised when cp_or_sequence is or contains an
+                                       invalid IDNA2008 property
         """
         self.name = name or 'New File'
 
@@ -102,6 +106,8 @@ class LGR(object):
         self.repertoire = Repertoire()
 
         self._unicode_database = unicode_database
+
+        self.raise_on_invalid_property = not allow_invalid_property
 
         # Used to store types of variants used.
         # Not updated on variant deletion
@@ -281,7 +287,6 @@ class LGR(object):
         logger.debug("Add cp '%s' to LGR '%s'", cp_or_sequence, self)
 
         cp_or_sequence = self._check_convert_cp(cp_or_sequence)
-
         if (not force) and (when is not None) and (not_when is not None):
             logger.error("Cannot add code point '%s' with both 'when' "
                          "and 'not-when' attributes", format_cp(cp_or_sequence))
@@ -430,8 +435,7 @@ class LGR(object):
         :param override_repertoire: If True, insert code point into LGR
                                     even if the code point is not in
                                     the validating repertoire.
-        :param force: If True, insert the code point in the LGR
-                      the best way possible.
+        :param force: If True, insert the code point in the LGR the best way possible.
                       This implies override_repertoire=True.
         :raises LGRApiInvalidParameter: If first_cp > last_cp.
         :raises NotInRepertoire: If one of the code point in the range
@@ -479,7 +483,9 @@ class LGR(object):
                     codepoints.append(cp)
             elif isinstance(status, CharInvalidIdnaProperty):
                 logger.error("CP '%s' is not IDNA valid", format_cp(cp))
-                if not force:
+                if not self.raise_on_invalid_property:
+                    codepoints.append(cp)
+                elif not force:
                     raise status
             elif isinstance(status, CharAlreadyExists):
                 logger.error("CP '%s' is already present in repertoire",
@@ -643,8 +649,7 @@ class LGR(object):
         :param override_repertoire: If True, insert code point into LGR
                                     even if the code point is not in
                                     the validating repertoire.
-        :param force: If True, insert the variant in the LGR
-                      the best way possible.
+        :param force: If True, insert the variant in the LGR the best way possible.
                       This implies override_repertoire=True.
         :raises LGRApiInvalidParameter: If cp_or_sequence is empty list,
                                         or non-supported input type.
@@ -885,12 +890,17 @@ class LGR(object):
         for cp in range(first_cp, last_cp + 1):
 
             # Test validity of code point (IDNA)
+            keep_raise = self.raise_on_invalid_property
             try:
+                # we need the method to raise exception in that case
+                self.raise_on_invalid_property = True
                 # No need to force since it is the aim of this function
                 cp_ = self._check_convert_cp(cp)
             except CharInvalidIdnaProperty as invalid:
                 result.append((cp, invalid))
                 continue
+            finally:
+                self.raise_on_invalid_property = keep_raise
 
             # Test validity of code point (reference repertoire)
             if validating_repertoire is not None:
@@ -1060,7 +1070,8 @@ class LGR(object):
         return True, label, [], disposition, action_idx, log_output.getvalue()
 
     def compute_label_disposition(self, label, include_invalid=False,
-                                  collect_log=True):
+                                  collect_log=True, hide_mixed_script_variants=False,
+                                  with_labels=None):
         """
         Given a label, compute its disposition and its variants.
 
@@ -1074,6 +1085,8 @@ class LGR(object):
                                 disposition, which are normally eliminated
                                 during the generation process.
         :param collect_log: If False, do not collect rule processing log.
+        :param hide_mixed_script_variants: Whether we hide mixed scripts variants.
+        :param with_labels: Compute disposition of selected labels only, all if None
         :return: Generator of (variant_cp, variant_invalid_parts, disp, action_idx, disp_set, log)
                  with:
                      - variant_cp: The code point sequence of a variant.
@@ -1101,12 +1114,14 @@ class LGR(object):
 
         # 8.2 Determining Variants for a Label
         # Step 1 - 2 - 3
-        variant_set = self._generate_label_variants(label)
+        variant_set = self._generate_label_variants(label, hide_mixed_script_variants=hide_mixed_script_variants)
 
         original_label = None
 
         # Step 4 - 8.3.  Determining a Disposition for a Label or Variant Label
         for (variant_cp, disp_set, only_variants) in variant_set:
+            if with_labels and variant_cp not in with_labels:
+                continue
             # Configure log system to redirect logs to local attribute
             log_output = StringIO()
             if collect_log:
@@ -1151,7 +1166,7 @@ class LGR(object):
 
         yield original_label
 
-    def compute_label_disposition_summary(self, label, include_invalid=False):
+    def compute_label_disposition_summary(self, label, include_invalid=False, hide_mixed_script_variants=False):
         """
         Given a label compute its disposition and variants along with a summary.
 
@@ -1161,6 +1176,7 @@ class LGR(object):
         :param include_invalid: If True, also return variants with "invalid"
                                 disposition, which are normally eliminated
                                 during the generation process.
+        :param hide_mixed_script_variants: Whether we hide mixed scripts variants.
         :return: Generator of (variant_cp, variant_invalid_parts, disp, action_idx, disp_set, log)
                  with:
 
@@ -1176,13 +1192,14 @@ class LGR(object):
         # We have to resolve _ALL_ labels here...
         # This might cause some issues with memory/time computation.
         label_dispositions = list(self.compute_label_disposition(label,
-                                                                 include_invalid=include_invalid))
+                                                                 include_invalid=include_invalid,
+                                                                 hide_mixed_script_variants=hide_mixed_script_variants))
 
         summary = collections.Counter([disp for (_, disp, _, _, _, _)
                                        in label_dispositions])
         return summary, label_dispositions
 
-    def estimate_variant_number(self, label):
+    def estimate_variant_number(self, label, hide_mixed_script_variants=False):
         """
         Given a label, return the estimated number of variants.
 
@@ -1190,12 +1207,27 @@ class LGR(object):
 
         :param label: The label to compute the disposition of,
                       as a sequence of code points.
+        :param hide_mixed_script_variants: Whether we count mixed scripts variants.
         :return: Estimated number of generated variants.
         """
         (_, _, _, chars) = self._test_preliminary_eligibility(label, generate_chars=True)
         variant_number = 1
-        for char in chars:
-            variant_number *= len(list(char.get_variants())) + 1  # Take into account original code point
+        if hide_mixed_script_variants:
+            mixed_script_filter = MixedScriptsVariantFilter(label, self.repertoire, unidb=self._unicode_database)
+            for char in chars:
+                variant_number *= len(
+                    [v for v in char.get_variants() if mixed_script_filter.cp_in_base_scripts(v.cp)]
+                ) + 1  # Take into account original code point
+            for script in mixed_script_filter.other_scripts:
+                other_script_number = 1
+                for char in chars:
+                    other_script_number *= len(
+                        [v for v in char.get_variants() if mixed_script_filter.cp_in_scripts(v.cp, {script})]
+                    )
+                variant_number += other_script_number
+        else:
+            for char in chars:
+                variant_number *= len(list(char.get_variants())) + 1  # Take into account original code point
         return variant_number
 
     def generate_index_label(self, label):
@@ -1203,16 +1235,15 @@ class LGR(object):
         Generate the "index label" of a given label.
 
         The "index label" is used to test for collisions between 2 labels.
-        It associates to a code point an index of the set formed by
-        the code point and its variants.
+        It associates to a code point an index of the set formed by the code point and its variants.
 
         For more details, see Section 8.5 of RFC7940.
 
         Pre-requires: Symmetric and transitive LGR.
 
-        :param label: The label to compute the disposition of,
-                      as a sequence of code points.
-        :return: The index label, as a list.
+        :param label: The label to compute the disposition of, as a sequence of code points.
+
+        :return: The index label, as a list and the index computed with minimum code point algorithm if required.
         :raises NotInLgr: If the label is not in the LGR
                           (does not pass preliminary eligibility testing).
         :raises RuleError: If rule is invalid.
@@ -1231,11 +1262,12 @@ class LGR(object):
         for char in chars:
             logger.debug('Char CP: %s', format_cp(char.cp))
             # Index: smallest id of the char and its variants
-            ids = [id(char)]
+            # FIXME: This index algorithm has some problems when dealing with sequences and should be fixed
+            ids = [char.as_index()]
             for var in char.get_variants():
                 var_char = self.repertoire.get_char(var.cp)
                 logger.debug('Variant CP: %r', var_char)
-                ids.append(id(var_char))
+                ids.append(var_char.as_index())
             logger.debug('List of variant ids: %s', ids)
 
             index_label.append(min(ids))
@@ -1527,14 +1559,16 @@ class LGR(object):
 
     def _generate_label_variants(self, label,
                                  orig_label=None, label_prefix=None,
-                                 has_variant=False):
+                                 has_variant=False,
+                                 mixed_script_filter: BaseMixedScriptsVariantFilter = None,
+                                 hide_mixed_script_variants=False):
         """
         Generate a list of all the variants for a given label.
 
         Takes a label as input, and output the _variants_ of the label.
         If there is no code point with at least one variant defined,
         then the output is empty.
-        Output may contained the reflexive variant of a label, if any reflexive
+        Output may contain the reflexive variant of a label, if any reflexive
         mapping is defined and valid in the label context.
 
         :param label: The label to generate the variants of,
@@ -1545,6 +1579,8 @@ class LGR(object):
         :param label_prefix: The prefix of the label (used for recursion).
         :param has_variant: True if the prefix has at least one variant
                             (used for recursion).
+        :param mixed_script_filter: Filter for mixed script (used for recursion).
+        :param hide_mixed_script_variants: Whether we hide mixed scripts variants.
         :return: A generator of (variant_cp, variant_disp, only_variants),
                  with:
 
@@ -1563,7 +1599,9 @@ class LGR(object):
 
         # current `label` will be consumed by recursion,
         # so need to save the original.
+        first_call = False
         if orig_label is None:
+            first_call = True
             orig_label = label
         if label_prefix is None:
             label_prefix = tuple()
@@ -1571,6 +1609,9 @@ class LGR(object):
         if len(label) == 0:
             rule_logger.debug("Empty label")
             return
+
+        if hide_mixed_script_variants and not mixed_script_filter:
+            mixed_script_filter = MixedScriptsVariantFilter(label, self.repertoire, unidb=self._unicode_database)
 
         try:
             same_prefix = self._get_prefix_list(label, label_prefix)
@@ -1592,12 +1633,11 @@ class LGR(object):
                         same_prefix = [cp]
                         break
 
-        for char in same_prefix[:]:
-            if isinstance(char, CharSequence):
-                # char is a sequence, if first code point of the sequence is in the LGR we need to consider it
-                for cp in self.repertoire.get_chars_from_prefix(label[0]):
-                    if len(cp) < len(char) and cp.is_prefix_of(label):
-                        same_prefix.append(cp)
+        for char in [ch for ch in same_prefix if isinstance(ch, CharSequence)]:
+            # char is a sequence, if first code point of the sequence is in the LGR we need to consider it
+            for cp in self.repertoire.get_chars_from_prefix(label[0]):
+                if len(cp) < len(char) and cp.is_prefix_of(label):
+                    same_prefix.append(cp)
 
         # Iterate through characters matching the start of the label
         for char in same_prefix:
@@ -1610,6 +1650,7 @@ class LGR(object):
             char_perms = []
 
             for var in char.get_variants():
+                script_filter: BaseMixedScriptsVariantFilter = mixed_script_filter
                 rule_logger.debug("Variant %s", format_cp(var.cp))
 
                 # Generate variant label:
@@ -1618,6 +1659,14 @@ class LGR(object):
                 # the variant code point from the label.
                 variant_label = label_prefix + var.cp + tuple(label[len(char):])
 
+                if hide_mixed_script_variants:
+                    if first_call and mixed_script_filter.cp_in_other_scripts(var.cp):
+                        rule_logger.debug("Variant script is eligible for non mixed-scripts", format_cp(var.cp))
+                        script_filter = mixed_script_filter.get_filter_for_other_script(
+                            self.unicode_database.get_script(var.cp[0]))
+                    elif not mixed_script_filter.cp_in_base_scripts(var.cp):
+                        rule_logger.debug("Variant %s contains mixed-scripts", format_cp(var.cp))
+                        continue
                 # Test when/not-when rules - Use variant label
                 if not self._test_context_rules(var,
                                                 variant_label,
@@ -1633,7 +1682,7 @@ class LGR(object):
 
                 if var.cp == char.cp:
                     has_reflexive_mapping = True
-                char_perms.append((var.cp, var_disp, True))
+                char_perms.append((var.cp, var_disp, True, script_filter))
 
             # Add original code point in permutation list
             # ONLY if the character has no defined reflexive mapping.
@@ -1644,26 +1693,34 @@ class LGR(object):
             # the type associated with a reflexive variant mapping
             # is applied to any of the permuted labels containing
             # the original code point.
-            if not has_reflexive_mapping:
-                char_perms.insert(0, (char.cp, frozenset(), False))
+            # Also ignore char that are not part of the label in the current script if required
+            if not has_reflexive_mapping and (not hide_mixed_script_variants or first_call or
+                                              mixed_script_filter.cp_in_base_scripts(char.cp)):
+                char_perms.insert(0, (char.cp, frozenset(), False, mixed_script_filter))
 
             if len(label) > len(char):
-                for (cp, disp, is_variant) in char_perms:
+                for (cp, disp, is_variant, script_filter) in char_perms:
                     # Generate variants for reminder of label
                     for (perm_cps, perm_disp, perm_only_variants) in \
                             self._generate_label_variants(label[len(char):],
                                                           orig_label,
                                                           label_prefix + cp,
                                                           # Mark if prefix is part of a variant
-                                                          is_variant | has_variant):
+                                                          is_variant | has_variant,
+                                                          mixed_script_filter=script_filter,
+                                                          hide_mixed_script_variants=hide_mixed_script_variants):
                         yield (cp + perm_cps,
                                # Construct new set of types
                                perm_disp | disp,
                                is_variant & perm_only_variants)
             elif has_variant or char.has_variant():
                 # Do not output the same un-permuted label
-                for (cp, disp, is_variant) in char_perms:
-                    yield (cp, disp, is_variant)
+                # TODO for consistency another or condition should be added:
+                #          or orig_label != label_prefix + char.cp
+                #      in order to include the original label in output in case the last char has no variants which
+                #      won't be the case without this condition
+                for (cp, disp, is_variant, _) in char_perms:
+                    yield cp, disp, is_variant
 
     def _apply_actions(self, label, disp_set, only_variants):
         """
@@ -1806,7 +1863,8 @@ class LGR(object):
                 if idna_prop in ['UNASSIGNED', 'DISALLOWED']:
                     logger.error("Code point %s is not IDNA-valid",
                                  format_cp(cp))
-                    raise CharInvalidIdnaProperty(cp)
+                    if self.raise_on_invalid_property:
+                        raise CharInvalidIdnaProperty(cp)
             in_script, _ = self.cp_in_script(cp_or_sequence)
             if assert_in_script:
                 raise CharNotInScript(cp_or_sequence)

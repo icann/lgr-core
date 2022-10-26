@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<lgr xmlns="urn:ietf:params:xml:ns:lgr-1.0">
+  <meta>
+    <version comment="Second Level Reference LGR">3</version>
+    <date>2022-05-31</date>
+    <language>fr</language>
+    <unicode-version>11.0.0</unicode-version>
+  </meta>
+  <data>
+    <char cp="0061" tag="sc:Latn" comment="LATIN SMALL LETTER A">
+      <var cp="00E1" when="enabled" type="blocked" comment="diacritic variant" />
+    </char>
+    <char cp="00E1" tag="sc:Latn" comment="LATIN SMALL LETTER A WITH ACUTE">
+      <var cp="0061" when="enabled" type="allocatable" comment="base form variant" />
+    </char>
+  </data>
+  <rules/>
+</lgr>

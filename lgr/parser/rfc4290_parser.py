@@ -57,7 +57,7 @@ class RFC4290Parser(LGRParser):
 
             try:
                 codepoints = parse_char(char)
-                self._lgr.add_cp(codepoints)
+                self._lgr.add_cp(codepoints, force=self.force)
             except ValueError:
                 logger.error("Invalid character '%s' at line %d", char,
                              line_num)
@@ -74,7 +74,7 @@ class RFC4290Parser(LGRParser):
                 for var in variants:
                     try:
                         var_codepoints = parse_char(var)
-                        self._lgr.add_variant(codepoints, var_codepoints)
+                        self._lgr.add_variant(codepoints, var_codepoints, force=self.force)
                     except ValueError:
                         logger.error("Invalid variant '%s' at line %d", var,
                                      line_num)

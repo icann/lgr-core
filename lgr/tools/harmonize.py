@@ -60,7 +60,7 @@ def harmonize(lgr_1, lgr_2, rz_lgr=None, _copy=True):
 
         # Find variants present in LGR 1 but not 2
         for variant_cp in lgr_1_variants - lgr_2_variants:
-            if variant_cp not in lgr_2_repertoire:
+            if variant_cp not in h_lgr_2.repertoire:
                 # Add variant to repertoire
                 h_lgr_2.add_cp(variant_cp, comment='Out-of-repertoire')
                 # Add identity mapping for newly added code point
@@ -72,7 +72,7 @@ def harmonize(lgr_1, lgr_2, rz_lgr=None, _copy=True):
             h_lgr_2.add_variant(cp, variant_cp, variant_type='blocked')
         # Find variants present in LGR 2 but not 1
         for variant_cp in lgr_2_variants - lgr_1_variants:
-            if variant_cp not in lgr_1_repertoire:
+            if variant_cp not in h_lgr_1.repertoire:
                 # Add variant to repertoire
                 h_lgr_1.add_cp(variant_cp, comment='Out-of-repertoire')
                 # Add identity mapping for newly added code point

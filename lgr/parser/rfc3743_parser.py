@@ -91,12 +91,13 @@ class RFC3743Parser(LGRParser):
                 continue
 
             # Split base character from variant(s)
-            char_variant = line.split(';')
+            no_comment = line.split('#', 1)[0].strip()
+            char_variant = no_comment.split(';')
             char = char_variant[0]
 
             try:
                 [(codepoints, references)] = parse_char(char)
-                self._lgr.add_cp(codepoints, ref=references)
+                self._lgr.add_cp(codepoints, ref=references, force=self.force)
             except ValueError:
                 logger.error("Invalid character '%s' at line %d", char, line_num)
             except LGRException as exc:
@@ -132,7 +133,8 @@ class RFC3743Parser(LGRParser):
         for (var_codepoints, references) in variants:
             try:
                 self._lgr.add_variant(codepoints, var_codepoints,
-                                      ref=references, variant_type=var_type)
+                                      ref=references, variant_type=var_type,
+                                      force=self.force)
             except LGRException as exc:
                 logger.error("Cannot add variant '%s' to code point '%s' at line %d: %s",
                              format_cp(var_codepoints),

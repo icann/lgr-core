@@ -17,8 +17,13 @@ logger = logging.getLogger(__name__)
 
 class HeuristicParser(LGRParser):
 
-    def __init__(self, source, filename=None):
-        super().__init__(source, filename)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.kwargs = {
+            'filename': self.filename,
+            'force': self.force,
+            'allow_invalid_property': self.allow_invalid_property
+        }
         self.lgr_parser = None
 
     def unicode_version(self):
@@ -43,13 +48,15 @@ class HeuristicParser(LGRParser):
             is_str = False
             first_line = first_line.decode('utf-8')
         if self._is_lgr(first_line):
-            self.lgr_parser = XMLParser(self.source, self.filename)
+            self.lgr_parser = XMLParser(self.source, **self.kwargs)
         else:
+            if hasattr(rule_file, "seek"):
+                rule_file.seek(0)
             self._check_rfc_format(rule_file, is_str)
 
         if not self.lgr_parser:
             # default to LGR XML parser
-            self.lgr_parser = XMLParser(self.source, self.filename)
+            self.lgr_parser = XMLParser(self.source, **self.kwargs)
 
         if hasattr(rule_file, "seek"):
             rule_file.seek(0)
@@ -70,22 +77,22 @@ class HeuristicParser(LGRParser):
             if not is_str:
                 line = line.decode('utf-8')
             if RFC3743_REGEX.match(line) and not RFC4290_REGEX.match(line):
-                self.lgr_parser = RFC3743Parser(get_source(), self.filename)
+                self.lgr_parser = RFC3743Parser(get_source(), **self.kwargs)
                 break
             elif RFC4290_REGEX.match(line.strip()):
                 match = True
                 if ';' in line:
-                    self.lgr_parser = RFC3743Parser(get_source(), self.filename)
+                    self.lgr_parser = RFC3743Parser(get_source(), **self.kwargs)
                     break
                 elif '|' in line:
-                    self.lgr_parser = RFC4290Parser(get_source(), self.filename)
+                    self.lgr_parser = RFC4290Parser(get_source(), **self.kwargs)
                     break
 
         if not self.lgr_parser and match:
             # we got through the whole file and we got matches with RFC formats but we did not get a way to
             # discriminate therefore select RFC4290
             # Note: this is because we accept RFC3743 without semicolon on code point line
-            self.lgr_parser = RFC4290Parser(get_source(), self.filename)
+            self.lgr_parser = RFC4290Parser(get_source(), **self.kwargs)
 
     def _parse_doc(self, rule_file):
         """
