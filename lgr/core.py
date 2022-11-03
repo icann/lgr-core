@@ -1213,7 +1213,10 @@ class LGR(object):
         (_, _, _, chars) = self._test_preliminary_eligibility(label, generate_chars=True)
         variant_number = 1
         if hide_mixed_script_variants:
-            mixed_script_filter = MixedScriptsVariantFilter(label, self.repertoire, unidb=self._unicode_database)
+            try:
+                mixed_script_filter = MixedScriptsVariantFilter(label, self.repertoire, unidb=self._unicode_database)
+            except NotInLGR:
+                return 0
             for char in chars:
                 variant_number *= len(
                     [v for v in char.get_variants() if mixed_script_filter.cp_in_base_scripts(v.cp)]
