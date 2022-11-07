@@ -135,7 +135,7 @@ class TestHarmonize(unittest.TestCase):
         french = load_lgr('harmonization', 'lgr-second-level-french-language-31may22-en.xml')
         cyrillic = load_lgr('harmonization', 'lgr-second-level-cyrillic-script-31may22-en.xml')
 
-        french_harmonized, cyrillic_harmonized, (log_french, log_cyrillic) = harmonize(french, cyrillic)
+        french_harmonized, cyrillic_harmonized, _ = harmonize(french, cyrillic)
 
         self.assertEqual(len(french_harmonized.repertoire), 3)
         self.assertEqual(len(cyrillic_harmonized.repertoire), 3)

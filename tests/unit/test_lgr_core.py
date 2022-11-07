@@ -462,7 +462,6 @@ class TestLGRCore(unittest.TestCase):
                               ((0x05D9, 0x05F2), frozenset(), False)]),
                          set(self.lgr._generate_label_variants([0x05D9, 0x05D9, 0x05D9])))
 
-
     def test_label_simple(self):
         self.lgr.add_cp([0x0061])
         self.lgr.add_cp([0x0062, 0x0063])
@@ -526,6 +525,13 @@ class TestLGRCore(unittest.TestCase):
         self.lgr.add_cp([0x0062])
         self.lgr.add_variant([0x0062], [0x0062], 'disp')
 
+        # ignore reflexive variant
+        self.assertEqual(1, self.lgr.estimate_variant_number([0x0061]))
+        self.assertEqual(1, self.lgr.estimate_variant_number([0x0062]))
+        self.assertEqual(1 * 1, self.lgr.estimate_variant_number([0x0061, 0x0062]))
+
+        self.lgr.add_variant([0x0061], [0x0062], 'disp')
+        self.lgr.add_variant([0x0062], [0x0061], 'disp')
         self.assertEqual(2, self.lgr.estimate_variant_number([0x0061]))
         self.assertEqual(2, self.lgr.estimate_variant_number([0x0062]))
         self.assertEqual(2 * 2, self.lgr.estimate_variant_number([0x0061, 0x0062]))
@@ -537,7 +543,8 @@ class TestLGRCore(unittest.TestCase):
         self.assertEqual(11, self.lgr.estimate_variant_number([0x0063]))
         self.assertEqual(2 * 2 * 11, self.lgr.estimate_variant_number([0x0061, 0x0062, 0x0063]))
 
-        self.assertEqual(4, self.lgr.estimate_variant_number([0x0061, 0x0062, 0x0063], hide_mixed_script_variants=True))
+        self.assertEqual(2 * 2 * 1, self.lgr.estimate_variant_number([0x0061, 0x0062, 0x0063],
+                                                                     hide_mixed_script_variants=True))
         # check that other script variants are also taken into account
         self.lgr.add_cp([0x0064])
         self.lgr.add_variant([0x0064], [0x3078], 'disp')

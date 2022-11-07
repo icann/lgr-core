@@ -1212,6 +1212,10 @@ class LGR(object):
         """
         (_, _, _, chars) = self._test_preliminary_eligibility(label, generate_chars=True)
         variant_number = 1
+
+        def vars_excl_reflexive(current_char):
+            return [v for v in current_char.get_variants() if v.cp != current_char.cp]
+
         if hide_mixed_script_variants:
             try:
                 mixed_script_filter = MixedScriptsVariantFilter(label, self.repertoire, unidb=self._unicode_database)
@@ -1219,18 +1223,18 @@ class LGR(object):
                 return 0
             for char in chars:
                 variant_number *= len(
-                    [v for v in char.get_variants() if mixed_script_filter.cp_in_base_scripts(v.cp)]
+                    [v for v in vars_excl_reflexive(char) if mixed_script_filter.cp_in_base_scripts(v.cp)]
                 ) + 1  # Take into account original code point
             for script in mixed_script_filter.other_scripts:
                 other_script_number = 1
                 for char in chars:
                     other_script_number *= len(
-                        [v for v in char.get_variants() if mixed_script_filter.cp_in_scripts(v.cp, {script})]
+                        [v for v in vars_excl_reflexive(char) if mixed_script_filter.cp_in_scripts(v.cp, {script})]
                     )
                 variant_number += other_script_number
         else:
             for char in chars:
-                variant_number *= len(list(char.get_variants())) + 1  # Take into account original code point
+                variant_number *= len(vars_excl_reflexive(char)) + 1  # Take into account original code point
         return variant_number
 
     def generate_index_label(self, label):
