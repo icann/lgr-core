@@ -375,7 +375,7 @@ class WholeLabelEvaluationRulesCheck:
                 labels.extend(l)
         return labels
 
-    def make_report(self, condition, collection, display=True):
+    def make_report(self, condition, collection):
         result = None
         if condition:
             for label in self.get_labels(collection):
@@ -390,7 +390,6 @@ class WholeLabelEvaluationRulesCheck:
         return {
             'applicable': condition,
             'exists': result,
-            'display': display
         }
 
     def check_label_cp_in_repertoire(self, label):
@@ -429,9 +428,8 @@ class WholeLabelEvaluationRulesCheck:
         return self.make_report(self.has_multiple_digits_sets, MULTIPLE_DIGIT_SETS_LABELS)
 
     def japanese_contextj_report(self) -> Dict:
-        is_jp = self.check_language('ja')
         contains_katakana_middle_dot = 0x30FB in self.idn_table.repertoire
-        return self.make_report(contains_katakana_middle_dot, JAPANESE_CONTEXTJ_LABELS, display=is_jp)
+        return self.make_report(contains_katakana_middle_dot, JAPANESE_CONTEXTJ_LABELS)
 
     def arabic_no_extended_report(self):
         is_arabic = self.check_language('Arab')

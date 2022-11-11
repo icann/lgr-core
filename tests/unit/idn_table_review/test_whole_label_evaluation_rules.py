@@ -38,37 +38,30 @@ class Test(TestCase):
     general_rules_combining_mark = {
         'applicable': False,
         'exists': None,
-        'display': True
     }
     general_rules_consecutive_hyphens = {
         'applicable': False,
         'exists': None,
-        'display': True
     }
     general_rules_rtl = {
         'applicable': False,
         'exists': None,
-        'display': True
     }
     general_rules_digits_sets = {
         'applicable': False,
         'exists': None,
-        'display': True
     }
     general_rules_japanese_contextj = {
         'applicable': False,
         'exists': None,
-        'display': False
     }
     general_rules_arabic_no_end = {
         'applicable': False,
         'exists': None,
-        'display': True
     }
     general_rules_kannada_script = {
         'applicable': False,
         'exists': None,
-        'display': True
     }
 
     def setUp(self) -> None:
@@ -220,7 +213,6 @@ class Test(TestCase):
                 'combining_mark': {
                     'applicable': True,
                     'exists': True,
-                    'display': True
                 },
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
@@ -249,7 +241,6 @@ class Test(TestCase):
                 'combining_mark': {
                     'applicable': True,
                     'exists': None,
-                    'display': True
                 },
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
@@ -275,7 +266,6 @@ class Test(TestCase):
                 'combining_mark': {
                     'applicable': True,
                     'exists': False,
-                    'display': True
                 },
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
                 'rtl': self.general_rules_rtl,
@@ -304,7 +294,6 @@ class Test(TestCase):
                 'consecutive_hyphens': {
                     'applicable': True,
                     'exists': True,
-                    'display': True
                 },
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
@@ -332,7 +321,6 @@ class Test(TestCase):
                 'consecutive_hyphens': {
                     'applicable': True,
                     'exists': False,
-                    'display': True
                 },
                 'rtl': self.general_rules_rtl,
                 'digits_set': self.general_rules_digits_sets,
@@ -361,7 +349,6 @@ class Test(TestCase):
                 'rtl': {
                     'applicable': True,
                     'exists': True,
-                    'display': True
                 },
                 'digits_set': self.general_rules_digits_sets,
                 'japanese_contextj': self.general_rules_japanese_contextj,
@@ -383,7 +370,6 @@ class Test(TestCase):
                 'rtl': {
                     'applicable': True,
                     'exists': False,
-                    'display': True
                 },
                 'digits_set': self.general_rules_digits_sets,
                 'japanese_contextj': self.general_rules_japanese_contextj,
@@ -424,7 +410,6 @@ class Test(TestCase):
                 'digits_set': {
                     'applicable': True,
                     'exists': True,
-                    'display': True
                 },
                 'japanese_contextj': self.general_rules_japanese_contextj,
                 # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
@@ -464,7 +449,6 @@ class Test(TestCase):
                 'digits_set': {
                     'applicable': True,
                     'exists': False,
-                    'display': True
                 },
                 'japanese_contextj': self.general_rules_japanese_contextj,
                 # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
@@ -501,7 +485,6 @@ class Test(TestCase):
                 'japanese_contextj': {
                     'applicable': True,
                     'exists': True,
-                    'display': True
                 },
                 # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
@@ -524,7 +507,6 @@ class Test(TestCase):
                 'japanese_contextj': {
                     'applicable': False,
                     'exists': None,
-                    'display': True
                 },
                 # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
@@ -555,7 +537,6 @@ class Test(TestCase):
                 'japanese_contextj': {
                     'applicable': True,
                     'exists': False,
-                    'display': True
                 },
                 # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
