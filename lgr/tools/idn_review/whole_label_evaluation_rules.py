@@ -322,7 +322,9 @@ class WholeLabelEvaluationRulesCheck:
         self.is_rtl = False
         self.check_rtl()
         self.language_tags = []
-        self.get_language_tags()
+        self.get_language_tags(self.idn_table)
+        if not self.language_tags:
+            self.get_language_tags(self.reference_lgr)
 
     def check_rtl(self):
         self.is_rtl = False
@@ -330,15 +332,15 @@ class WholeLabelEvaluationRulesCheck:
             if self.idn_table.unicode_database.is_script_rtl(script):
                 self.is_rtl = True
 
-    def get_language_tags(self):
+    def get_language_tags(self, table):
         """
         Retrieve language and scripts
         """
-        for language_tag in sorted(self.idn_table.metadata.languages):
+        for language_tag in sorted(table.metadata.languages):
             tag = tags.tag(language_tag)
             if tag.language:
                 self.language_tags.append(tag.language.format)
-        self.language_tags.extend(self.idn_table.metadata.get_scripts(allow_invalid=True))
+        self.language_tags.extend(table.metadata.get_scripts(allow_invalid=True))
 
     def get_context_rules(self):
         nbr_digits = 0
