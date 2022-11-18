@@ -1,6 +1,12 @@
 # Changelog for lgr-core
 
-## 5.0.0 (2022-10-26)
+## 5.0.1 (2022-11-21)
+### Fixes
+- Fix collision tools
+### Improvements
+- Improve advanced collision tool output
+
+## 5.0.0 (2022-11-16)
 ### New features
 - Allow using pre-computed index in collision calculation
 - Allow filtering mixed-script variants in variants computation
