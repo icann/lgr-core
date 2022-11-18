@@ -268,7 +268,7 @@ def dump_collisions(colliding1, cb, colliding2=None, **kwargs):
     list2 = colliding2
     for l1 in colliding1:
         idx += 1
-        if not list2:
+        if list2 is None:
             # do not display the same collision permuted
             list2 = colliding1[idx:]
         for l2 in list2:
@@ -282,14 +282,15 @@ def _write_complete_output(labels, label_indexes, tlds=None):
     :param label_indexes: the dictionary containing the primary labels and
                           their variants (with various information) for each index.
     """
-    output_labels = ("\n## Collision ##\n" + MD +
-                     "Label:       \t{label:{len}} | {variant}\n"
+    output_labels = ("\n### Collision within the {col} ###\n" + MD +
+                     "Label:       \t{label:{len}}   | {variant}\n"
                      "Code points: \t{label_cp:{len}} | {variant_cp}\n"
                      "Category:    \t{label_cat:{len}} | {variant_cat}" +
                      MD)
 
     def print_collision(label, variant):
-        return output_labels.format(label="%s" % label['bidi'],
+        return output_labels.format(col='existing TLDs' if TLD in [label['cat'], variant['cat']] else 'input file',
+                                    label="%s" % label['bidi'],
                                     variant="%s" % variant['bidi'],
                                     label_cp="[%s]" % label['cp_out'],
                                     variant_cp="[%s]" % variant['cp_out'],
@@ -301,7 +302,8 @@ def _write_complete_output(labels, label_indexes, tlds=None):
 
     collided = False
     tlds = tlds or set()
-    for collisions in label_indexes.values():
+    for idx, collisions in label_indexes.items():
+        yield f"\n## Index '{cp_to_ulabel(idx)}' ##\n"
         colliding_labels = [l for l in collisions if l['label'] in labels]
         colliding_tlds = [l for l in collisions if l['label'] in tlds]
 
@@ -311,13 +313,14 @@ def _write_complete_output(labels, label_indexes, tlds=None):
             for col in dump_collisions(colliding_labels, print_collision):
                 yield col
 
-        for col in dump_collisions(colliding_labels, print_collision, colliding2=colliding_tlds):
-            yield col
+        if colliding_tlds:
+            for col in dump_collisions(colliding_labels, print_collision, colliding2=colliding_tlds):
+                yield col
 
-        if not collided:
-            yield MD
-            yield "No collision in the list of labels"
-            yield MD
+    if not collided:
+        yield MD
+        yield "No collision in the list of labels"
+        yield MD
 
 
 def _write_simple_output(labels, tlds, label_indexes):
@@ -337,8 +340,9 @@ def _write_simple_output(labels, tlds, label_indexes):
             for col in dump_collisions(colliding_labels, print_collision, label_type="label"):
                 yield col
 
-        for col in dump_collisions(colliding_labels, print_collision, colliding2=colliding_tlds, label_type="TLD"):
-            yield col
+        if colliding_tlds:
+            for col in dump_collisions(colliding_labels, print_collision, colliding2=colliding_tlds, label_type="TLD"):
+                yield col
 
 
 def _full_dump(label_indexes):
