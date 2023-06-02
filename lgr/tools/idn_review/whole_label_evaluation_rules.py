@@ -356,17 +356,18 @@ class WholeLabelEvaluationRulesCheck:
                 self.idn_table_context_rules.setdefault(char.when, set()).add(char.cp)
             elif char.not_when:
                 self.idn_table_context_rules.setdefault(char.not_when, set()).add(char.cp)
-            elif char not in self.reference_lgr.repertoire:
+            elif self.reference_lgr and char not in self.reference_lgr.repertoire:
                 self.idn_table_char_without_rule.add(char)
 
         # we consider that there is more than one digit set if we have more than 9 digits
         self.has_multiple_digits_sets = nbr_digits > 10
 
-        for char in self.reference_lgr.repertoire:
-            if char.when:
-                self.reference_lgr_context_rules.setdefault(char.when, set()).add(char.cp)
-            if char.not_when:
-                self.reference_lgr_context_rules.setdefault(char.not_when, set()).add(char.cp)
+        if self.reference_lgr:
+            for char in self.reference_lgr.repertoire:
+                if char.when:
+                    self.reference_lgr_context_rules.setdefault(char.when, set()).add(char.cp)
+                if char.not_when:
+                    self.reference_lgr_context_rules.setdefault(char.not_when, set()).add(char.cp)
 
     def get_labels(self, collection):
         labels = []
@@ -458,6 +459,19 @@ class WholeLabelEvaluationRulesCheck:
         } for char in sorted(self.idn_table_char_without_rule, key=lambda x: x.cp)]
 
 
+def generate_additional_general_rules(check):
+    return {
+        'additional_general_rules': {
+            'combining_mark': check.combining_mark_report(),
+            'consecutive_hyphens': check.consecutive_hyphens_report(),
+            'rtl': check.rtl_report(),
+            'digits_set': check.digits_set_report(),
+            'japanese_contextj': check.japanese_contextj_report(),
+            # 'arabic_no_extended_end': check.arabic_no_extended_report(),  # TODO disabled for now
+        }
+    }
+
+
 def generate_whole_label_evaluation_rules_report(idn_table: LGR, reference_lgr: LGR) -> Dict:
     check = WholeLabelEvaluationRulesCheck(idn_table, reference_lgr)
     reports = []
@@ -468,15 +482,13 @@ def generate_whole_label_evaluation_rules_report(idn_table: LGR, reference_lgr: 
                                                 check.reference_lgr_context_rules.get(rule_name, set()))
         reports.append(report.to_dict())
 
-    return {
+    result = {
         'comparison': reports,
         'additional_cp': check.additional_cp_report(),
-        'additional_general_rules': {
-            'combining_mark': check.combining_mark_report(),
-            'consecutive_hyphens': check.consecutive_hyphens_report(),
-            'rtl': check.rtl_report(),
-            'digits_set': check.digits_set_report(),
-            'japanese_contextj': check.japanese_contextj_report(),
-            # 'arabic_no_extended_end': check.arabic_no_extended_report(),  # TODO disabled for now
-        }
     }
+    result.update(generate_additional_general_rules(check))
+    return result
+
+
+def generate_whole_label_evaluation_rules_core_report(idn_table: LGR) -> Dict:
+    return generate_additional_general_rules(WholeLabelEvaluationRulesCheck(idn_table, None))

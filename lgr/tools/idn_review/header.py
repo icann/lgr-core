@@ -16,12 +16,8 @@ def generate_header(idn_table: LGR, reference_lgr: LGR) -> dict:
         idn_table_version = idn_table.metadata.version.value
     except BaseException:
         idn_table_version = None
-    try:
-        ref_lgr_version = reference_lgr.metadata.version.value
-    except BaseException:
-        ref_lgr_version = None
 
-    return {
+    header = {
         'date': date.today(),
         'disclaimer': 'Please refer to the LGR (IDN Table) Review Tool disclaimer on this '
                       '<a href="https://www.icann.org/resources/pages/lgr-toolset-2015-06-21-en" '
@@ -29,9 +25,17 @@ def generate_header(idn_table: LGR, reference_lgr: LGR) -> dict:
         'idn_table': {
             'filename': idn_table.name,
             'version': idn_table_version
-        },
-        'reference_lgr': {
+        }
+    }
+    if reference_lgr:
+        try:
+            ref_lgr_version = reference_lgr.metadata.version.value
+        except BaseException:
+            ref_lgr_version = None
+
+        header['reference_lgr'] = {
             'name': reference_lgr.name,
             'version': ref_lgr_version
         }
-    }
+
+    return header
