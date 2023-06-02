@@ -687,11 +687,13 @@ class Test(TestCase):
                 'cp': (112,),
                 'glyph': 'p',
                 'name': 'LATIN SMALL LETTER P',
+                'idna_property': 'PVALID',
                 'category': 'Ll'
             }, {
                 'cp': (113,),
                 'glyph': 'q',
                 'name': 'LATIN SMALL LETTER Q',
+                'idna_property': 'PVALID',
                 'category': 'Ll'
             }]
         })

@@ -206,8 +206,14 @@ class Test(TestCase):
                 'remark': 'Mismatch (WLE rule only exists in IDN Table)'
             }, self.match_match, self.not_match_match],
             'additional_cp': [
-                {'cp': (2478,), 'glyph': 'ম', 'name': 'BENGALI LETTER MA', 'category': 'Lo'},
-                {'cp': (2497,), 'glyph': 'ু', 'name': 'BENGALI VOWEL SIGN U', 'category': 'Mn'}
+                {'cp': (2478,), 'glyph': 'ম', 'name': 'BENGALI LETTER MA', 'idna_property': 'PVALID', 'category': 'Lo'},
+                {
+                    'cp': (2497,),
+                    'glyph': 'ু',
+                    'name': 'BENGALI VOWEL SIGN U',
+                    'idna_property': 'PVALID',
+                    'category': 'Mn'
+                }
             ],
             'additional_general_rules': {
                 'combining_mark': {
@@ -236,7 +242,13 @@ class Test(TestCase):
                 'result': 'MANUAL CHECK',
                 'remark': 'Mismatch (WLE rule only exists in IDN Table)'
             }, self.match_match, self.not_match_match],
-            'additional_cp': [{'cp': (2497,), 'glyph': 'ু', 'name': 'BENGALI VOWEL SIGN U', 'category': 'Mn'}],
+            'additional_cp': [{
+                'cp': (2497,),
+                'glyph': 'ু',
+                'name': 'BENGALI VOWEL SIGN U',
+                'idna_property': 'PVALID',
+                'category': 'Mn'
+            }],
             'additional_general_rules': {
                 'combining_mark': {
                     'applicable': True,
@@ -259,8 +271,13 @@ class Test(TestCase):
         self.assertDictEqual(result, {
             'comparison': [self.all_match_match, self.match_match, self.not_match_match],
             'additional_cp': [
-                {'cp': (2478,), 'glyph': 'ম', 'name': 'BENGALI LETTER MA', 'category': 'Lo'},
-                {'cp': (2497,), 'glyph': 'ু', 'name': 'BENGALI VOWEL SIGN U', 'category': 'Mn'}
+                {'cp': (2478,), 'glyph': 'ম', 'name': 'BENGALI LETTER MA', 'idna_property': 'PVALID', 'category': 'Lo'},
+                {'cp': (2497,),
+                 'glyph': 'ু',
+                 'name': 'BENGALI VOWEL SIGN U',
+                 'idna_property': 'PVALID',
+                 'category': 'Mn'
+                 }
             ],
             'additional_general_rules': {
                 'combining_mark': {
@@ -288,7 +305,12 @@ class Test(TestCase):
                 'result': 'MANUAL CHECK',
                 'remark': 'Mismatch (WLE rule only exists in IDN Table)'
             }, self.match_match, self.not_match_match],
-            'additional_cp': [{'cp': (109,), 'glyph': 'm', 'name': 'LATIN SMALL LETTER M', 'category': 'Ll'}],
+            'additional_cp': [{
+                'cp': (109,),
+                'glyph': 'm',
+                'name': 'LATIN SMALL LETTER M',
+                'idna_property': 'PVALID',
+                'category': 'Ll'}],
             'additional_general_rules': {
                 'combining_mark': self.general_rules_combining_mark,
                 'consecutive_hyphens': {
@@ -315,7 +337,13 @@ class Test(TestCase):
                 'result': 'MANUAL CHECK',
                 'remark': 'Mismatch (WLE rule only exists in IDN Table)'
             }, self.match_match, self.not_match_match],
-            'additional_cp': [{'cp': (109,), 'glyph': 'm', 'name': 'LATIN SMALL LETTER M', 'category': 'Ll'}],
+            'additional_cp': [{
+                'cp': (109,),
+                'glyph': 'm',
+                'name': 'LATIN SMALL LETTER M',
+                'idna_property': 'PVALID',
+                'category': 'Ll'
+            }],
             'additional_general_rules': {
                 'combining_mark': self.general_rules_combining_mark,
                 'consecutive_hyphens': {
@@ -342,7 +370,13 @@ class Test(TestCase):
                 'result': 'MANUAL CHECK',
                 'remark': 'Mismatch (WLE rule only exists in IDN Table)'
             }, self.match_match, self.not_match_match],
-            'additional_cp': [{'cp': (1489,), 'glyph': 'ב', 'name': 'HEBREW LETTER BET', 'category': 'Lo'}],
+            'additional_cp': [{
+                'cp': (1489,),
+                'glyph': 'ב',
+                'name': 'HEBREW LETTER BET',
+                'idna_property': 'PVALID',
+                'category': 'Lo'
+            }],
             'additional_general_rules': {
                 'combining_mark': self.general_rules_combining_mark,
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
@@ -363,7 +397,13 @@ class Test(TestCase):
 
         self.assertDictEqual(result, {
             'comparison': [self.all_match_match, self.match_match, self.not_match_match],
-            'additional_cp': [{'cp': (1489,), 'glyph': 'ב', 'name': 'HEBREW LETTER BET', 'category': 'Lo'}],
+            'additional_cp': [{
+                'cp': (1489,),
+                'glyph': 'ב',
+                'name': 'HEBREW LETTER BET',
+                'idna_property': 'PVALID',
+                'category': 'Lo'
+            }],
             'additional_general_rules': {
                 'combining_mark': self.general_rules_combining_mark,
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
@@ -391,17 +431,17 @@ class Test(TestCase):
                 'remark': 'Mismatch (WLE rule only exists in IDN Table)'
             }, self.match_match, self.not_match_match],
             'additional_cp': [
-                {'cp': (2478,), 'glyph': 'ম', 'name': 'BENGALI LETTER MA', 'category': 'Lo'},
-                {'cp': (2534,), 'glyph': '০', 'name': 'BENGALI DIGIT ZERO', 'category': 'Nd'},
-                {'cp': (2535,), 'glyph': '১', 'name': 'BENGALI DIGIT ONE', 'category': 'Nd'},
-                {'cp': (2536,), 'glyph': '২', 'name': 'BENGALI DIGIT TWO', 'category': 'Nd'},
-                {'cp': (2537,), 'glyph': '৩', 'name': 'BENGALI DIGIT THREE', 'category': 'Nd'},
-                {'cp': (2538,), 'glyph': '৪', 'name': 'BENGALI DIGIT FOUR', 'category': 'Nd'},
-                {'cp': (2539,), 'glyph': '৫', 'name': 'BENGALI DIGIT FIVE', 'category': 'Nd'},
-                {'cp': (2540,), 'glyph': '৬', 'name': 'BENGALI DIGIT SIX', 'category': 'Nd'},
-                {'cp': (2541,), 'glyph': '৭', 'name': 'BENGALI DIGIT SEVEN', 'category': 'Nd'},
-                {'cp': (2542,), 'glyph': '৮', 'name': 'BENGALI DIGIT EIGHT', 'category': 'Nd'},
-                {'cp': (2543,), 'glyph': '৯', 'name': 'BENGALI DIGIT NINE', 'category': 'Nd'},
+                {'cp': (2478,), 'glyph': 'ম', 'name': 'BENGALI LETTER MA', 'idna_property': 'PVALID', 'category': 'Lo'},
+                {'cp': (2534,), 'glyph': '০', 'name': 'BENGALI DIGIT ZERO', 'idna_property': 'PVALID', 'category': 'Nd'},
+                {'cp': (2535,), 'glyph': '১', 'name': 'BENGALI DIGIT ONE', 'idna_property': 'PVALID', 'category': 'Nd'},
+                {'cp': (2536,), 'glyph': '২', 'name': 'BENGALI DIGIT TWO', 'idna_property': 'PVALID', 'category': 'Nd'},
+                {'cp': (2537,), 'glyph': '৩', 'name': 'BENGALI DIGIT THREE', 'idna_property': 'PVALID', 'category': 'Nd'},
+                {'cp': (2538,), 'glyph': '৪', 'name': 'BENGALI DIGIT FOUR', 'idna_property': 'PVALID', 'category': 'Nd'},
+                {'cp': (2539,), 'glyph': '৫', 'name': 'BENGALI DIGIT FIVE', 'idna_property': 'PVALID', 'category': 'Nd'},
+                {'cp': (2540,), 'glyph': '৬', 'name': 'BENGALI DIGIT SIX', 'idna_property': 'PVALID', 'category': 'Nd'},
+                {'cp': (2541,), 'glyph': '৭', 'name': 'BENGALI DIGIT SEVEN', 'idna_property': 'PVALID', 'category': 'Nd'},
+                {'cp': (2542,), 'glyph': '৮', 'name': 'BENGALI DIGIT EIGHT', 'idna_property': 'PVALID', 'category': 'Nd'},
+                {'cp': (2543,), 'glyph': '৯', 'name': 'BENGALI DIGIT NINE', 'idna_property': 'PVALID', 'category': 'Nd'},
             ],
             'additional_general_rules': {
                 'combining_mark': self.general_rules_combining_mark,
@@ -430,17 +470,17 @@ class Test(TestCase):
                 'remark': 'Mismatch (WLE rule only exists in IDN Table)'
             }, self.match_match, self.not_match_match],
             'additional_cp': [
-                {'cp': (2478,), 'glyph': 'ম', 'name': 'BENGALI LETTER MA', 'category': 'Lo'},
-                {'cp': (2534,), 'glyph': '০', 'name': 'BENGALI DIGIT ZERO', 'category': 'Nd'},
-                {'cp': (2535,), 'glyph': '১', 'name': 'BENGALI DIGIT ONE', 'category': 'Nd'},
-                {'cp': (2536,), 'glyph': '২', 'name': 'BENGALI DIGIT TWO', 'category': 'Nd'},
-                {'cp': (2537,), 'glyph': '৩', 'name': 'BENGALI DIGIT THREE', 'category': 'Nd'},
-                {'cp': (2538,), 'glyph': '৪', 'name': 'BENGALI DIGIT FOUR', 'category': 'Nd'},
-                {'cp': (2539,), 'glyph': '৫', 'name': 'BENGALI DIGIT FIVE', 'category': 'Nd'},
-                {'cp': (2540,), 'glyph': '৬', 'name': 'BENGALI DIGIT SIX', 'category': 'Nd'},
-                {'cp': (2541,), 'glyph': '৭', 'name': 'BENGALI DIGIT SEVEN', 'category': 'Nd'},
-                {'cp': (2542,), 'glyph': '৮', 'name': 'BENGALI DIGIT EIGHT', 'category': 'Nd'},
-                {'cp': (2543,), 'glyph': '৯', 'name': 'BENGALI DIGIT NINE', 'category': 'Nd'},
+                {'cp': (2478,), 'glyph': 'ম', 'name': 'BENGALI LETTER MA', 'idna_property': 'PVALID', 'category': 'Lo'},
+                {'cp': (2534,), 'glyph': '০', 'name': 'BENGALI DIGIT ZERO', 'idna_property': 'PVALID', 'category': 'Nd'},
+                {'cp': (2535,), 'glyph': '১', 'name': 'BENGALI DIGIT ONE', 'idna_property': 'PVALID', 'category': 'Nd'},
+                {'cp': (2536,), 'glyph': '২', 'name': 'BENGALI DIGIT TWO', 'idna_property': 'PVALID', 'category': 'Nd'},
+                {'cp': (2537,), 'glyph': '৩', 'name': 'BENGALI DIGIT THREE', 'idna_property': 'PVALID', 'category': 'Nd'},
+                {'cp': (2538,), 'glyph': '৪', 'name': 'BENGALI DIGIT FOUR', 'idna_property': 'PVALID', 'category': 'Nd'},
+                {'cp': (2539,), 'glyph': '৫', 'name': 'BENGALI DIGIT FIVE', 'idna_property': 'PVALID', 'category': 'Nd'},
+                {'cp': (2540,), 'glyph': '৬', 'name': 'BENGALI DIGIT SIX', 'idna_property': 'PVALID', 'category': 'Nd'},
+                {'cp': (2541,), 'glyph': '৭', 'name': 'BENGALI DIGIT SEVEN', 'idna_property': 'PVALID', 'category': 'Nd'},
+                {'cp': (2542,), 'glyph': '৮', 'name': 'BENGALI DIGIT EIGHT', 'idna_property': 'PVALID', 'category': 'Nd'},
+                {'cp': (2543,), 'glyph': '৯', 'name': 'BENGALI DIGIT NINE', 'idna_property': 'PVALID', 'category': 'Nd'},
             ],
             'additional_general_rules': {
                 'combining_mark': self.general_rules_combining_mark,
@@ -474,9 +514,13 @@ class Test(TestCase):
                 'result': 'MANUAL CHECK',
                 'remark': 'Check the content of the rule'
             }, self.not_match_match],
-            'additional_cp': [
-                {'cp': (12353,), 'glyph': 'ぁ', 'name': 'HIRAGANA LETTER SMALL A', 'category': 'Lo'},
-            ],
+            'additional_cp': [{
+                'cp': (12353,),
+                'glyph': 'ぁ',
+                'name': 'HIRAGANA LETTER SMALL A',
+                'idna_property': 'PVALID',
+                'category': 'Lo'
+            }],
             'additional_general_rules': {
                 'combining_mark': self.general_rules_combining_mark,
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
@@ -526,9 +570,13 @@ class Test(TestCase):
                 'result': 'MANUAL CHECK',
                 'remark': 'Check the content of the rule'
             }, self.not_match_match],
-            'additional_cp': [
-                {'cp': (12539,), 'glyph': '・', 'name': 'KATAKANA MIDDLE DOT', 'category': 'Po'},
-            ],
+            'additional_cp': [{
+                'cp': (12539,),
+                'glyph': '・',
+                'name': 'KATAKANA MIDDLE DOT',
+                'idna_property': 'CONTEXTO',
+                'category': 'Po'
+            }],
             'additional_general_rules': {
                 'combining_mark': self.general_rules_combining_mark,
                 'consecutive_hyphens': self.general_rules_consecutive_hyphens,
