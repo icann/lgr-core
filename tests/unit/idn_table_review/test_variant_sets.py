@@ -1193,3 +1193,51 @@ class Test(TestCase):
                 }, self.report_oe],
                 'additional': []
             })
+
+    def test_generate_variant_sets_missing_sequence(self):
+        idn = load_lgr('idn_table_review/variant_sets', 'variant_sets_missing_sequence.xml',
+                       unidb=self.unidb)
+
+        result = generate_variant_sets_report(idn, self.ref)
+
+        self.assertDictEqual(result, {
+            'reports': [
+                self.report_abc,
+                {
+                    'idn_table': (),
+                    'ref_lgr': ((111, 101), (339,)),
+                    'relevant_idn_table_repertoire': ((339,),),
+                    'symmetry_check': None,
+                    'transitivity_check': None,
+                    'report': [
+                        {
+                            'source_cp': (111, 101),
+                            'source_glyph': 'oe',
+                            'dest_cp': (339,),
+                            'dest_glyph': 'œ',
+                            'fwd_type_idn': '',
+                            'fwd_type_ref': 'blocked',
+                            'reverse': True,
+                            'rev_type_idn': '',
+                            'rev_type_ref': 'blocked',
+                            'dest_in_idn': False,
+                            'dest_in_ref': True,
+                            'symmetric': True,
+                            'result_fwd': 'REVIEW',
+                            'result_rev': 'REVIEW',
+                            'remark_fwd': 'Variant set exists in the reference LGR\n'
+                                          'The sequence "oe" seem to be missing',
+                            'remark_rev': 'Variant set exists in the reference LGR\n'
+                                          'The sequence "oe" seem to be missing'
+                        }
+                    ]
+                }
+            ],
+            'additional': [{
+                'cp': (111,),
+                'name': 'LATIN SMALL LETTER O',
+                'glyph': 'o',
+                'idna_property': 'PVALID',
+                'category': 'Ll'
+            }]
+        })
