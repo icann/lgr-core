@@ -6,10 +6,11 @@ repertoire -
 import logging
 from typing import Set, Tuple, Dict, List
 
+from munidata.database import UnicodeDatabase
+
 from lgr.char import Char
 from lgr.core import LGR
 from lgr.tools.idn_review.utils import IdnReviewResult
-from munidata.database import UnicodeDatabase
 
 logger = logging.getLogger(__name__)
 
@@ -125,4 +126,17 @@ def generate_repertoire_report(idn_table: LGR, reference_lgr: LGR) -> Dict:
     return {
         'reports': reports,
         'cp_in_sequences': get_idn_cp_in_ref_seq(idn_table, reference_lgr, unidb)
+    }
+
+
+def generate_repertoire_core_report(idn_table: LGR) -> Dict:
+    unidb = idn_table.unicode_database
+    return {
+        'reports': [{
+            'cp': char.cp,
+            'glyph': str(char),
+            'name': " ".join(unidb.get_char_name(cp) for cp in char.cp),
+            'idna_property': unidb.get_idna_prop(char.cp[0]),
+            'category': unidb.get_prop_value(char.cp[0], 'General_Category')
+        } for char in idn_table.repertoire.all_repertoire(expand_ranges=True)]
     }

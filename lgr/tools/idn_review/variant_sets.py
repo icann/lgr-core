@@ -519,3 +519,18 @@ def generate_variant_sets_report(idn_table: LGR, reference_lgr: LGR) -> Dict:
         'reports': reports,
         'additional': get_additional_codepoints(idn_table, idn_table_variant_sets, reference_lgr)
     }
+
+
+def generate_variant_sets_core_report(idn_table: LGR) -> Dict:
+    unidb = idn_table.unicode_database
+    nbr_digits = 0
+    for char in idn_table.repertoire.all_repertoire(expand_ranges=True):
+        if len(char.cp) == 1:
+            cp = char.cp[0]
+            if unidb.is_digit(cp):
+                nbr_digits += 1
+
+    # we consider that there is more than one digit set if we have more than 9 digits
+    return {
+        'report': {'multiple_digit_sets': nbr_digits > 10}
+    }
