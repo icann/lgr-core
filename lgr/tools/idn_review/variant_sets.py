@@ -265,7 +265,8 @@ class VariantReport:
     def __init__(self, idn_table_char: Char, reference_lgr_char: Char,
                  idn_table_var_data: VariantData, reference_lgr_var_data: VariantData,
                  idn_variant_set_missing: bool, reference_lgr_variant_set_missing: bool,
-                 idn_table_repertoire: Repertoire):
+                 idn_table_repertoire: Repertoire,
+                 missing_sequence):
         self.idn_table_char = idn_table_char
         self.reference_lgr_char = reference_lgr_char
         self.idn_table_var_data = idn_table_var_data
@@ -274,12 +275,17 @@ class VariantReport:
         self.reference_lgr_variant_set_missing = reference_lgr_variant_set_missing
         self.idn_table_repertoire = idn_table_repertoire
         self.variant_compare = VariantComparison(idn_table_var_data, reference_lgr_var_data)
+        self.missing_sequence = missing_sequence
 
     def to_dict(self) -> Dict:
         src_char = self.idn_table_char or self.reference_lgr_char
         in_repertoire = self.reference_lgr_var_data.in_repertoire(self.idn_table_repertoire)
         result_fwd, remark_fwd = self.get_result_and_remark(VariantComparison.Direction.FORWARD, in_repertoire)
         result_rev, remark_rev = self.get_result_and_remark(VariantComparison.Direction.REVERSE, in_repertoire)
+        if self.missing_sequence:
+            remark = f'\nThe sequence "{self.missing_sequence}" seem to be missing'
+            remark_fwd += remark
+            remark_rev += remark
         return {
             'source_cp': src_char.cp,
             'source_glyph': str(src_char),
@@ -363,6 +369,15 @@ class VariantSetsReport:
         lgr_reversed_variants = {}
         relevant_repertoire = set()
 
+        missing_sequence = None
+        if not self.idn_table_variant_set:
+            # check if a sequence is missing
+            for cp in self.reference_lgr_variant_set:
+                if len(cp) > 1:
+                    in_idn_table = set(cp) & set(char for c in self.idn_repertoire for char in c.cp)
+                    if in_idn_table:
+                        missing_sequence = self.reference_lgr_repertoire.get_char(cp)
+
         for cp in sorted(set(self.idn_table_variant_set) | set(self.reference_lgr_variant_set)):
             idn_table_vars = {}
             reference_lgr_vars = {}
@@ -388,7 +403,7 @@ class VariantSetsReport:
                                   reference_lgr_vars.get(var_cp, VariantData.none()),
                                   len(self.idn_table_variant_set) == 0,
                                   len(self.reference_lgr_variant_set) == 0,
-                                  self.idn_repertoire).to_dict())
+                                  self.idn_repertoire, missing_sequence).to_dict())
 
         return variant_reports, tuple(sorted(relevant_repertoire))
 
