@@ -363,10 +363,6 @@ class VariantSetsReport:
         lgr_reversed_variants = {}
         relevant_repertoire = set()
 
-        if not self.idn_table_variant_set and not self.same_repertoire():
-            # XXX case not handled: missing variant sets but repertoires are not the same 10.7.10
-            return None, None
-
         for cp in sorted(set(self.idn_table_variant_set) | set(self.reference_lgr_variant_set)):
             idn_table_vars = {}
             reference_lgr_vars = {}
@@ -449,15 +445,6 @@ class VariantSetsReport:
             'transitivity_check': transitivity_ok,
             'report': sorted(var_report or [], key=lambda x: x['dest_cp'])
         }
-
-    def same_repertoire(self):
-        """
-        Check if all code points from the reference LGR variant sets are in IDN table repertoire
-        """
-        for cp in self.reference_lgr_variant_set:
-            if cp not in self.idn_repertoire:
-                return False
-        return True
 
 
 def get_additional_codepoints(idn_table, idn_table_variant_sets, reference_lgr) -> List[Dict]:
