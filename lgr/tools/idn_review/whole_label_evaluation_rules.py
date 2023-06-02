@@ -12,7 +12,7 @@ from lgr.char import Char, CharSequence
 from lgr.core import LGR
 from lgr.exceptions import NotInLGR
 from lgr.rule import Rule
-from lgr.tools.idn_review.utils import IdnReviewResult
+from lgr.tools.idn_review.utils import IdnReviewResult, cp_report
 
 logger = logging.getLogger(__name__)
 
@@ -451,12 +451,7 @@ class WholeLabelEvaluationRulesCheck:
 
     def additional_cp_report(self) -> List[Dict]:
         unidb = self.idn_table.unicode_database
-        return [{
-            'cp': char.cp,
-            'glyph': str(char),
-            'name': ' '.join(self.idn_table.unicode_database.get_char_name(cp) for cp in char.cp),
-            'category': ' '.join(unidb.get_prop_value(cp, 'General_Category') for cp in char.cp)
-        } for char in sorted(self.idn_table_char_without_rule, key=lambda x: x.cp)]
+        return cp_report(unidb, sorted(self.idn_table_char_without_rule, key=lambda x: x.cp))
 
 
 def generate_additional_general_rules(check):

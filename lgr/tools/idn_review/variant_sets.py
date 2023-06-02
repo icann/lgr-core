@@ -11,7 +11,7 @@ from typing import Dict, List, Tuple, Set
 from lgr.char import Char, Variant, Repertoire
 from lgr.core import LGR
 from lgr.exceptions import NotInLGR, VariantAlreadyExists
-from lgr.tools.idn_review.utils import IdnReviewResult
+from lgr.tools.idn_review.utils import IdnReviewResult, cp_report
 from lgr.validate import check_symmetry, check_transitivity
 
 logger = logging.getLogger(__name__)
@@ -343,7 +343,8 @@ class VariantReport:
             return (IdnReviewResult.NOTE.name,
                     "Variant types are mismatched. IDN Table is more conservative compared to the Reference LGR")
 
-        assert type_check in [VariantComparison.IdnTypeCheck.MATCH, None] and rules_check == VariantComparison.IdnRuleCheck.MATCH
+        assert type_check in [VariantComparison.IdnTypeCheck.MATCH,
+                              None] and rules_check == VariantComparison.IdnRuleCheck.MATCH
         return IdnReviewResult.MATCH.name, "Exact match (including type, conditional variant rule)"
 
 
@@ -465,13 +466,8 @@ def get_additional_codepoints(idn_table, idn_table_variant_sets, reference_lgr) 
     """
     unidb = idn_table.unicode_database
     variants_flat = set(zip(*[v for v in idn_table_variant_sets.values()]))
-    return [{
-        'cp': char.cp,
-        'glyph': str(char),
-        'name': " ".join(unidb.get_char_name(cp) for cp in char.cp),
-        'category': unidb.get_prop_value(char.cp[0], 'General_Category')
-    } for char in idn_table.repertoire if
-        char.cp not in variants_flat and char not in reference_lgr.repertoire]
+    return cp_report(unidb, [char for char in idn_table.repertoire if
+                      char.cp not in variants_flat and char not in reference_lgr.repertoire])
 
 
 def generate_variant_sets_report(idn_table: LGR, reference_lgr: LGR) -> Dict:
