@@ -1206,7 +1206,7 @@ class Test(TestCase):
                 {
                     'idn_table': (),
                     'ref_lgr': ((111, 101), (339,)),
-                    'relevant_idn_table_repertoire': ((339,),),
+                    'relevant_idn_table_repertoire': ((111,), (339,),),
                     'symmetry_check': None,
                     'transitivity_check': None,
                     'report': [
@@ -1225,10 +1225,10 @@ class Test(TestCase):
                             'symmetric': True,
                             'result_fwd': 'REVIEW',
                             'result_rev': 'REVIEW',
-                            'remark_fwd': 'Variant set exists in the reference LGR\n'
-                                          'The sequence "oe" seem to be missing',
-                            'remark_rev': 'Variant set exists in the reference LGR\n'
-                                          'The sequence "oe" seem to be missing'
+                            'remark_fwd': 'Variant set exists in the reference LGR.\n'
+                                          'The sequence "oe" may be missing.',
+                            'remark_rev': 'Variant set exists in the reference LGR.\n'
+                                          'The sequence "oe" may be missing.'
                         }
                     ]
                 }

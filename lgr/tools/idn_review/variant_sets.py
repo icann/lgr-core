@@ -283,7 +283,7 @@ class VariantReport:
         result_fwd, remark_fwd = self.get_result_and_remark(VariantComparison.Direction.FORWARD, in_repertoire)
         result_rev, remark_rev = self.get_result_and_remark(VariantComparison.Direction.REVERSE, in_repertoire)
         if self.missing_sequence:
-            remark = f'\nThe sequence "{self.missing_sequence}" seem to be missing'
+            remark = f'.\nThe sequence "{self.missing_sequence}" may be missing.'
             remark_fwd += remark
             remark_rev += remark
         return {
@@ -376,7 +376,12 @@ class VariantSetsReport:
                 if len(cp) > 1:
                     in_idn_table = set(cp) & set(char for c in self.idn_repertoire for char in c.cp)
                     if in_idn_table:
+                        for c in in_idn_table:
+                            idn_cp = (c,)
+                            if idn_cp in self.idn_repertoire:
+                                relevant_repertoire.add(idn_cp)
                         missing_sequence = self.reference_lgr_repertoire.get_char(cp)
+                        break
 
         for cp in sorted(set(self.idn_table_variant_set) | set(self.reference_lgr_variant_set)):
             idn_table_vars = {}
