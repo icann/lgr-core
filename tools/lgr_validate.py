@@ -112,7 +112,7 @@ def main():
     filtered_set_labels = []
     if len(args.lgr_xml) > 1:
         write_output("# The following labels from the set labels are invalid\n")
-        for label, valid, error in read_labels(parser.set_labels, parser.script_lgr.unicode_database):
+        for __, label, valid, error in read_labels(parser.set_labels, parser.script_lgr.unicode_database):
             if not valid:
                 write_output("{}: {}\n".format(label, error))
             else:

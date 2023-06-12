@@ -29,7 +29,7 @@ def annotate(lgr, labels_input):
     :param lgr: The LGR info object.
     :param labels_input: The file containing the labels
     """
-    for label, valid, error in read_labels(labels_input, lgr.unicode_database):
+    for __, label, valid, error in read_labels(labels_input, lgr.unicode_database):
         if valid:
             label_cp = tuple([ord(c) for c in label])
             (eligible, _, label_invalid_parts, disp, action_idx, _) = lgr.test_label_eligible(label_cp,
@@ -54,7 +54,7 @@ def lgr_set_annotate(lgr, script_lgr, set_labels_input, labels_input):
     # First, we need to filter-out out-of-LGR labels from the set_labels_input:
     yield "# The following labels from the set labels are invalid\n"
     filtered_set = []
-    for label, valid, error in read_labels(set_labels_input, lgr.unicode_database):
+    for __, label, valid, error in read_labels(set_labels_input, lgr.unicode_database):
         if not valid:
             yield "%s: %s\n" % (label, error)
         else:
@@ -65,7 +65,7 @@ def lgr_set_annotate(lgr, script_lgr, set_labels_input, labels_input):
                 filtered_set.append(label)
     yield "# End of filtered set labels\n\n"
 
-    for label, valid, error in read_labels(labels_input, script_lgr.unicode_database):
+    for __, label, valid, error in read_labels(labels_input, script_lgr.unicode_database):
         if not valid:
             out = error
             yield "%s: %s\n" % (label, out)
