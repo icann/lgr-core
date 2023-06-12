@@ -46,7 +46,6 @@ setup(
         'tools/lgr_compare.py',
         'tools/lgr_diff_collisions.py',
         'tools/lgr_merge_set.py',
-        'tools/lgr_cross_script_variants.py',
         'tools/lgr_harmonize',
         'tools/lgr_populate_variants.py',
         'tools/rfc7940_validate.py',
