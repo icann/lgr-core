@@ -396,7 +396,7 @@ def diff(lgr_1, lgr_2, labels_input, show_collision=True,
     """
     from lgr.tools.utils import read_labels
     labels = set()
-    for label, valid, error in read_labels(labels_input, lgr_1.unicode_database):
+    for __, label, valid, error in read_labels(labels_input, lgr_1.unicode_database):
         if valid:
             labels.add(label)
         else:
@@ -462,7 +462,7 @@ def _read_tlds(lgr, tlds_input):
 
     tlds = set()
     errors = []
-    for label, valid, error in read_labels(tlds_input, lgr.unicode_database):
+    for __, label, valid, error in read_labels(tlds_input, lgr.unicode_database):
         if valid:
             tlds.add(label)
         else:
@@ -483,7 +483,7 @@ def collision(lgr, labels_input, tlds_input, show_dump=False, quiet=True):
     """
     from lgr.tools.utils import read_labels
     labels = dict()  # use dict to keep order
-    for label, valid, error in read_labels(labels_input, lgr.unicode_database):
+    for __, label, valid, error in read_labels(labels_input, lgr.unicode_database):
         if valid:
             labels[label] = None
         else:
@@ -539,7 +539,7 @@ def basic_collision(lgr, labels_input, tlds_input, with_annotations=False):
 
     label_errors = []
     labels = set()
-    for label, valid, error in read_labels(labels_input, lgr.unicode_database):
+    for __, label, valid, error in read_labels(labels_input, lgr.unicode_database):
         if valid:
             labels.add(label)
         else:
@@ -594,7 +594,7 @@ def get_collisions(lgr, labels_input, quiet=True, cached_indexes=None):
     """
     from lgr.tools.utils import read_labels
     labels = set()
-    for label, valid, error in read_labels(labels_input, lgr.unicode_database):
+    for __, label, valid, error in read_labels(labels_input, lgr.unicode_database):
         if valid:
             labels.add(label)
     label_indexes, _ = _generate_indexes(lgr, labels, keep=False, quiet=quiet, cached_indexes=cached_indexes)

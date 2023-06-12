@@ -24,7 +24,7 @@ from munidata import UnicodeDataVersionManager
 logger = logging.getLogger(__name__)
 
 
-def read_labels(input, unidb=None, do_raise=False, keep_commented=False, as_cp=False):
+def read_labels(input, unidb=None, do_raise=False, keep_commented=False, as_cp=False, return_exceptions=False):
     """
     Read a label file and format lines to get a list of correct labels
 
@@ -33,36 +33,44 @@ def read_labels(input, unidb=None, do_raise=False, keep_commented=False, as_cp=F
     :param do_raise: Whether the label parsing exceptions are raised or not
     :param keep_commented: Whether commented labels are returned (still commented) or not
     :param as_cp: If True, returns a list of code points per label. Otherwise, unicode string.
-    :return: [(label, valid, error)]
+    :param return_exceptions: If True, returns the exception instead of an error string
+    :return: [(original label, parsed label, valid, error)]
     """
-    labels = [l.strip() for l in input]
+    def clean(l):
+        try:
+            l = l.lstrip(codecs.BOM_UTF8.decode('utf-8'))
+        except:
+            pass
+        return l.strip()
 
     # remove comments
-    for label in labels:
+    for label in input:
+        label = clean(label)
         if '#' in label:
             pos = label.find('#')
             if pos == 0:
                 if keep_commented:
-                    yield label, True, ''
+                    yield label, label, True, ''
                 continue
             label = label[:pos].strip()
         if len(label) == 0:
             continue
 
         error = ''
+        parsed_label = ''
         valid = True
         # transform U-label and A-label in unicode strings
         try:
             if unidb:
-                label = parse_label_input(label, idna_decoder=unidb.idna_decode_label, as_cp=as_cp)
+                parsed_label = parse_label_input(label, idna_decoder=unidb.idna_decode_label, as_cp=as_cp)
             else:
-                label = parse_label_input(label, as_cp=as_cp)
+                parsed_label = parse_label_input(label, as_cp=as_cp)
         except BaseException as ex:
             if do_raise:
                 raise
             valid = False
-            error = text_type(ex)
-        yield label, valid, error
+            error = ex if return_exceptions else text_type(ex)
+        yield label, parsed_label, valid, error
 
 
 def parse_single_cp_input(s):

@@ -64,7 +64,7 @@ def cross_script_variants(lgr, labels_input):
                      "for LGR without unicode database attached")
         raise LGRCrossScriptMissingDataException("Unicode Version")
     found = False
-    for label, valid, error in read_labels(labels_input, lgr.unicode_database):
+    for __, label, valid, error in read_labels(labels_input, lgr.unicode_database):
         if not valid:
             yield "Input label {}: {}\n".format(label, error)
         else:
