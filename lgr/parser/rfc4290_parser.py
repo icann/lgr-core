@@ -24,7 +24,7 @@ class RFC4290Parser(LGRParser):
 
     def validate_document(self, schema=None):
         # No validation of document done for now
-        return True
+        return
 
     def parse_document(self):
         if not self.filename and isinstance(self.source, str):

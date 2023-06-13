@@ -32,7 +32,7 @@ class RFC3743Parser(LGRParser):
 
     def validate_document(self, schema=None):
         # No validation of document done for now
-        return ""
+        return
 
     def parse_document(self):
         if not self.filename and isinstance(self.source, str):
