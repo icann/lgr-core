@@ -34,3 +34,19 @@ class Test(TestCase):
                                      'version': '1'
                                  }
                              })
+
+
+    def test_generage_header_core_requirements(self):
+        idn = load_lgr('idn_table_review/header', 'header.xml')
+
+        self.assertDictEqual(generate_header(idn),
+                             {
+                                 'date': date.today(),
+                                 'disclaimer': 'Please refer to the LGR (IDN Table) Review Tool disclaimer on this '
+                                               '<a href="https://www.icann.org/resources/pages/lgr-toolset-2015-06-21-en" '
+                                               'target="_blank" rel="noopener noreferrer">page</a>',
+                                 'idn_table': {
+                                     'filename': 'header.xml',
+                                     'version': '2'
+                                 }
+                             })

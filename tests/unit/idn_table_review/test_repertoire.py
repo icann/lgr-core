@@ -6,7 +6,7 @@ test_repertoire -
 import logging
 from unittest import TestCase
 
-from lgr.tools.idn_review.repertoire import generate_repertoire_report
+from lgr.tools.idn_review.repertoire import generate_repertoire_report, generate_repertoire_core_report
 from tests.unit.unicode_database_mock import UnicodeDatabaseMock
 from tests.unit.utils import load_lgr
 
@@ -404,3 +404,136 @@ class Test(TestCase):
                 'ref_name': 'LATIN SMALL LETTER O LATIN SMALL LETTER E'
             }]
         })
+
+
+    def test_repertoire_core_requirements(self):
+        result = generate_repertoire_core_report(self.ref)
+
+        self.assertListEqual(result, sorted([{
+        'cp': (97,),
+        'glyph': 'a',
+        'name': 'LATIN SMALL LETTER A',
+        'idna_property': 'PVALID',
+        'category': 'Ll',
+    }, {
+        'cp': (98,),
+        'glyph': 'b',
+        'name': 'LATIN SMALL LETTER B',
+        'idna_property': 'PVALID',
+        'category': 'Ll',
+    }, {
+        'cp': (99,),
+        'glyph': 'c',
+        'name': 'LATIN SMALL LETTER C',
+        'idna_property': 'PVALID',
+        'category': 'Ll',
+    }, {
+        'cp': (100,),
+        'glyph': 'd',
+        'name': 'LATIN SMALL LETTER D',
+        'idna_property': 'PVALID',
+        'category': 'Ll',
+    }, {
+        'cp': (101,),
+        'glyph': 'e',
+        'name': 'LATIN SMALL LETTER E',
+        'idna_property': 'PVALID',
+        'category': 'Ll',
+    }, {
+        'cp': (102,),
+        'glyph': 'f',
+        'name': 'LATIN SMALL LETTER F',
+        'idna_property': 'PVALID',
+        'category': 'Ll',
+    }, {
+        'cp': (103,),
+        'glyph': 'g',
+        'name': 'LATIN SMALL LETTER G',
+        'idna_property': 'PVALID',
+        'category': 'Ll',
+    }, {
+        'cp': (104,),
+        'glyph': 'h',
+        'name': 'LATIN SMALL LETTER H',
+        'idna_property': 'PVALID',
+        'category': 'Ll',
+    }, {
+        'cp': (105,),
+        'glyph': 'i',
+        'name': 'LATIN SMALL LETTER I',
+        'idna_property': 'PVALID',
+        'category': 'Ll',
+    }, {
+        'cp': (48,),
+        'glyph': '0',
+        'name': 'DIGIT ZERO',
+        'idna_property': 'PVALID',
+        'category': 'Nd',
+    }, {
+        'cp': (49,),
+        'glyph': '1',
+        'name': 'DIGIT ONE',
+        'idna_property': 'PVALID',
+        'category': 'Nd',
+    }, {
+        'cp': (50,),
+        'glyph': '2',
+        'name': 'DIGIT TWO',
+        'idna_property': 'PVALID',
+        'category': 'Nd',
+    }, {
+        'cp': (51,),
+        'glyph': '3',
+        'name': 'DIGIT THREE',
+        'idna_property': 'PVALID',
+        'category': 'Nd',
+    }, {
+        'cp': (52,),
+        'glyph': '4',
+        'name': 'DIGIT FOUR',
+        'idna_property': 'PVALID',
+        'category': 'Nd',
+    }, {
+        'cp': (53,),
+        'glyph': '5',
+        'name': 'DIGIT FIVE',
+        'idna_property': 'PVALID',
+        'category': 'Nd',
+    }, {
+        'cp': (54,),
+        'glyph': '6',
+        'name': 'DIGIT SIX',
+        'idna_property': 'PVALID',
+        'category': 'Nd',
+    }, {
+        'cp': (55,),
+        'glyph': '7',
+        'name': 'DIGIT SEVEN',
+        'idna_property': 'PVALID',
+        'category': 'Nd',
+    }, {
+        'cp': (56,),
+        'glyph': '8',
+        'name': 'DIGIT EIGHT',
+        'idna_property': 'PVALID',
+        'category': 'Nd',
+    }, {
+        'cp': (57,),
+        'glyph': '9',
+        'name': 'DIGIT NINE',
+        'idna_property': 'PVALID',
+        'category': 'Nd',
+    }, {
+        'cp': (339,),
+        'glyph': 'œ',
+        'name': 'LATIN SMALL LIGATURE OE',
+        'idna_property': 'PVALID',
+        'category': 'Ll',
+    }, {
+        'cp': (111, 101),
+        'glyph': 'oe',
+        'name': 'LATIN SMALL LETTER O LATIN SMALL LETTER E',
+        'name': 'LATIN SMALL LIGATURE OE',
+        'idna_property': 'PVALID',
+        'category': 'Ll',
+    }], key=lambda x: x['cp']))
