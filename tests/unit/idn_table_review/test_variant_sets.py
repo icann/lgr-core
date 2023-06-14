@@ -6,7 +6,7 @@ test_variant_sets -
 import logging
 from unittest import TestCase
 
-from lgr.tools.idn_review.variant_sets import generate_variant_sets_report
+from lgr.tools.idn_review.variant_sets import generate_variant_sets_report, generate_variant_sets_core_report
 from tests.unit.unicode_database_mock import UnicodeDatabaseMock
 from tests.unit.utils import load_lgr
 
@@ -1241,3 +1241,16 @@ class Test(TestCase):
                 'category': 'Ll'
             }]
         })
+
+    def test_generate_variant_sets_report_core_requirements(self):
+        result = generate_variant_sets_core_report(self.ref)
+
+        self.assertDictEqual(result, {'report': {'multiple_digit_sets': False}})
+
+        def test_generate_variant_sets_report_core_requirements_multiple_digits_sets(self):
+            idn = load_lgr('idn_table_review/variant_sets', 'variant_sets_core_multiple_digits_sets.xml',
+                           unidb=self.unidb)
+
+            result = generate_variant_sets_core_report(idn)
+
+            self.assertDictEqual(result, {'report': {'multiple_digit_sets': True}})
