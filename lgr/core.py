@@ -1117,11 +1117,16 @@ class LGR(object):
         variant_set = self._generate_label_variants(label, hide_mixed_script_variants=hide_mixed_script_variants)
 
         original_label = None
+        # sometimes we have duplicated (e.g. twice the same characters)
+        already_handled = set()
 
         # Step 4 - 8.3.  Determining a Disposition for a Label or Variant Label
         for (variant_cp, disp_set, only_variants) in variant_set:
+            if variant_cp in already_handled:
+                continue
             if with_labels and variant_cp not in with_labels:
                 continue
+            already_handled.add(variant_cp)
             # Configure log system to redirect logs to local attribute
             log_output = StringIO()
             if collect_log:
