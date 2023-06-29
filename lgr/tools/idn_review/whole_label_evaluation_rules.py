@@ -344,7 +344,7 @@ class WholeLabelEvaluationRulesCheck:
 
     def get_context_rules(self):
         nbr_digits = 0
-        for char in self.idn_table.repertoire.all_repertoire(expand_ranges=True):
+        for char in self.idn_table.repertoire.all_repertoire():
             if len(char.cp) == 1:
                 cp = char.cp[0]
                 if self.idn_table.unicode_database.is_digit(cp):
