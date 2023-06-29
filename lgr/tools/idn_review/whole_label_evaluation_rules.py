@@ -323,7 +323,7 @@ class WholeLabelEvaluationRulesCheck:
         self.check_rtl()
         self.language_tags = []
         self.get_language_tags(self.idn_table)
-        if not self.language_tags:
+        if not self.language_tags and self.reference_lgr:
             self.get_language_tags(self.reference_lgr)
 
     def check_rtl(self):
