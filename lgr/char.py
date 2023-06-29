@@ -438,13 +438,12 @@ class Repertoire(object):
 
                 yield char
 
-    def all_repertoire(self, include_sequences=True, include_ranges=True, expand_ranges=False):
+    def all_repertoire(self, include_sequences=True, include_ranges=True):
         """
         Return the whole content of the repertoire, unsorted.
 
         :param include_sequences: If False CharSequence are excluded from output.
         :param include_ranges: If False RangeChar are excluded from output.
-        :param expand_ranges: Return the ranges expanded (include_ranges should be True)
         :return: A generator that contains all Char elements of the repertoire.
 
         >>> cd = Repertoire()
@@ -458,15 +457,8 @@ class Repertoire(object):
             for char in char_list:
                 if isinstance(char, CharSequence) and not include_sequences:
                     continue
-                if isinstance(char, RangeChar):
-                    if not include_ranges:
-                        continue
-                    if expand_ranges:
-                        for cp in range(char.first_cp, char.last_cp + 1):
-                            yield CharBase.from_cp_or_sequence(cp,
-                                                               char.comment, char.references, char.tags,
-                                                               char.when, char.not_when)
-                        continue
+                if isinstance(char, RangeChar) and not include_ranges:
+                    continue
                 yield char
 
     def __len__(self):

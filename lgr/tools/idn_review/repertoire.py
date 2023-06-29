@@ -111,8 +111,8 @@ def get_idn_cp_in_ref_seq(idn_table: LGR, reference_lgr: LGR, unidb: UnicodeData
 
 
 def generate_repertoire_report(idn_table: LGR, reference_lgr: LGR) -> Dict:
-    idn_table_repertoire: Dict[Tuple, Char] = {c.cp: c for c in idn_table.repertoire.all_repertoire(expand_ranges=True)}
-    reference_lgr_repertoire = {c.cp: c for c in reference_lgr.repertoire.all_repertoire(expand_ranges=True)}
+    idn_table_repertoire: Dict[Tuple, Char] = {c.cp: c for c in idn_table.repertoire.all_repertoire()}
+    reference_lgr_repertoire = {c.cp: c for c in reference_lgr.repertoire.all_repertoire()}
 
     unidb = idn_table.unicode_database or reference_lgr.unicode_database
     reports = []
@@ -130,4 +130,4 @@ def generate_repertoire_report(idn_table: LGR, reference_lgr: LGR) -> Dict:
 
 def generate_repertoire_core_report(idn_table: LGR) -> Dict:
     unidb = idn_table.unicode_database
-    return cp_report(unidb, idn_table.repertoire.all_repertoire(expand_ranges=True))
+    return cp_report(unidb, idn_table.repertoire.all_repertoire())

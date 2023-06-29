@@ -514,7 +514,7 @@ class TestRepertoire(unittest.TestCase):
             Char(0x0013),
         }
         self.assertEqual(set(self.cd.all_repertoire(include_ranges=False,
-                                                     include_sequences=False)),
+                                                    include_sequences=False)),
                          expected_output)
 
     def test_get_variants(self):
