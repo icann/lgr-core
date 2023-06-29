@@ -35,11 +35,10 @@ class Test(TestCase):
                                  }
                              })
 
-
     def test_generage_header_core_requirements(self):
         idn = load_lgr('idn_table_review/header', 'header.xml')
 
-        self.assertDictEqual(generate_header(idn),
+        self.assertDictEqual(generate_header(idn, None),
                              {
                                  'date': date.today(),
                                  'disclaimer': 'Please refer to the LGR (IDN Table) Review Tool disclaimer on this '

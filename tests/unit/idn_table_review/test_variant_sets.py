@@ -14,7 +14,7 @@ logger = logging.getLogger('test_variant_sets')
 
 
 class Test(TestCase):
-    ref = load_lgr('idn_table_review', 'reference_lgr.xml')
+    ref = load_lgr('idn_table_review', 'reference_lgr.xml', unidb=UnicodeDatabaseMock())
     report_abc = {
         'idn_table': ((97,), (98,), (99,)),
         'ref_lgr': ((97,), (98,), (99,)),
@@ -1247,10 +1247,10 @@ class Test(TestCase):
 
         self.assertDictEqual(result, {'report': {'multiple_digit_sets': False}})
 
-        def test_generate_variant_sets_report_core_requirements_multiple_digits_sets(self):
-            idn = load_lgr('idn_table_review/variant_sets', 'variant_sets_core_multiple_digits_sets.xml',
-                           unidb=self.unidb)
+    def test_generate_variant_sets_report_core_requirements_multiple_digits_sets(self):
+        idn = load_lgr('idn_table_review/variant_sets', 'variant_sets_core_multiple_digits_sets.xml',
+                       unidb=self.unidb)
 
-            result = generate_variant_sets_core_report(idn)
+        result = generate_variant_sets_core_report(idn)
 
-            self.assertDictEqual(result, {'report': {'multiple_digit_sets': True}})
+        self.assertDictEqual(result, {'report': {'multiple_digit_sets': True}})

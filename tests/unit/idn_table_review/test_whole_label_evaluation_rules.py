@@ -808,10 +808,22 @@ class Test(TestCase):
                     'applicable': True,
                     'exists': None,
                 },
-                'digits_set': {
-                    'applicable': True,
-                    'exists': None,
-                },
+                'digits_set': self.general_rules_digits_sets,
+                'japanese_contextj': self.general_rules_japanese_contextj,
+                # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
+            }
+        })
+
+    def test_wle_core_requirements_no_language_tags(self):
+        idn = load_lgr('idn_table_review/whole_label_evaluation_rules', 'wle_no_language_tags.xml', unidb=self.unidb)
+        result = generate_whole_label_evaluation_rules_core_report(idn)
+
+        self.assertDictEqual(result, {
+            'additional_general_rules': {
+                'combining_mark': self.general_rules_combining_mark,
+                'consecutive_hyphens': self.general_rules_consecutive_hyphens,
+                'rtl': self.general_rules_rtl,
+                'digits_set': self.general_rules_digits_sets,
                 'japanese_contextj': self.general_rules_japanese_contextj,
                 # 'arabic_no_extended_end': self.general_rules_arabic_no_end,
             }
