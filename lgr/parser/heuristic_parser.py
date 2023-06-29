@@ -36,7 +36,7 @@ class HeuristicParser(LGRParser):
             with io.open(self.source, 'r', encoding='utf-8') as rule_file:
                 self._find_parser(rule_file)
 
-        return self.lgr_parser.validate_document()
+        return self.lgr_parser.validate_document(schema)
 
     def _find_parser(self, rule_file):
         if self.lgr_parser:
