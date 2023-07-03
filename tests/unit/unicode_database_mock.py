@@ -66,9 +66,13 @@ class UnicodeDatabaseMock(UnicodeDatabase):
         except:
             return False
 
+    def is_rtl(self, cp):
+        script = self.get_script(cp)
+        return self.is_script_rtl(script)
+
     def is_script_rtl(self, script):
         # XXX The list may not be accurate
-        if script.lower() in {'arab', 'aran', 'xpeo', 'narb', 'sarb', 'thaa', 'hebr'}:
+        if script.lower() in {'arab', 'aran', 'xpeo', 'narb', 'sarb', 'thaa', 'hebr', 'hebrew'}:
             return True
         return False
 

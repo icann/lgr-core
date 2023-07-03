@@ -318,13 +318,13 @@ class WholeLabelEvaluationRulesCheck:
         self.has_hyphen = 0x002D in self.idn_table.repertoire
         self.has_digits = False
         self.has_multiple_digits_sets = False
-        self.get_context_rules()
         self.is_rtl = False
         self.check_rtl()
         self.language_tags = []
         self.get_language_tags(self.idn_table)
         if not self.language_tags and self.reference_lgr:
             self.get_language_tags(self.reference_lgr)
+        self.get_context_rules()
 
     def check_rtl(self):
         self.is_rtl = False
@@ -352,6 +352,9 @@ class WholeLabelEvaluationRulesCheck:
                     self.has_digits = True
                 if self.idn_table.unicode_database.is_combining_mark(cp):
                     self.combining_mark = True
+                if not self.language_tags and self.idn_table.unicode_database.is_rtl(cp):
+                    # we don't have any language tag, check rtl with code points
+                    self.is_rtl = True
             if char.when:
                 self.idn_table_context_rules.setdefault(char.when, set()).add(char.cp)
             elif char.not_when:
