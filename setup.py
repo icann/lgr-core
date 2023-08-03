@@ -25,12 +25,12 @@ class PyTest(TestCommand):
 
 setup(
     name="lgr-core",
-    version='5.0.1',
-    author='Viagénie and Wil Tan',
-    author_email='support@viagenie.ca',
+    version='6.0.0',
+    author='Cofomo, Viagénie and Wil Tan',
+    author_email='int-eng@cofomo.com',
     description="API for manipulating Label Generation Rules",
     long_description=open('README.md', encoding='utf-8').read(),
-    license="TBD",
+    license="BSD",
     install_requires=['lxml', 'language-tags', 'pycountry', 'munidata', 'picu'],
     packages=find_packages(),
     scripts=[

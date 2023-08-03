@@ -1,5 +1,18 @@
 # Changelog for lgr-core
 
+## 6.0.0 (2023-08-03)
+### New features
+- Add IDN review with core requirements
+-
+### Improvements
+- Prevent variant duplication
+- Remove cross-script tool
+- Handle BOM when reading labels input file
+- Handle some edge cases in IDN table review of variant sets
+- Add some new relevant information in IDN table reviews
+- Code cleaning
+
+
 ## 5.0.1 (2022-11-21)
 ### Fixes
 - Fix collision tools
