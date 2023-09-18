@@ -142,7 +142,7 @@ def union_char(lgr, first, second):
     """
     comment = let_user_choose(first.comment, second.comment)
 
-    tags = set.union(set(first.tags), set(second.tags))
+    tags = list(set.union(set(first.tags), set(second.tags)))
 
     lgr.add_cp(first.cp, comment=comment, tag=tags)
 
