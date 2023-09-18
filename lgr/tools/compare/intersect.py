@@ -133,7 +133,7 @@ def intersect_char(lgr, first, second):
     """
     comment = let_user_choose(first.comment, second.comment)
 
-    tags = set.intersection(set(first.tags), set(second.tags))
+    tags = list(set.intersection(set(first.tags), set(second.tags)))
 
     lgr.add_cp(first.cp, comment=comment, tag=tags)
 
