@@ -6,11 +6,20 @@ from lgr.char import Repertoire
 
 
 def get_permitted_scripts(base_scripts: Set[str]):
+    """
+    Japanese: Katakana, Hiragana, Han, Latin
+    Korean: Hangul, Latin, or Han, Latin
+    Chinese: Han, Latin
+
+    Examples of cp:
+    Hangul: 뉘 [B258]
+    Han: 爿 [723F]
+    """
     permitted_scripts = base_scripts.copy()
     if 'Katakana' in base_scripts or 'Hiragana' in base_scripts:
         permitted_scripts.update({'Han', 'Latin', 'Katakana', 'Hiragana'})
     elif 'Hangul' in base_scripts:
-        permitted_scripts.update({'Han', 'Latin'})
+        permitted_scripts.update({'Latin'})
     if 'Han' in base_scripts:
         permitted_scripts.update({'Latin'})
 
