@@ -4,7 +4,6 @@ from typing import Dict, Tuple
 
 from lgr.char import Char
 from lgr.core import LGR
-from lgr.tools.utils import parse_single_cp_input
 
 
 def check_idna2008_compliance(idn_table: LGR):
@@ -22,17 +21,12 @@ def check_idna2008_compliance(idn_table: LGR):
                     'idna_property': prop,
                 })
                 break
-        # c = parse_single_cp_input(cp)
-        # try:
-        #     unidb.idna_encode_label(c)
-        # except:
-        #     invalid.add(cp)
 
     return invalid
 
 
 def is_out_of_repertoire(char):
     for v in char.get_reflexive_variants():
-        if v.type and v.type.lower() == 'out-of-repertoire':
+        if v.type and v.type.lower().startswith('out-of-repertoire'):
             return True
     return False

@@ -1,0 +1,42 @@
+<lgr xmlns="urn:ietf:params:xml:ns:lgr-1.0">
+    <meta>
+        <version comment="Sample LGR for French">1</version>
+        <date>2015-08-07</date>
+        <unicode-version>6.3.0</unicode-version>
+        <language>und-Latin</language>
+        <scope type="domain">example</scope>
+        <description type="text/plain">LGR for Unit Tests</description>
+        <references>
+            <reference comment="http://www.unicode.org/versions/Unicode1.1.0/" id="0">The Unicode Standard 1.1
+            </reference>
+        </references>
+    </meta>
+    <data>
+        <char cp="0041" tag="sc:Latn" comment="Not part of repertoire">
+            <var cp="0041" type="out-of-repertoire-var" comment="Out-of-repertoire"/>
+        </char>
+        <char cp="0041" tag="sc:Latn" />
+        <char cp="0041" tag="sc:Latn" />
+        <char cp="0041" tag="sc:Latn" />
+        <char cp="0061" ref="0" when="match">
+            <var cp="0062" type="blocked"/>
+            <var cp="0063" type="activated"/>
+        </char>
+        <char cp="0061" ref="0" when="match">
+            <var cp="0062" type="blocked"/>
+            <var cp="0063" type="activated"/>
+        </char>
+        <char cp="0062" ref="0" when="match">
+            <var cp="0061" type="blocked" when="match"/>
+            <var cp="0063" type="blocked"/>
+        </char>
+        <char cp="0063" ref="0" not-when="not-match">
+            <var cp="0061" type="blocked"/>
+            <var cp="0062" type="allocatable"/>
+        </char>
+        <char cp="0064" ref="0"/>
+        <char cp="0065" ref="0"/>
+        <char cp="0066" ref="0"/>
+    </data>
+    <rules/>
+</lgr>
