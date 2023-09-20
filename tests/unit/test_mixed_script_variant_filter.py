@@ -19,7 +19,7 @@ class TestMixedScriptVariantFilter(TestCase):
 
     CHINEESE_SCRIPTS_SET = {'Han', 'Latin'}
     JAPENEESE_SCRIPTS_SET = {'Han', 'Katakana', 'Hiragana', 'Latin'}
-    KOREAN_SCRIPTS_SET = {'Han', 'Hangul', 'Latin'}
+    KOREAN_SCRIPTS_SET = {'Hangul', 'Latin'}
 
     def setUp(self) -> None:
         super().setUp()
@@ -130,7 +130,7 @@ class TestMixedScriptVariantFilter(TestCase):
 
     def test_K_filter(self):
         self.filter_base(label='보', chars=['á', 'ά', 'α', 'a', '赤', 'テ', 'ゃ', '보'],
-                         expected_list=['á', 'a', '赤', '보'])
+                         expected_list=['á', 'a', '보'])
 
     def test_special_char_filter(self):
         self.filter_base(label='œ', chars=['œ', 'oe'], expected_list=['œ', 'oe'])
