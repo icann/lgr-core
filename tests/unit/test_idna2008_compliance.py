@@ -32,7 +32,13 @@ class TestIDNA2008Compliance(unittest.TestCase):
         result = check_idna2008_compliance(lgr)
 
         self.assertEquals(1, len(result))
-        self.assertListEqual([{'char': lgr.get_char(0x0041), 'idna_property': 'DISALLOWED'}], result)
+        self.assertListEqual([{
+            'cp': (65,),
+            'glyph': 'A',
+            'name': "LATIN CAPITAL LETTER A",
+            'idna_property': 'DISALLOWED',
+            'category': 'Lu'
+        }], result)
 
 
 if __name__ == '__main__':
