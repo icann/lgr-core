@@ -7,8 +7,15 @@ from lgr.tools.idn_review.utils import cp_report
 
 def check_idna2008_compliance(idn_table: LGR):
     unidb = idn_table.unicode_database
-    return cp_report(unidb, [char for char in idn_table.repertoire.all_repertoire() if
-                             not is_out_of_repertoire(char) and contains_invalid_cp(char, unidb)])
+    report = cp_report(unidb, [char for char in idn_table.repertoire.all_repertoire() if
+                               not is_out_of_repertoire(char) and contains_invalid_cp(char, unidb)])
+    for data in report:
+        data['idna2003_compliant'] = True
+        for c in data['cp']:
+            if unidb.is_idna2003_disallowed(c):
+                data['idna2003_compliant'] = False
+                break
+    return report
 
 
 def is_out_of_repertoire(char):
@@ -24,3 +31,5 @@ def contains_invalid_cp(char, unidb):
         if prop in ['UNASSIGNED', 'DISALLOWED']:
             return True
     return False
+
+
