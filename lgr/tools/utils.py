@@ -68,6 +68,10 @@ def read_labels(input, unidb=None, do_raise=False, keep_commented=False, as_cp=F
         except BaseException as ex:
             if do_raise:
                 raise
+            try:
+                parsed_label = [ord(c) for c in label] if as_cp else label
+            except:
+                pass
             valid = False
             error = ex if return_exceptions else text_type(ex)
         yield label, parsed_label, valid, error
