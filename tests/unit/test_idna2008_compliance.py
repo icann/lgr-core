@@ -37,7 +37,30 @@ class TestIDNA2008Compliance(unittest.TestCase):
             'glyph': 'A',
             'name': "LATIN CAPITAL LETTER A",
             'idna_property': 'DISALLOWED',
-            'category': 'Lu'
+            'category': 'Lu',
+            'idna2003_compliant': True
+        }], result)
+
+    def test_non_compliant_idna2003(self):
+        lgr = load_lgr('idna2008_compliance', 'non_compliant_idna2003.xml', unidb=self.unidb)
+
+        result = check_idna2008_compliance(lgr)
+
+        self.assertEquals(2, len(result))
+        self.assertListEqual([{
+            'cp': (65,),
+            'glyph': 'A',
+            'name': "LATIN CAPITAL LETTER A",
+            'idna_property': 'DISALLOWED',
+            'category': 'Lu',
+            'idna2003_compliant': True
+        }, {
+            'cp': (1304,),
+            'glyph': 'Ԙ',
+            'name': "CYRILLIC CAPITAL LETTER YAE",
+            'idna_property': 'DISALLOWED',
+            'category': 'Lu',
+            'idna2003_compliant': False
         }], result)
 
 
