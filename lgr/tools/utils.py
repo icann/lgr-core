@@ -332,9 +332,9 @@ class LgrToolArgParser(argparse.ArgumentParser):
     def setup_logger(self):
         if not self.args:
             self.parse_args()
-        # "Disable" logging in test mode except if we ask to be verbose
         log_level = logging.DEBUG if self.args.verbose else logging.INFO
-        if self.args.test and not self.args.verbose:
+        # "Disable" logging in test mode except if we ask to be verbose
+        if hasattr(self.args, 'test') and self.args.test and not self.args.verbose:
             log_level = logging.ERROR
         if self.args.quiet:
             log_level = logging.CRITICAL
