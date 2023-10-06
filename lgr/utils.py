@@ -14,6 +14,14 @@ from lgr import text_type, wide_unichr
 logger = logging.getLogger(__name__)
 
 
+VALID_IDNA_PROPERTY_VALUES = set([
+    "PVALID",
+    "CONTEXTJ",
+    "CONTEXTO",
+])
+
+
+
 def cp_to_ulabel(cp_or_sequence):
     """
     Convert a code point or code point sequence to the corresponding U-label.
@@ -233,3 +241,14 @@ def tag_to_language_script(tag, use_suppress_script=False):
     if language == 'zh' and not script:
         script = 'Hani'
     return language, script
+
+
+def is_idna_valid_cp_or_sequence(cp_or_sequence, udata, check_all=False):
+    all_invalid = dict()
+    for cp in cp_or_sequence:
+        prop = udata.get_idna_prop(cp)
+        if prop not in VALID_IDNA_PROPERTY_VALUES:
+            all_invalid[cp] = prop
+            if not check_all:
+                return False, all_invalid
+    return len(all_invalid) == 0, all_invalid

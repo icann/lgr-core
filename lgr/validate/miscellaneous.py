@@ -8,6 +8,7 @@ import datetime
 import re
 
 import lgr.char as lgr_char
+from lgr.utils import is_idna_valid_cp_or_sequence
 
 logger = logging.getLogger(__name__)
 
@@ -19,11 +20,6 @@ STANDARD_DISPOSITIONS = set([
     "valid",
 ])
 
-VALID_IDNA_PROPERTY_VALUES = set([
-    "PVALID",
-    "CONTEXTJ",
-    "CONTEXTO",
-])
 
 def check_lgr_data(lgr):
 
@@ -57,12 +53,11 @@ def check_lgr_data(lgr):
                     to_check.update(v.cp)
 
         # Check that all code points are valid in our Unicode version
-        for cp in to_check:
-            prop = lgr.unicode_database.get_idna_prop(cp)
-            if prop not in VALID_IDNA_PROPERTY_VALUES:
-                logging.error("Invalid codepoint '%04X': %s", cp, prop)
-                success = False
-                lgr.notify_error('codepoint_valid')
+        _, invalid_cps = is_idna_valid_cp_or_sequence(to_check, lgr.unicode_database, check_all=True)
+        for cp, prop in invalid_cps.items():
+            logging.error("Invalid codepoint '%04X': %s", cp, prop)
+            success = False
+            lgr.notify_error('codepoint_valid')
         lgr.notify_tested('codepoint_valid')
     else:
         logger.warning("Target Unicode version %s differs "

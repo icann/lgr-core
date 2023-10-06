@@ -31,7 +31,7 @@ from lgr.mixed_scripts_variant_filter import MixedScriptsVariantFilter, BaseMixe
 from lgr.validate import validate_lgr
 from lgr.populate import populate_lgr
 from lgr.utils import (collapse_codepoints,
-                       format_cp)
+                       format_cp, is_idna_valid_cp_or_sequence)
 
 logger = logging.getLogger(__name__)
 rule_logger = logging.getLogger('lgr-rule-logger')
@@ -1869,14 +1869,12 @@ class LGR(object):
                 raise LGRApiInvalidParameter('cp_or_sequence')
 
         if self.unicode_database is not None:
-            for cp in cp_or_sequence:
+            _, invalid_cps = is_idna_valid_cp_or_sequence(cp_or_sequence, self.unicode_database, check_all=True)
+            for cp in invalid_cps.keys():
                 # Check IDNA properties - This check cannot be overridden
-                idna_prop = self.unicode_database.get_idna_prop(cp)
-                if idna_prop in ['UNASSIGNED', 'DISALLOWED']:
-                    logger.error("Code point %s is not IDNA-valid",
-                                 format_cp(cp))
-                    if self.raise_on_invalid_property:
-                        raise CharInvalidIdnaProperty(cp)
+                logger.error("Code point %s is not IDNA-valid", format_cp(cp))
+                if self.raise_on_invalid_property:
+                    raise CharInvalidIdnaProperty(cp)
             in_script, _ = self.cp_in_script(cp_or_sequence)
             if assert_in_script:
                 raise CharNotInScript(cp_or_sequence)
