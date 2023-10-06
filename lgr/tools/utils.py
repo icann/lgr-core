@@ -165,16 +165,17 @@ def parse_codepoint_input(s):
     return [parse_single_cp_input(x) for x in s.split()]
 
 
-def parse_label_input(s, idna_decoder=lambda x: x.encode('utf-8').decode('idna'), as_cp=True):
+def parse_label_input(s, idna_decoder=lambda x: x.encode('utf-8').decode('idna'), as_cp=True, keep_spaces=False):
     """
     Parses a label from user input, applying a bit of auto-detection smarts
 
     :param s: input string in A-label, U-label or space-separated hex sequences.
     :param idna_decoder: IDNA decode function.
     :param as_cp: If True, returns a list of code points. Otherwise, unicode string.
+    :param keep_spaces: Whether, we should continue to process labels with space when we cannot parse them as code points
     :return: list of code points
 
-    >>> parse_label_input('0061')  # treated as U-label - probably the only confusing result
+    >>> parse_label_input('0061')  # treated as U-label - probably the most confusing result
     [48, 48, 54, 49]
     >>> parse_label_input('U+0061')  # this is how to signal that you want hex
     [97]
@@ -184,6 +185,8 @@ def parse_label_input(s, idna_decoder=lambda x: x.encode('utf-8').decode('idna')
     [97, 98, 99]
     >>> parse_label_input('xn--m-0ga')  # "öm"
     [246, 109]
+    >>> parse_label_input('ab ')  # "«" treated as code point since we have a space at the end - kind of confusing
+    [171]
     """
     if s.lower().startswith('xn--'):
         if as_cp:
@@ -194,20 +197,23 @@ def parse_label_input(s, idna_decoder=lambda x: x.encode('utf-8').decode('idna')
         try:
             label_cp = parse_codepoint_input(s)
         except:
-            if ' ' in s:
+            if ' ' not in s:
+                raise
+
+            if not keep_spaces:
                 raise ValueError("Label '{}' contains spaces "
                                  "that are not PVALID for IDNA2008".format(s))
-            raise
-        if as_cp:
-            return label_cp
         else:
-            return cp_to_ulabel(label_cp)
+            if as_cp:
+                return label_cp
+            else:
+                return cp_to_ulabel(label_cp)
+
+    # treat as unicode
+    if as_cp:
+        return [ord(c) for c in s]
     else:
-        # treat as unicode
-        if as_cp:
-            return [ord(c) for c in s]
-        else:
-            return s
+        return s
 
 
 def merge_lgrs(input_lgrs, name=None, rng=None, unidb=None):
