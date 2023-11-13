@@ -130,4 +130,14 @@ def generate_repertoire_report(idn_table: LGR, reference_lgr: LGR) -> Dict:
 
 def generate_repertoire_core_report(idn_table: LGR) -> Dict:
     unidb = idn_table.unicode_database
-    return cp_report(unidb, idn_table.repertoire.all_repertoire())
+    report = cp_report(unidb, idn_table.repertoire.all_repertoire())
+    invalid = 0
+    for c in report:
+        idna_props = set(c['idna_property'].split(' '))
+        if idna_props != {'PVALID'}:
+            invalid += 1
+    return {
+        'report': report,
+        'pvalid_cp_nbr': len(report) - invalid,
+        'invalid_cp_nbr': invalid
+    }
