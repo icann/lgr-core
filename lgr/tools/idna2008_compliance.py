@@ -16,7 +16,11 @@ def check_idna2008_compliance(idn_table: LGR):
             if unidb.is_idna2003_disallowed(c):
                 data['idna2003_compliant'] = False
                 break
-    return report
+    return {
+        'contains_non_compliant': len(report) > 0,
+        'non_compliant': report,
+        'compliant_nbr': len(idn_table.repertoire) - len(report)
+    }
 
 
 def is_out_of_repertoire(char):

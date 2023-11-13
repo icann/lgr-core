@@ -15,13 +15,6 @@
         <char cp="0041" tag="sc:Latn" comment="Not part of repertoire">
             <var cp="0041" type="out-of-repertoire-var" comment="Out-of-repertoire"/>
         </char>
-        <char cp="0041" tag="sc:Latn" />
-        <char cp="0041" tag="sc:Latn" />
-        <char cp="0041" tag="sc:Latn" />
-        <char cp="0061" ref="0" when="match">
-            <var cp="0062" type="blocked"/>
-            <var cp="0063" type="activated"/>
-        </char>
         <char cp="0061" ref="0" when="match">
             <var cp="0062" type="blocked"/>
             <var cp="0063" type="activated"/>
