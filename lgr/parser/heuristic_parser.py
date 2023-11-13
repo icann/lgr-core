@@ -73,9 +73,12 @@ class HeuristicParser(LGRParser):
             return self.source
 
         match = False
-        for line in rule_file:
+        # we have to do the splitlines because some files have \r as line separator
+        for line in [ll for l in rule_file for ll in l.splitlines()]:
             if not is_str:
                 line = line.decode('utf-8')
+            # remove comments
+            line = line.split('#')[0].strip()
             if RFC3743_REGEX.match(line) and not RFC4290_REGEX.match(line):
                 self.lgr_parser = RFC3743Parser(get_source(), **self.kwargs)
                 break
@@ -89,7 +92,7 @@ class HeuristicParser(LGRParser):
                     break
 
         if not self.lgr_parser and match:
-            # we got through the whole file and we got matches with RFC formats but we did not get a way to
+            # we got through the whole file, and we got matches with RFC formats, but we did not get a way to
             # discriminate therefore select RFC4290
             # Note: this is because we accept RFC3743 without semicolon on code point line
             self.lgr_parser = RFC4290Parser(get_source(), **self.kwargs)
