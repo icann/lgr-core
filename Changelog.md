@@ -1,9 +1,21 @@
 # Changelog for lgr-core
 
+## 6.1.0 (2023-11-15)
+### New features
+- Add IDNA 2008 compliance check for IDN tables
+
+### Improvements
+- Add more supported IDN tables formats
+- Change label parsing method to limit confusion
+
+### Fixes
+- Fix union and intersection tools
+- Fix arg parser for tools
+
 ## 6.0.0 (2023-08-03)
 ### New features
 - Add IDN review with core requirements
--
+
 ### Improvements
 - Prevent variant duplication
 - Remove cross-script tool
