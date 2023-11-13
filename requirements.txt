@@ -4,7 +4,7 @@ pycountry==22.3.5
 
 # Unicode modules
 picu==1.4
-munidata==2.3.0
+munidata==2.3.1
 
 # for tests
 idna==2.10
