@@ -104,7 +104,7 @@ def main():
     parser.add_xml_set_args()
 
     args = parser.parse_args()
-    parser.add_logging_args()
+    parser.setup_logger()
 
     if not parser.process_set(True):
         return
