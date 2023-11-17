@@ -421,7 +421,7 @@ class LgrSetToolArgParser(LgrToolArgParser):
                 logger.error('Cannot find script %s in any of the LGR provided as input', self.args.lgr_script)
                 return
         else:
-            self.lgr = parse_lgr(self.args.lgr_mxml[0], self.args.rng, self.get_unidb())
+            self.lgr = parse_lgr(self.args.lgr_xml[0], self.args.rng, self.get_unidb())
             if self.lgr is None:
                 logger.error("Error while parsing LGR file.")
                 logger.error("Please check compliance with RNG.")
