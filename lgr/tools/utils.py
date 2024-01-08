@@ -56,24 +56,15 @@ def read_labels(input, unidb=None, do_raise=False, keep_commented=False, as_cp=F
         if len(label) == 0:
             continue
 
-        error = ''
-        parsed_label = ''
-        valid = True
         # transform U-label and A-label in unicode strings
-        try:
-            if unidb:
-                parsed_label = parse_label_input(label, idna_decoder=unidb.idna_decode_label, as_cp=as_cp)
-            else:
-                parsed_label = parse_label_input(label, as_cp=as_cp)
-        except BaseException as ex:
-            if do_raise:
-                raise
-            try:
-                parsed_label = [ord(c) for c in label] if as_cp else label
-            except:
-                pass
-            valid = False
-            error = ex if return_exceptions else text_type(ex)
+        kwargs = {
+            'as_cp': as_cp,
+            'do_raise': do_raise
+        }
+        if unidb:
+            kwargs['idna_decoder'] = unidb.idna_decode_label
+        parsed_label, valid, ex = parse_label_input(label, **kwargs)
+        error = ex if return_exceptions else text_type(ex)
         yield label, parsed_label, valid, error
 
 
@@ -165,7 +156,10 @@ def parse_codepoint_input(s):
     return [parse_single_cp_input(x) for x in s.split()]
 
 
-def parse_label_input(s, idna_decoder=lambda x: x.encode('utf-8').decode('idna'), as_cp=True, keep_spaces=False):
+def parse_label_input(s, idna_decoder=lambda x: x.encode('utf-8').decode('idna'),
+                      as_cp=True,
+                      keep_spaces=False,
+                      do_raise=False):
     """
     Parses a label from user input, applying a bit of auto-detection smarts
 
@@ -174,18 +168,41 @@ def parse_label_input(s, idna_decoder=lambda x: x.encode('utf-8').decode('idna')
     :param as_cp: If True, returns a list of code points. Otherwise, unicode string.
     :param keep_spaces: Whether, we should continue to process labels with space when we cannot parse them as code points
     :return: list of code points
+    :param do_raise: Whether the label parsing exceptions are raised or not
+    :return: parsed label, valid, exception if any exception occurred
+    """
+    parsed_label = ''
+    valid = True
+    exception = None
+    try:
+        parsed_label = _parse_label_input(s, idna_decoder, as_cp, keep_spaces)
+    except BaseException as ex:
+        if do_raise:
+            raise
+        try:
+            parsed_label = [ord(c) for c in s] if as_cp else s
+        except:
+            pass
+        valid = False
+        exception = ex
+    return parsed_label, valid, exception
 
-    >>> parse_label_input('0061')  # treated as U-label - probably the most confusing result
+
+def _parse_label_input(s, idna_decoder=lambda x: x.encode('utf-8').decode('idna'),
+                       as_cp=True,
+                       keep_spaces=False):
+    """
+    >>> _parse_label_input('0061')  # treated as U-label - probably the most confusing result
     [48, 48, 54, 49]
-    >>> parse_label_input('U+0061')  # this is how to signal that you want hex
+    >>> _parse_label_input('U+0061')  # this is how to signal that you want hex
     [97]
-    >>> parse_label_input('abc')
+    >>> _parse_label_input('abc')
     [97, 98, 99]
-    >>> parse_label_input('a b c')
+    >>> _parse_label_input('a b c')
     [97, 98, 99]
-    >>> parse_label_input('xn--m-0ga')  # "öm"
+    >>> _parse_label_input('xn--m-0ga')  # "öm"
     [246, 109]
-    >>> parse_label_input('ab ')  # "«" treated as code point since we have a space at the end - kind of confusing
+    >>> _parse_label_input('ab ')  # "«" treated as code point since we have a space at the end - kind of confusing
     [171]
     """
     if s.lower().startswith('xn--'):
