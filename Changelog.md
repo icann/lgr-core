@@ -1,5 +1,13 @@
 # Changelog for lgr-core
 
+## 6.1.1 (2024-02-15)
+
+### Improvements
+- Better exception handling when parsing label inputs
+
+### Fixes
+- Fix lgr_validate tool
+
 ## 6.1.0 (2023-11-15)
 ### New features
 - Add IDNA 2008 compliance check for IDN tables
