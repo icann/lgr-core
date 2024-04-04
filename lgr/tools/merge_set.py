@@ -37,7 +37,7 @@ def get_script(lgr):
     try:
         return lgr.metadata.languages[0]
     except IndexError:
-        raise LGRFormatException(reason=LGRFormatException.LGRFormatReason.INVALID_LANGUAGE_TAG)
+        return ''
 
 
 def merge_version(lgr_set):
