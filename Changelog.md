@@ -1,5 +1,10 @@
 # Changelog for lgr-core
 
+## 6.1.2 (2024-09-08)
+
+### Fixes
+- Fix merge_set tool
+
 ## 6.1.1 (2024-02-15)
 
 ### Improvements
