@@ -367,6 +367,10 @@ class XMLParser(LGRParser):
 
         for child in elem:
             self._parse_rule_helper(child, rule)
+        
+        if self._unicode_database:
+            rule.precalculate_patterns(self._lgr.rules_lookup, self._lgr.classes_lookup,
+                                    self._unicode_database)
 
         return rule
 

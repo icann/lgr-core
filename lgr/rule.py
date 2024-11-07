@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import re
 import logging
+import io
 
 from picu.exceptions import PICUException
 
@@ -38,6 +39,7 @@ class Rule(object):
         self.references = ref or []
         self.by_ref = by_ref
         self.children = []
+        self._pattern_cache = {}
 
         if name is not None and by_ref is not None:
             logger.error("Cannot create a rule with both a 'name' and a 'by-ref'")
@@ -72,6 +74,10 @@ class Rule(object):
         :param is_look_behind: True if rule is used in a look-behind element.
         :return: String to be compiled to a regex.
         """
+        cache_key = (id(rules_lookup), id(classes_lookup), id(unicode_database), is_look_behind)
+        if cache_key in self._pattern_cache:
+            return self._pattern_cache[cache_key]
+        
         if self.by_ref is not None:
             if self.by_ref not in rules_lookup:
                 logger.error("Rule cannot reference inexisting rule '%s'",
@@ -85,10 +91,32 @@ class Rule(object):
                                                          unicode_database,
                                                          is_look_behind)
 
-        return ''.join([m.get_pattern(rules_lookup,
-                                      classes_lookup,
-                                      unicode_database,
-                                      is_look_behind) for m in self.children])
+        pattern_io = io.StringIO()
+        for m in self.children:
+            pattern_io.write(m.get_pattern(rules_lookup,
+                                        classes_lookup,
+                                        unicode_database,
+                                        is_look_behind))
+
+        self._pattern_cache[cache_key] = pattern_io.getvalue()
+        return pattern_io.getvalue()
+    
+    def precalculate_patterns(self, rules_lookup, classes_lookup, unicode_database):
+        """
+        Precalculate patterns for this rule and all its children.
+
+        :param rules_lookup: Dictionary of defined rules in the LGR.
+        :param classes_lookup: Dictionary of defined classes in the LGR.
+        :param unicode_database: The Unicode Database.
+        """
+        # Calculate patterns for both is_look_behind=True and False
+        for is_look_behind in [True, False]:
+            self.get_pattern(rules_lookup, classes_lookup, unicode_database, is_look_behind)
+
+        # Recursively precalculate patterns for children
+        for child in self.children:
+            if isinstance(child, Rule):
+                child.precalculate_patterns(rules_lookup, classes_lookup, unicode_database)
 
     def matches(self, label,
                 rules_lookup,
