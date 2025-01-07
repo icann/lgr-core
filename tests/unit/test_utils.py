@@ -18,7 +18,7 @@ class TestUtils(unittest.TestCase):
         expected_output = [(0x0061, 0x007A),
                            (0x0107, 0x0107),
                            (0x0137, 0x0138)]
-        self.assertEquals(ranges, expected_output)
+        self.assertEqual(ranges, expected_output)
 
 if __name__ == '__main__':
     unittest.main()

@@ -24,9 +24,9 @@ class TestIDNA2008Compliance(unittest.TestCase):
 
         result = check_idna2008_compliance(lgr)
 
-        self.assertEquals(7, result['compliant_nbr'])
+        self.assertEqual(7, result['compliant_nbr'])
         self.assertFalse(result['contains_non_compliant'])
-        self.assertEquals(0, len(result['non_compliant']))
+        self.assertEqual(0, len(result['non_compliant']))
 
     def test_non_compliant(self):
         lgr = load_lgr('idna2008_compliance', 'non_compliant.xml', unidb=self.unidb)
@@ -34,9 +34,9 @@ class TestIDNA2008Compliance(unittest.TestCase):
         result = check_idna2008_compliance(lgr)
         non_compliant = result['non_compliant']
 
-        self.assertEquals(6, result['compliant_nbr'])
+        self.assertEqual(6, result['compliant_nbr'])
         self.assertTrue(result['contains_non_compliant'])
-        self.assertEquals(1, len(non_compliant))
+        self.assertEqual(1, len(non_compliant))
         self.assertListEqual([{
             'cp': (65,),
             'glyph': 'A',
@@ -52,9 +52,9 @@ class TestIDNA2008Compliance(unittest.TestCase):
         result = check_idna2008_compliance(lgr)
         non_compliant = result['non_compliant']
 
-        self.assertEquals(6, result['compliant_nbr'])
+        self.assertEqual(6, result['compliant_nbr'])
         self.assertTrue(result['contains_non_compliant'])
-        self.assertEquals(2, len(non_compliant))
+        self.assertEqual(2, len(non_compliant))
         self.assertListEqual([{
             'cp': (65,),
             'glyph': 'A',

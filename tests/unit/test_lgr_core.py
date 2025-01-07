@@ -328,8 +328,8 @@ class TestLGRCore(unittest.TestCase):
         self.lgr.del_tag('1')
 
         self.assertNotIn(TAG_CLASSNAME_PREFIX + '1', self.lgr.classes_lookup)
-        self.assertEquals(self.lgr.get_char([0x0061]).tags, [])
-        self.assertEquals(self.lgr.get_char([0x0062]).tags, ['2'])
+        self.assertEqual(self.lgr.get_char([0x0061]).tags, [])
+        self.assertEqual(self.lgr.get_char([0x0062]).tags, ['2'])
 
     def test_list_types(self):
         self.lgr.add_cp([0x0061])
@@ -337,8 +337,7 @@ class TestLGRCore(unittest.TestCase):
         self.lgr.add_variant([0x0061], [0x0031], variant_type='VALID')
         self.lgr.add_variant([0x0061], [0x0032], variant_type='BLOCK')
 
-        self.assertEquals(self.lgr.types,
-                          set(['BLOCK', 'VALID']))
+        self.assertEqual(self.lgr.types, set(['BLOCK', 'VALID']))
 
     def test_del_reference(self):
         ref_id_1 = self.lgr.add_reference("Test - 1")
@@ -350,8 +349,8 @@ class TestLGRCore(unittest.TestCase):
         self.lgr.del_reference(ref_id_1)
 
         self.assertNotIn(ref_id_1, self.lgr.reference_manager)
-        self.assertEquals(self.lgr.get_char([0x0061]).references, [])
-        self.assertEquals(self.lgr.get_char([0x0062]).references, [ref_id_2])
+        self.assertEqual(self.lgr.get_char([0x0061]).references, [])
+        self.assertEqual(self.lgr.get_char([0x0062]).references, [ref_id_2])
 
     def test_add_cp_duplicate_reference(self):
         ref_id = self.lgr.add_reference("Test - 1")
