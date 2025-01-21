@@ -2,15 +2,13 @@
 """
 test_metadata.py - Unit testing of metadata module.
 """
-from __future__ import unicode_literals
-
 import unittest
 
-from lgr.metadata import Metadata, ReferenceManager
 from lgr.exceptions import (LGRFormatException,
                             ReferenceAlreadyExists,
                             ReferenceInvalidId,
                             ReferenceNotDefined)
+from lgr.metadata import Metadata, ReferenceManager
 
 
 class TestMetadata(unittest.TestCase):
@@ -42,6 +40,12 @@ class TestMetadata(unittest.TestCase):
         the_exception = cm.exception
         self.assertEqual(the_exception.reason,
                          LGRFormatException.LGRFormatReason.INVALID_LANGUAGE_TAG)
+
+    def test_add_language_does_not_add_duplicate(self):
+        self.metadata.add_language('fr')
+        self.metadata.add_language('fr')
+
+        self.assertListEqual(self.metadata.languages, ['fr'])
 
     def test_add_language_force(self):
         self.metadata.add_language('fr', force=True)
@@ -189,6 +193,7 @@ class TestReferenceManager(unittest.TestCase):
         self.assertRaises(ReferenceNotDefined,
                           self.manager.update_reference, 1,
                           **{'value': 'The Unicode Standard 1.2'})
+
 
 if __name__ == '__main__':
     import logging
