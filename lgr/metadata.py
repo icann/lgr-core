@@ -216,7 +216,8 @@ class Metadata(object):
                     raise LGRFormatException(LGRFormatException.
                                              LGRFormatReason.INVALID_LANGUAGE_TAG)
             self.rfc7940_checks.tested('metadata_language')
-            self.languages.append(language)
+            if language not in self.languages:
+                self.languages.append(language)
         except UnicodeEncodeError:
             # Can't skip this one
             logger.error("Invalid non-ASCII language tag '%s'", language)
