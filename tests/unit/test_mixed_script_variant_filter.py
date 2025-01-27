@@ -12,7 +12,6 @@ def to_chars(label):
 
 
 class TestMixedScriptVariantFilter(TestCase):
-    UNKNOWN_SCRIPT = 'Common'
     c_label = '赤a'  # han - latin (chinese)
     j_label = 'テゃa'  # han - katakana - hiragana - latin (japanese)
     k_label = '보a'  # han - hangul - latin (korean)
@@ -28,6 +27,7 @@ class TestMixedScriptVariantFilter(TestCase):
         self.repertoire = Repertoire()
         self.repertoire.add_char((ord('a'),))
         self.repertoire.add_char((ord('á'),))
+        self.repertoire.add_char((ord('a'), ord('´')))
         self.repertoire.add_char((ord('ά'),))
         self.repertoire.add_char((ord('а'),))
         self.repertoire.add_char((ord('α'),))
@@ -35,22 +35,32 @@ class TestMixedScriptVariantFilter(TestCase):
         self.repertoire.add_variant((ord('a'),), (ord('ά'),))
         self.repertoire.add_variant((ord('a'),), (ord('а'),))
         self.repertoire.add_variant((ord('a'),), (ord('α'),))
+        self.repertoire.add_variant((ord('a'),), (ord('a'), ord('´')))
         self.repertoire.add_variant((ord('á'),), (ord('a'),))
         self.repertoire.add_variant((ord('á'),), (ord('ά'),))
         self.repertoire.add_variant((ord('á'),), (ord('а'),))
         self.repertoire.add_variant((ord('á'),), (ord('α'),))
+        self.repertoire.add_variant((ord('á'),), (ord('a'), ord('´')))
         self.repertoire.add_variant((ord('ά'),), (ord('a'),))
         self.repertoire.add_variant((ord('ά'),), (ord('á'),))
         self.repertoire.add_variant((ord('ά'),), (ord('а'),))
         self.repertoire.add_variant((ord('ά'),), (ord('α'),))
+        self.repertoire.add_variant((ord('ά'),), (ord('a'), ord('´')))
         self.repertoire.add_variant((ord('а'),), (ord('a'),))
         self.repertoire.add_variant((ord('а'),), (ord('á'),))
         self.repertoire.add_variant((ord('а'),), (ord('ά'),))
         self.repertoire.add_variant((ord('а'),), (ord('α'),))
+        self.repertoire.add_variant((ord('а'),), (ord('a'), ord('´')))
         self.repertoire.add_variant((ord('α'),), (ord('a'),))
         self.repertoire.add_variant((ord('α'),), (ord('á'),))
         self.repertoire.add_variant((ord('α'),), (ord('ά'),))
         self.repertoire.add_variant((ord('α'),), (ord('а'),))
+        self.repertoire.add_variant((ord('α'),), (ord('a'), ord('´')))
+        self.repertoire.add_variant((ord('a'), ord('´')), (ord('á'),))
+        self.repertoire.add_variant((ord('a'), ord('´')), (ord('ά'),))
+        self.repertoire.add_variant((ord('a'), ord('´')), (ord('а'),))
+        self.repertoire.add_variant((ord('a'), ord('´')), (ord('α'),))
+        self.repertoire.add_variant((ord('a'), ord('´')), ((ord('a')),))
         self.repertoire.add_char((ord('b'),))
         self.repertoire.add_char((ord('β'),))
         self.repertoire.add_variant((ord('b'),), (ord('β'),))
@@ -117,6 +127,13 @@ class TestMixedScriptVariantFilter(TestCase):
         fltr = MixedScriptsVariantFilter(to_chars('abc'), self.repertoire, self.unidb)
         self.assertCountEqual(fltr.other_scripts, {})
 
+    def test_sequence_char_not_in_lgr(self):
+        fltr = MixedScriptsVariantFilter(to_chars('a´'), self.repertoire, self.unidb)
+        self.assertCountEqual(fltr.base_scripts, {'Latin'})
+
+    def test_not_in_lgr(self):
+        fltr = MixedScriptsVariantFilter(to_chars('xyz'), self.repertoire, self.unidb)
+        self.assertCountEqual(fltr.other_scripts, {})
 
     def test_filter(self):
         self.filter_base(label='a', chars=['á', 'ά', 'α', 'a', '赤', 'テ', 'ゃ', '보'], expected_list=['a', 'á'])

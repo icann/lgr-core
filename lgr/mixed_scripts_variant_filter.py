@@ -1,5 +1,6 @@
 from typing import Set, Tuple
 
+from lgr.exceptions import NotInLGR
 from munidata.database import UnicodeDatabase
 
 from lgr.char import Repertoire
@@ -47,7 +48,7 @@ class BaseMixedScriptsVariantFilter:
 
 
 class MixedScriptsVariantFilter(BaseMixedScriptsVariantFilter):
-    UNKNOWN_SCRIPT = 'Common'
+    IGNORED_SCRIPTS = {'Common', 'Inherited'}
 
     def __init__(self, label: Tuple[int], repertoire: Repertoire, unidb: UnicodeDatabase) -> None:
         super().__init__(unidb)
@@ -61,7 +62,7 @@ class MixedScriptsVariantFilter(BaseMixedScriptsVariantFilter):
         scripts = set()
         for c in label:
             script = self.unidb.get_script(c)
-            if script != self.UNKNOWN_SCRIPT:
+            if script not in self.IGNORED_SCRIPTS:
                 scripts.add(self.unidb.get_script(c))
         return get_permitted_scripts(scripts)
 
@@ -83,7 +84,12 @@ class MixedScriptsVariantFilter(BaseMixedScriptsVariantFilter):
 
         for c in label:
             scripts_for_char = set()
-            for char in repertoire.get_chars_from_prefix(c, only_variants=True):
+            try:
+                chars_from_prefix = repertoire.get_chars_from_prefix(c, only_variants=True)
+            except NotInLGR:
+                # may be a code point from a sequence
+                continue
+            for char in chars_from_prefix:
                 # Ensure prefix is valid for label
                 if not char.is_prefix_of(current_label):
                     continue
@@ -92,15 +98,13 @@ class MixedScriptsVariantFilter(BaseMixedScriptsVariantFilter):
                     for cp in v.cp:
                         scripts_for_char.add(self.unidb.get_script(cp))
 
-            scripts_for_char -= set(self.UNKNOWN_SCRIPT)
+            scripts_for_char -= self.IGNORED_SCRIPTS
             if scripts is None:
                 scripts = set(scripts_for_char)
             else:
                 scripts.intersection_update(scripts_for_char)
             current_label = current_label[1:]
 
-            if scripts == self.base_scripts:
-                # no other scripts than base script
-                return set()
-
+        if scripts is None:
+            return set()
         return scripts - self.base_scripts
