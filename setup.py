@@ -51,7 +51,7 @@ setup(
         'tools/rfc7940_validate.py',
         'tools/lgr_idn_table_review.py'
     ],
-    tests_require=['pytest', 'idna'],
+    tests_require=['idna', 'pytest', 'pytest-cov'],
     cmdclass={'test': PyTest},
     classifiers=[
         'Operating System :: OS Independent',
