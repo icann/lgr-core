@@ -40,28 +40,38 @@ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
 THE POSSIBILITY OF SUCH DAMAGE.
 
-## Pre-requisites
+## Pre-Requisites
 
 * Python 3.6 and above
 * [LibXML2](http://www.xmlsoft.org/) [MIT License] used by the lxml Python bindings
-* [LXML](http://lxml.de/) for XML parsing/serializing [BSD License]
+
+### Python Dependencies
+
+#### Main Dependencies
+
+The main dependencies are defined in the [requirements.txt](requirements.txt) file.
+
 * [language-tags](https://github.com/OnroerendErfgoed/language-tags) [MIT License]
-* [pycountry](https://github.com/flyingcircusio/pycountry) [L-GPL License]
-* [picu](https://pypi.python.org/pypi/picu) [MIT/X license]
+* [lxml](http://lxml.de/) [BSD License]
 * [munidata](https://github.com/icann/munidata) for Unicode-related properties access [BSD License]
+* [picu](https://pypi.python.org/pypi/picu) [MIT/X License]
+* [pycountry](https://github.com/flyingcircusio/pycountry) [L-GPL License]
 
-For testing:
+#### Testing Dependencies
 
-* [pytest](https://docs.pytest.org/)
-* [coverage](http://nedbatchelder.com/code/coverage/)
+The dependencies to run the test suite are defined in the [tests requirements.txt](tests/requirements.txt).
+
 * [idna](https://github.com/kjd/idna) [BSD License]
+* [pytest](https://docs.pytest.org/en/stable/) [MIT License]
+* [pytest-cov](https://pytest-cov.readthedocs.io/en/latest/) [MIT License]
 
-For documentation generation:
+#### Documentation Dependencies
 
-* [Sphinx](http://www.sphinx-doc.org/en/stable/)
-* [pyreverse](https://pypi.python.org/pypi/pylint/)
-* [Graphviz](http://www.graphviz.org/)
+The dependencies to build the documentation are defined in the [doc requirements.txt](doc/requirements.txt) file.
 
+* [Graphviz](http://www.graphviz.org/) [Eclipse Public License]
+* [pylint](https://pylint.pycqa.org/en/latest/index.html) [GNU GPL License]
+* [Sphinx](https://www.sphinx-doc.org/en/master/) [BSD License]
 
 ## Virtual Environment setup
 
