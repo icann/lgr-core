@@ -42,7 +42,7 @@ THE POSSIBILITY OF SUCH DAMAGE.
 
 ## Pre-requisites
 
-* Python 3.4
+* Python 3.6 and above
 * [LibXML2](http://www.xmlsoft.org/) [MIT License] used by the lxml Python bindings
 * [LXML](http://lxml.de/) for XML parsing/serializing [BSD License]
 * [language-tags](https://github.com/OnroerendErfgoed/language-tags) [MIT License]
