@@ -6,6 +6,7 @@ pycountry==22.3.5
 picu==1.4
 munidata==2.3.1
 
-# for tests
-idna==2.10
-
+# Test
+idna==3.10
+pytest==8.3.4
+pytest-cov==6.0.0
