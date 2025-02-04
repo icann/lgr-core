@@ -1,12 +1,7 @@
-lxml==4.9.1
+lxml==4.9.4
 language-tags==1.1.0
 pycountry==22.3.5
 
 # Unicode modules
 picu==1.4
 munidata==2.3.1
-
-# Test
-idna==3.10
-pytest==8.3.4
-pytest-cov==6.0.0
