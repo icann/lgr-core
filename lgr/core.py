@@ -1274,15 +1274,13 @@ class LGR(object):
         for char in chars:
             logger.debug('Char CP: %s', format_cp(char.cp))
             # Index: smallest id of the char and its variants
-            # FIXME: This index algorithm has some problems when dealing with sequences and should be fixed
-            ids = [char.as_index()]
+            ids = [char.cp]
             for var in char.get_variants():
-                var_char = self.repertoire.get_char(var.cp)
-                logger.debug('Variant CP: %r', var_char)
-                ids.append(var_char.as_index())
-            logger.debug('List of variant ids: %s', ids)
+                ids.append(var.cp)
 
-            index_label.append(min(ids))
+            # Find the minimum id, handling both single values and tuples
+            min_id = min(ids, key=lambda x: x if isinstance(x, int) else min(x))
+            index_label += min_id
 
         logger.debug("Index label: '%s'", index_label)
 
