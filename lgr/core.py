@@ -1592,8 +1592,8 @@ class LGR(object):
 
         :param label: Input label to test.
                       Must have passed the 'preliminary' eligibility test.
-        :param apply_reflexive_mapping: Whether the reflexive mapping should be considereed for disposition
-                                        (This should be True when evaluating a variant)
+        :param apply_reflexive_mapping: Whether the reflexive mapping should be considered for disposition
+                                        (This should be False when evaluating a variant)
         :return: - original_disp: The final disposition of the original label.
                  - action_idx: The index of the action which triggered
                                the disposition.
@@ -1601,7 +1601,7 @@ class LGR(object):
         """
         # Note: This function duplicate some code
         # from _test_preliminary_eligibility and both of them could be merged in
-        # the same code but it feel cleaner to keep them separate.
+        # the same code, but it feels cleaner to keep them separate.
 
         rule_logger.info("Testing disposition of label %s", format_cp(label))
 
