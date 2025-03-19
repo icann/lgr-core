@@ -8,7 +8,7 @@ import logging
 import unittest
 
 from lgr.tools.idna2008_compliance import check_idna2008_compliance
-from tests.unit.unicode_database_mock import UnicodeDatabaseMock
+from lgr.test_utils.unicode_database_mock import UnicodeDatabaseMock
 from tests.unit.utils import load_lgr
 
 

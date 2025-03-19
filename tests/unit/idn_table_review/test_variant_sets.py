@@ -7,7 +7,7 @@ import logging
 from unittest import TestCase
 
 from lgr.tools.idn_review.variant_sets import generate_variant_sets_report, generate_variant_sets_core_report
-from tests.unit.unicode_database_mock import UnicodeDatabaseMock
+from lgr.test_utils.unicode_database_mock import UnicodeDatabaseMock
 from tests.unit.utils import load_lgr
 
 logger = logging.getLogger('test_variant_sets')
