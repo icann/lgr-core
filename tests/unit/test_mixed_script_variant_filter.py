@@ -4,7 +4,7 @@ from unittest import TestCase
 from lgr.char import Repertoire
 from lgr.mixed_scripts_variant_filter import MixedScriptsVariantFilter, get_permitted_scripts
 from lgr.tools.utils import parse_single_cp_input
-from tests.unit.unicode_database_mock import UnicodeDatabaseMock
+from lgr.test_utils.unicode_database_mock import UnicodeDatabaseMock
 
 
 def to_chars(label):

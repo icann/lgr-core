@@ -20,7 +20,7 @@ from lgr.exceptions import (CharAlreadyExists,
                             NotInLGR,
                             DuplicateReference,
                             LGRFormatException)
-from tests.unit.unicode_database_mock import UnicodeDatabaseMock
+from lgr.test_utils.unicode_database_mock import UnicodeDatabaseMock
 
 
 class TestLGRCore(unittest.TestCase):
