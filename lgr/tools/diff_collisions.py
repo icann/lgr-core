@@ -457,12 +457,12 @@ def diff(lgr_1, lgr_2, labels_input, show_collision=True,
                 yield output
 
 
-def _read_tlds(lgr, tlds_input):
+def _read_tlds(tlds_input, unidb):
     from lgr.tools.utils import read_labels
 
     tlds = set()
     errors = []
-    for __, label, valid, error in read_labels(tlds_input, lgr.unicode_database):
+    for __, label, valid, error in read_labels(tlds_input, unidb):
         if valid:
             tlds.add(label)
         else:
@@ -491,7 +491,7 @@ def collision(lgr, labels_input, tlds_input, show_dump=False, quiet=True):
 
     tlds = None
     if tlds_input:
-        tlds, errors = _read_tlds(lgr, tlds_input)
+        tlds, errors = _read_tlds(tlds_input, lgr.unicode_database)
         for err in errors:
             yield err
 
@@ -545,7 +545,7 @@ def basic_collision(lgr, labels_input, tlds_input, with_annotations=False):
         else:
             label_errors.append("{}: {}".format(label, error))
 
-    tlds, errors = _read_tlds(lgr, tlds_input)
+    tlds, errors = _read_tlds(tlds_input, lgr.unicode_database)
     for err in errors:
         yield err
 
