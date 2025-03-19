@@ -6,8 +6,11 @@ This version conforms to the specification [RFC7940](https://www.rfc-editor.org/
 
 ## Acknowledgment
 
-This toolset was implemented by Viagenie (Audric Schiltknecht, Julien Bernard,
-David Drouin, Guillaume Blanchet and Marc Blanchet) and Wil Tan on an ICANN contract.
+This library was implemented by Viagenie (Julien Bernard, Michel Bernier, Guillaume Blanchet,
+Marc Blanchet, Vincent Gonzalez, Audric Schiltknecht and Alexandre Taillon-Desrochers) 
+and Wil Tan on an ICANN contract.
+
+
 
 ## License
 

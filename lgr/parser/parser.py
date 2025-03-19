@@ -5,6 +5,7 @@ parser.py - Base class for LGR parser.
 import logging
 import os
 import io
+from pathlib import Path
 
 from lgr.core import LGR
 
@@ -22,7 +23,9 @@ class LGRParser(object):
         self.allow_invalid_property = allow_invalid_property
 
         if not filename and isinstance(self.source, str):
-            self.filename = os.path.basename(self.source)
+            self.filename = Path(self.source).name
+        elif not filename and isinstance(self.source, Path):
+            self.filename = self.source.name
         else:
             self.filename = filename
 
