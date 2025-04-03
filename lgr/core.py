@@ -1269,20 +1269,12 @@ class LGR(object):
             # If not result, there is at least on element in not_in_lgr.
             # See _test_preliminary_eligibility()
             raise NotInLGR(not_in_lgr[0][0])
-
+        
         index_label = []
         for char in chars:
             logger.debug('Char CP: %s', format_cp(char.cp))
-            # Index: smallest id of the char and its variants
-            # FIXME: This index algorithm has some problems when dealing with sequences and should be fixed
-            ids = [char.as_index()]
-            for var in char.get_variants():
-                var_char = self.repertoire.get_char(var.cp)
-                logger.debug('Variant CP: %r', var_char)
-                ids.append(var_char.as_index())
-            logger.debug('List of variant ids: %s', ids)
-
-            index_label.append(min(ids))
+            # Index: smallest codepoint sum of the char and its variant decompositions
+            index_label.extend(char.get_index_cps(self.repertoire))
 
         logger.debug("Index label: '%s'", index_label)
 

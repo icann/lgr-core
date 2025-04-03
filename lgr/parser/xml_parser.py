@@ -161,6 +161,10 @@ class XMLParser(LGRParser):
         context = etree.iterparse(self.source, **self.PARSER_OPTIONS)
 
         self._fast_iter(context)
+        
+        # After the entire LGR file has been parsed, cache the char index cps
+        logger.info("Caching index codepoints for all characters")
+        self._cache_char_index_cps()
 
         # FD is now potentially at the end of the documents,
         # set it back to start
@@ -169,6 +173,32 @@ class XMLParser(LGRParser):
 
         self.rfc7940_checks.tested('parse_xml')
         return self._lgr
+
+    def _cache_char_index_cps(self):
+        """
+        Pre-calculate and cache character index codepoints for all characters in the LGR.
+        This improves performance by ensuring the decompositions are only calculated once.
+        """
+        if not self._lgr:
+            return
+        
+        # Temporarily disable logging for NotInLGR errors
+        char_logger = logging.getLogger('lgr.char')
+        original_level = char_logger.level
+        char_logger.setLevel(logging.CRITICAL)  # Only show critical errors
+        
+        try:
+            # Get all characters from the repertoire
+            for char in self._lgr.repertoire.all_repertoire():
+                try:
+                    # Cache the characters' index codepoints
+                    char.get_index_cps(self._lgr.repertoire)
+                except Exception as e:
+                    # Silently ignore any exceptions during caching
+                    logger.debug(f"Error caching char cps for {char}: {e}")
+        finally:
+            # Restore original logging level
+            char_logger.setLevel(original_level)
 
     def _process_meta(self, elem):
         """
