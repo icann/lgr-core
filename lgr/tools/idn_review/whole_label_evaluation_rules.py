@@ -398,10 +398,10 @@ class WholeLabelEvaluationRulesCheck:
             'exists': result,
         }
 
+    # TODO move method in core.py
     def check_label_cp_in_repertoire(self, label):
-        i = 0
         result = False
-        cp = label[i]
+        cp = label[0]
 
         try:
             char_list = self.idn_table.repertoire.get_chars_from_prefix(cp)
@@ -410,12 +410,12 @@ class WholeLabelEvaluationRulesCheck:
 
         for char in char_list:
             if isinstance(char, CharSequence):
-                if not char.is_prefix_of(label[i:]):
+                if not char.is_prefix_of(label):
                     continue
                 else:
-                    result |= self.check_label_cp_in_repertoire(label[i + len(char):])
+                    result |= self.check_label_cp_in_repertoire(label[len(char):])
             elif len(label) > 1:
-                result |= self.check_label_cp_in_repertoire(label[i + 1:])
+                result |= self.check_label_cp_in_repertoire(label[1:])
             else:
                 return True
 

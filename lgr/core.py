@@ -1123,7 +1123,7 @@ class LGR(object):
         already_handled = set()
 
         # Step 4 - 8.3.  Determining a Disposition for a Label or Variant Label
-        for (variant_cp, disp_set, only_variants) in variant_set:
+        for (variant_cp, disp_set, only_variants, __) in variant_set:
             if variant_cp in already_handled:
                 continue
             if with_labels and variant_cp not in with_labels:
@@ -1595,7 +1595,7 @@ class LGR(object):
                             (used for recursion).
         :param mixed_script_filter: Filter for mixed script (used for recursion).
         :param hide_mixed_script_variants: Whether we hide mixed scripts variants.
-        :return: A generator of (variant_cp, variant_disp, only_variants),
+        :return: A generator of (variant_cp, variant_disp, only_variants, chars),
                  with:
 
                     * variant_cp: sequence of the variant code points.
@@ -1604,6 +1604,7 @@ class LGR(object):
                     * only_variant: True if variant_cp only contains variant
                                     code points. Used for action triggering
                                     ('only-variants' attribute).
+                    * chars: List of the LGR chars included in label (as a CharBase class)
         :raises RuleError: If rule is invalid.
         """
         rule_logger.debug("Generate variants for label %s", format_cp(label))
@@ -1696,7 +1697,7 @@ class LGR(object):
 
                 if var.cp == char.cp:
                     has_reflexive_mapping = True
-                char_perms.append((var.cp, var_disp, True, script_filter))
+                char_perms.append((var, var_disp, True, script_filter))
 
             # Add original code point in permutation list
             # ONLY if the character has no defined reflexive mapping.
@@ -1710,31 +1711,32 @@ class LGR(object):
             # Also ignore char that are not part of the label in the current script if required
             if not has_reflexive_mapping and (not hide_mixed_script_variants or first_call or
                                               mixed_script_filter.cp_in_base_scripts(char.cp)):
-                char_perms.insert(0, (char.cp, frozenset(), False, mixed_script_filter))
+                char_perms.insert(0, (char, frozenset(), False, mixed_script_filter))
 
             if len(label) > len(char):
-                for (cp, disp, is_variant, script_filter) in char_perms:
+                for (char_perm, disp, is_variant, script_filter) in char_perms:
                     # Generate variants for reminder of label
-                    for (perm_cps, perm_disp, perm_only_variants) in \
+                    for (perm_cps, perm_disp, perm_only_variants, perm_chars) in \
                             self._generate_label_variants(label[len(char):],
                                                           orig_label,
-                                                          label_prefix + cp,
+                                                          label_prefix + char_perm.cp,
                                                           # Mark if prefix is part of a variant
                                                           is_variant | has_variant,
                                                           mixed_script_filter=script_filter,
                                                           hide_mixed_script_variants=hide_mixed_script_variants):
-                        yield (cp + perm_cps,
+                        yield (char_perm.cp + perm_cps,
                                # Construct new set of types
                                perm_disp | disp,
-                               is_variant & perm_only_variants)
+                               is_variant & perm_only_variants,
+                               [char_perm] + perm_chars)
             elif has_variant or char.has_variant():
                 # Do not output the same un-permuted label
                 # TODO for consistency another or condition should be added:
                 #          or orig_label != label_prefix + char.cp
                 #      in order to include the original label in output in case the last char has no variants which
                 #      won't be the case without this condition
-                for (cp, disp, is_variant, _) in char_perms:
-                    yield cp, disp, is_variant
+                for (char_perm, disp, is_variant, chars) in char_perms:
+                    yield char_perm.cp, disp, is_variant, [char_perm]
 
     def _apply_actions(self, label, disp_set, only_variants):
         """
@@ -1747,7 +1749,7 @@ class LGR(object):
         :param disp_set: Set of dispositions used to generate the label.
         :param only_variants: True if label only contains code point
                               from variant mapping.
-        :return: The final label disposition and the action index
+        :return: The final label disposition and the action index.
                  Index includes default actions, ie
                  if index > len(self.actions): action == DEFAULT_ACTION[index - len(actions)]
         :raises RuleError: If rule is invalid.
