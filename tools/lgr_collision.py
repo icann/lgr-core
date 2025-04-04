@@ -20,7 +20,7 @@ def compute_label_index(lgr, label):
 
 
 def find_variants_to_block(lgr, label_ref, label):
-    var_ref = [var for (var, _, _) in lgr._generate_label_variants(label_ref)]
+    var_ref = [var for (var, _, _, _) in lgr._generate_label_variants(label_ref)]
 
     for (variant_cp, disp, _, _, disp_set, _) in lgr.compute_label_disposition(label):
         if variant_cp in var_ref:
