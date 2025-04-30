@@ -46,6 +46,8 @@ class UnicodeDatabaseMock(UnicodeDatabase):
 
     def get_script(self, cp, alpha4=False):
         from lgr.test_utils.unidb_get_script_mock import script
+        if isinstance(cp, str):
+            cp = ord(cp)
         return script(cp)
 
     def get_script_extensions(self, cp, alpha4=False):
