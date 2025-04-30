@@ -204,14 +204,6 @@ def let_user_choose(first, second, separator='|'):
         return first
     return '{0!s}{1!s}{2!s}'.format(first, separator, second)
 
-
-if __name__ == "__main__":
-    import doctest
-
-    logger.addHandler(logging.NullHandler())
-    doctest.testmod()
-
-
 def tag_to_language_script(tag, use_suppress_script=False):
     if '-' in tag:
         # replace 3 char language isocode by 2 char isocode
@@ -252,3 +244,10 @@ def is_idna_valid_cp_or_sequence(cp_or_sequence, udata, check_all=False):
             if not check_all:
                 return False, all_invalid
     return len(all_invalid) == 0, all_invalid
+
+
+if __name__ == "__main__":
+    import doctest
+
+    logger.addHandler(logging.NullHandler())
+    doctest.testmod()
