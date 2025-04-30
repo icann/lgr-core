@@ -1016,7 +1016,9 @@ class LGR(object):
         self.classes_lookup[cls.name] = cls
         self.classes.append(cls.name)
 
-    def test_label_eligible(self, label, is_variant=False, collect_log=True):
+
+    # TODO get rid of generate_chars and always return them
+    def test_label_eligible(self, label, is_variant=False, collect_log=True, generate_chars=False):
         """
         Test label eligibility against an LGR.
 
@@ -1039,6 +1041,7 @@ class LGR(object):
                                    -1 if the label is not in the LGR.
                      - log: Log of the disposition computation,
                             empty if collect_log is False
+                     - chars: List of the LGR chars included in label (as a CharBase class) if generate_chars is True
         """
         if not label:
             raise LGRApiInvalidParameter('label')
@@ -1051,12 +1054,19 @@ class LGR(object):
             rule_logger.addHandler(ch)
 
         # Start by testing presence of code points in LGR
-        (valid, label_parts, label_invalid_parts) = self._test_preliminary_eligibility(label)
+        chars = []
+        if generate_chars:
+            (valid, label_parts, label_invalid_parts, chars) = self._test_preliminary_eligibility(label, generate_chars=generate_chars)
+        else:
+            (valid, label_parts, label_invalid_parts) = self._test_preliminary_eligibility(label, generate_chars=generate_chars)
         if not valid:
             rule_logger.error("Label '%s' is not in the LGR", format_cp(label))
             if collect_log:
                 rule_logger.removeHandler(ch)
-            return False, label_parts, label_invalid_parts, INVALID_DISPOSITION, -1, log_output.getvalue()
+            if generate_chars:
+                return False, label_parts, label_invalid_parts, INVALID_DISPOSITION, -1, log_output.getvalue(), chars
+            else:
+                return False, label_parts, label_invalid_parts, INVALID_DISPOSITION, -1, log_output.getvalue()
 
         # Compute label disposition by analyzing reflexive mappings
         (disposition, action_idx) = self._test_label_disposition(label, apply_reflexive_mapping=not is_variant)
@@ -1065,15 +1075,21 @@ class LGR(object):
                               "triggered by action #%d", action_idx)
             if collect_log:
                 rule_logger.removeHandler(ch)
-            return False, [], [], disposition, action_idx, log_output.getvalue()
+            if generate_chars:
+                return False, [], [], disposition, action_idx, log_output.getvalue(), chars
+            else:
+                return False, [], [], disposition, action_idx, log_output.getvalue()
 
         if collect_log:
             rule_logger.removeHandler(ch)
-        return True, label, [], disposition, action_idx, log_output.getvalue()
+        if generate_chars:
+            return True, label, [], disposition, action_idx, log_output.getvalue(), chars
+        else:
+            return True, label, [], disposition, action_idx, log_output.getvalue()
 
     def compute_label_disposition(self, label, include_invalid=False,
                                   collect_log=True, hide_mixed_script_variants=False,
-                                  with_labels=None):
+                                  with_labels=None, generate_chars=False):
         """
         Given a label, compute its disposition and its variants.
 
@@ -1092,13 +1108,13 @@ class LGR(object):
         :return: Generator of (variant_cp, variant_invalid_parts, disp, action_idx, disp_set, log)
                  with:
                      - variant_cp: The code point sequence of a variant.
-                     - variant_invalid_parts: List of code points not valid in the LGR.
                      - disp: The disposition of the variant.
                      - variant_invalid_parts: List of code points not valid in the LGR.
                      - action_idx: The index of the action which triggered the disposition.
                      - disp_set: The disposition set generated for this label.
                      - log: The log of the generation of the label,
                              empty if collect_log is True.
+                     - chars: List of the LGR chars included in label (as a CharBase class) if generate_chars is True
         """
         # Implements process described in 8. Processing a Label Against an LGR
 
@@ -1123,8 +1139,11 @@ class LGR(object):
         already_handled = set()
 
         # Step 4 - 8.3.  Determining a Disposition for a Label or Variant Label
-        for (variant_cp, disp_set, only_variants, __) in variant_set:
-            if variant_cp in already_handled:
+        for (variant_cp, disp_set, only_variants, chars) in variant_set:
+            # TODO fix methods using this with !generate_chars:
+            #  we should get all combination of chars with the same variant_cp here and
+            #  then decide which disposition to keep, and not only handle the first one
+            if not generate_chars and variant_cp in already_handled:
                 continue
             if with_labels and variant_cp not in with_labels:
                 continue
@@ -1158,9 +1177,15 @@ class LGR(object):
             if (variant_disp != INVALID_DISPOSITION) or include_invalid:
                 if variant_cp == label:
                     # Skip original label, yield last
-                    original_label = variant_cp, variant_disp, variant_invalid_parts, idx, disp_set, log_output.getvalue()
+                    if generate_chars:
+                        original_label = variant_cp, variant_disp, variant_invalid_parts, idx, disp_set, log_output.getvalue(), chars
+                    else:
+                        original_label = variant_cp, variant_disp, variant_invalid_parts, idx, disp_set, log_output.getvalue()
                 else:
-                    yield variant_cp, variant_disp, variant_invalid_parts, idx, disp_set, log_output.getvalue()
+                    if generate_chars:
+                        yield variant_cp, variant_disp, variant_invalid_parts, idx, disp_set, log_output.getvalue(), chars
+                    else:
+                        yield variant_cp, variant_disp, variant_invalid_parts, idx, disp_set, log_output.getvalue()
 
             if collect_log:
                 rule_logger.removeHandler(ch)
@@ -1168,8 +1193,14 @@ class LGR(object):
         if not original_label:
             # TODO: already computed since label MUST be eligible
             rule_logger.debug('Add original label')
-            (_, _, _, disposition, action_idx, log) = self.test_label_eligible(label, collect_log=collect_log)
-            original_label = label, disposition, None, action_idx, set(), log
+            if generate_chars:
+                _, _, _, disposition, action_idx, log, chars = self.test_label_eligible(label, collect_log=collect_log,
+                                                                                        generate_chars=generate_chars)
+                original_label = label, disposition, None, action_idx, set(), log, chars
+            else:
+                _, _, _, disposition, action_idx, log = self.test_label_eligible(label, collect_log=collect_log,
+                                                                                 generate_chars=generate_chars)
+                original_label = label, disposition, None, action_idx, set(), log
 
         yield original_label
 
