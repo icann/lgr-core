@@ -192,7 +192,7 @@ class LGR(object):
         if unidb_version != self.metadata.unicode_version:
             logger.warning("Unicode database version is '%s' "
                            "when LGR Unicode version is '%s'",
-                           unidb_version, self.metadata.version)
+                           unidb_version, self.metadata.unicode_version)
         self._unicode_database = unidb
 
     def add_reference(self, value, comment=None, ref_id=None):
