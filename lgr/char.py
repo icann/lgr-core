@@ -5,12 +5,13 @@ char.py - Definition of base classes for character objects.
 from __future__ import unicode_literals
 
 import logging
+from functools import total_ordering
 
 from lgr import text_type
-from lgr.exceptions import (CharAlreadyExists,
-                            NotInLGR,
-                            RangeAlreadyExists,
+from lgr.exceptions import (CharAlreadyExists, 
                             LGRFormatException,
+                            NotInLGR, 
+                            RangeAlreadyExists,
                             VariantAlreadyExists)
 from lgr.utils import cp_to_str, format_cp, cp_to_ulabel
 
@@ -104,6 +105,7 @@ class CharBase(object):
         self.when = when
         self.not_when = not_when
         self._variants = {}
+        self._index_cps = None
 
     def as_index(self):
         return _to_index(self.cp)
@@ -233,6 +235,190 @@ class CharBase(object):
             variants = self._variants[variant_cp]
             for var in variants:
                 yield var
+
+    def get_index_cps(self, repertoire):
+        """
+        Find the index codepoints that make up this char.
+        These are the set of codepoints of it and its variant decompositions that have the smallest sum.
+        
+        Prioritizes LDH (letters, digits, hyphen) characters when possible.
+        """
+        # Check if we've already calculated the index codepoints
+        if self._index_cps is not None:
+            return self._index_cps
+            
+        # Get all possible decompositions
+        ids = [self.cp]
+        variant_decompositions = self.get_variant_decompositions(repertoire)
+        for sc_vars in variant_decompositions:
+            ids.append(tuple(cp for var in sc_vars for cp in var.cp))
+        
+        # Define LDH ranges
+        ldh_ranges = [
+            (0x0030, 0x0039),  # Digits 0-9
+            (0x0061, 0x007A),  # Lowercase a-z
+            (0x002D, 0x002D),  # Hyphen
+        ]
+        
+        # Helper function to check if a codepoint is LDH
+        def is_ldh_cp(cp):
+            return any(start <= cp <= end for start, end in ldh_ranges)
+        
+        # Helper function to check if all codepoints in a sequence are LDH
+        def is_ldh_sequence(cps):
+            return all(is_ldh_cp(cp) for cp in cps)
+        
+        # Split into LDH and non-LDH sequences
+        ldh_sequences = [seq for seq in ids if is_ldh_sequence(seq)]
+        non_ldh_sequences = [seq for seq in ids if not is_ldh_sequence(seq)]
+        
+        # Find the sequence with the minimum sum in each group
+        if ldh_sequences:
+            self._index_cps = min(ldh_sequences, key=lambda x: sum(x))
+        else:
+            self._index_cps = min(non_ldh_sequences, key=lambda x: sum(x)) if non_ldh_sequences else self.cp
+            
+        return self._index_cps
+
+    def get_variant_decompositions(self, repertoire):
+        """
+        Find all possible ways to decompose this character into sequences of other characters
+        that, when combined, exactly match this character.
+
+        This includes both direct decompositions and variant decompositions.
+        
+        For example, if this character has codepoints (333, 444, 555), the result might include:
+        - [[c(333), c(444, 555)]] - where c(333) and c(444, 555) are characters in the repertoire
+        - [[c(333, 444), c(555)]] - another valid decomposition
+        - [[c(333, 444, 555)]] - the original character itself
+        
+        And if c(222) is a variant of c(333, 444) and c(111) is a variant of c(555), it would also include:
+        - [[c(222), c(555)]]
+        - [[c(222), c(111)]]
+        - [[c(333, 444), c(111)]]
+
+        :param repertoire: The repertoire to use for finding characters
+        :returns: A list of lists of CharBase objects, where each inner list represents
+                 a valid decomposition of this character
+        """
+        # Initialize the list
+        variant_decompositions = []
+        
+        # Add the character itself as a decomposition
+        variant_decompositions.append([self])
+        
+        # Find all possible direct decompositions of this character
+        self._find_decompositions(repertoire, list(self.cp), 0, [], variant_decompositions)
+        
+        # Find variant decompositions based on the direct decompositions
+        self._find_variant_decompositions(repertoire, variant_decompositions.copy(), variant_decompositions)
+        
+        # Also find decompositions of variant characters
+        self._find_variant_char_decompositions(repertoire, variant_decompositions)
+        
+        return variant_decompositions
+    
+    def _find_decompositions(self, repertoire, target_cp, start_idx, current_decomp, all_decomps):
+        """
+        Recursively find all possible decompositions of the target codepoints.
+        
+        :param repertoire: The repertoire to use for finding characters
+        :param target_cp: The target codepoints to decompose
+        :param start_idx: The starting index in target_cp to consider
+        :param current_decomp: The current decomposition being built
+        :param all_decomps: List to store all valid decompositions
+        """
+        # If we've reached the end of the target codepoints, we have a valid decomposition
+        if start_idx >= len(target_cp):
+            # Only add if it's not just the character itself (which we already added)
+            if len(current_decomp) > 1 or (len(current_decomp) == 1 and current_decomp[0] != self):
+                all_decomps.append(current_decomp.copy())
+            return
+        
+        # Try all possible prefixes starting from start_idx
+        for end_idx in range(start_idx + 1, len(target_cp) + 1):
+            prefix = tuple(target_cp[start_idx:end_idx])
+            
+            # Check if this prefix exists as a character in the repertoire
+            try:
+                # Try to get the character with this exact sequence
+                char = repertoire.get_char(prefix)
+                
+                # Add this character to the current decomposition
+                current_decomp.append(char)
+                
+                # Recursively find decompositions for the rest of the target codepoints
+                self._find_decompositions(repertoire, target_cp, end_idx, current_decomp, all_decomps)
+                
+                # Backtrack
+                current_decomp.pop()
+            except NotInLGR:
+                # Character with this exact sequence doesn't exist, continue to next possibility
+                continue
+    
+    def _find_variant_decompositions(self, repertoire, decomps, all_decomps):
+        """
+        Find all possible variant decompositions based on the direct decompositions.
+        
+        :param repertoire: The repertoire to use for finding characters
+        :param decomps: List of direct decompositions to process
+        :param all_decomps: List to store all variant decompositions
+        """
+        # Process each decomposition
+        for decomp in decomps:
+            # For each character in the decomposition, try replacing it with its variants
+            for i, char in enumerate(decomp):
+                # Get all variants of this character
+                for variant in char.get_variants():
+                    # Create a new decomposition with this variant
+                    new_decomp = decomp.copy()
+                    
+                    # Try to get the character with the variant's codepoints
+                    try:
+                        # Replace the character with its variant
+                        variant_char = repertoire.get_char(variant.cp)
+                        new_decomp[i] = variant_char
+                        
+                        # Add this new decomposition if it's not already in the list
+                        if new_decomp not in all_decomps:
+                            all_decomps.append(new_decomp)
+                            
+                            # Recursively find more variant decompositions
+                            self._find_variant_decompositions(repertoire, [new_decomp], all_decomps)
+                    except NotInLGR:
+                        # Variant doesn't exist as a character in the repertoire
+                        continue
+
+    def _find_variant_char_decompositions(self, repertoire, all_decomps):
+        """
+        Find decompositions of variant characters.
+        
+        This handles the case where a variant character might have its own unique decompositions
+        that aren't derived from the original character's decompositions.
+        
+        :param repertoire: The repertoire to use for finding characters
+        :param all_decomps: List to store all variant decompositions
+        """
+        # Get all direct variants of this character
+        for variant in self.get_variants():
+            try:
+                # Try to get the variant character from the repertoire
+                variant_char = repertoire.get_char(variant.cp)
+                
+                # Find decompositions of this variant character
+                variant_decomps = []
+                variant_char._find_decompositions(repertoire, list(variant_char.cp), 0, [], variant_decomps)
+                
+                # Add any new decompositions to our list
+                for decomp in variant_decomps:
+                    if decomp not in all_decomps:
+                        all_decomps.append(decomp)
+                        
+                        # Recursively find variant decompositions of these new decompositions
+                        self._find_variant_decompositions(repertoire, [decomp], all_decomps)
+            except NotInLGR:
+                # Variant doesn't exist as a character in the repertoire
+                continue
 
     def get_variant(self, var_cp):
         """
