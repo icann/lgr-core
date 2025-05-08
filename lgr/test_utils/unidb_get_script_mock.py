@@ -550,6 +550,36 @@ script_data = {
 (0xe0020,0xe007f,0,13), (0xe0100,0xe01ef,40,23)
 ]}
 
+script_to_alpha4 = {
+    'Arabic': 'Arab',
+    'Armenian': 'Armn',
+    'Bengali': 'Beng',
+    'Cyrillic': 'Cyrl',
+    'Devanagari': 'Deva',
+    'Ethiopic': 'Ethi',
+    'Georgian': 'Geor',
+    'Greek': 'Grek',
+    'Gujarati': 'Gujr',
+    'Gurmukhi': 'Guru',
+    'Hebrew': 'Hebr',
+    'Katakana': 'Kana',
+    'Hiragana': 'Hira',
+    'Kannada': 'Knda',
+    'Khmer': 'Khmr',
+    'Han': 'Hani',
+    'Hangul': 'Hang',
+    'Lao': 'Laoo',
+    'Latin': 'Latn',
+    'Malayalam': 'Mlym',
+    'Myanmar': 'Mymr',
+    'Oriya': 'Orya',
+    'Sinhala': 'Sinh',
+    'Tamil': 'Taml',
+    'Telugu': 'Telu',
+    'Thai': 'Thai',
+    'Thaana': 'Thaa',
+}
+
 def script(c):
     """ For the unicode character c in hex return its Scriptname. """
     l = 0

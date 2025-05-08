@@ -94,9 +94,9 @@ class Rule(object):
         pattern_io = io.StringIO()
         for m in self.children:
             pattern_io.write(m.get_pattern(rules_lookup,
-                                        classes_lookup,
-                                        unicode_database,
-                                        is_look_behind))
+                                           classes_lookup,
+                                           unicode_database,
+                                           is_look_behind))
 
         self._pattern_cache[cache_key] = pattern_io.getvalue()
         return pattern_io.getvalue()
