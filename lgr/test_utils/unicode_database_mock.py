@@ -45,10 +45,13 @@ class UnicodeDatabaseMock(UnicodeDatabase):
         raise NotImplementedError
 
     def get_script(self, cp, alpha4=False):
-        from lgr.test_utils.unidb_get_script_mock import script
+        from lgr.test_utils.unidb_get_script_mock import script, script_to_alpha4
         if isinstance(cp, str):
             cp = ord(cp)
-        return script(cp)
+        cp_script = script(cp)
+        if alpha4:
+            cp_script = script_to_alpha4.get(cp_script, cp_script)
+        return cp_script
 
     def get_script_extensions(self, cp, alpha4=False):
         raise NotImplementedError
