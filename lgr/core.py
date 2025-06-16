@@ -71,6 +71,8 @@ MAX_NUMBER_GENERATED_VARIANTS = 1000
 # From RFC1035, 2.3.4 Size limits
 PROTOCOL_LABEL_MAX_LENGTH = 63
 
+COMMON_SCRIPT = 'Zyyy'
+INHERITED_SCRIPT = 'Zinh'
 
 class LGR(object):
     """
@@ -1900,7 +1902,9 @@ class LGR(object):
             try:
                 script = self.unicode_database.get_script(cp, alpha4=True)
                 cp_scripts.add(script)
-                if len(lgr_scripts) > 0 and script not in lgr_scripts:
+                if (len(lgr_scripts) > 0
+                        and script not in lgr_scripts
+                        and script not in [COMMON_SCRIPT, INHERITED_SCRIPT]):
                     logger.debug("Code point '%s' (script %s) not in LGR script '%s'",
                                  format_cp(cp), script, lgr_scripts)
                     in_script = False
