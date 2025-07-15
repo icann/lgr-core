@@ -14,12 +14,14 @@ from io import BytesIO
 from urllib.parse import urlparse
 from urllib.request import urlopen
 
+from munidata import UnicodeDataVersionManager
+from munidata.database import UnicodeDatabase
+
 from lgr import text_type
 from lgr.parser.xml_parser import XMLParser
 from lgr.parser.xml_serializer import serialize_lgr_xml
 from lgr.tools.merge_set import merge_lgr_set
 from lgr.utils import cp_to_ulabel
-from munidata import UnicodeDataVersionManager
 
 logger = logging.getLogger(__name__)
 
@@ -315,6 +317,34 @@ def parse_lgr(xml, rng=None, unidb=None):
 
     lgr = lgr_parser.parse_document()
     return lgr
+
+
+def get_rz_label_script(label: str, unidb: UnicodeDatabase) -> str | None:
+    """
+    Returns the script in which the label belongs to.
+
+    :param label: Input label
+    :param unidb: The UnicodeDatabase
+    :return: The name of the script if one is found
+    """
+    if not label:
+        return None
+
+    script = unidb.get_script(label[0], alpha4=True)
+    if script in ['Hira', 'Kana']:
+        script = 'Jpan'
+    elif script == 'Hang':
+        script = 'Kore'
+
+    elif script == 'Hani':
+        script = 'Hani'
+        # We keep looking on the other characters to determine if the script can be Jpan.
+        for character in label[1:]:
+            if unidb.get_script(character, alpha4=True) in ['Hira', 'Kana']:
+                script = 'Jpan'
+                break
+
+    return f'und-{script}'
 
 
 class LgrToolArgParser(argparse.ArgumentParser):
