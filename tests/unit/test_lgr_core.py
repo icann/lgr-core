@@ -20,6 +20,8 @@ from lgr.exceptions import (CharAlreadyExists,
                             NotInLGR,
                             DuplicateReference,
                             LGRFormatException)
+from lgr.matcher import LookBehindMatcher, AnchorMatcher, CharMatcher, LookAheadMatcher
+from lgr.rule import Rule
 from lgr.test_utils.unicode_database_mock import UnicodeDatabaseMock
 
 
@@ -383,83 +385,98 @@ class TestLGRCore(unittest.TestCase):
         self.lgr.add_cp([0x0063])
         self.lgr.add_cp([0x0064])
 
+        a = self.lgr.get_char([0x0061])
+        b = self.lgr.get_char([0x0062])
+        c = self.lgr.get_char([0x0063])
+
         self.lgr.add_variant([0x0061], [0x0070], variant_type="type0")
         self.lgr.add_variant([0x0062], [0x0071], variant_type="type1")
         self.lgr.add_variant([0x0062], [0x0072], variant_type="type2")
+
+        p = a.get_variant((0x0070,))[0]
+        q = b.get_variant((0x0071,))[0]
+        r = b.get_variant((0x0072,))[0]
 
         self.assertEqual([], list(self.lgr._generate_label_variants([])))
         self.assertEqual([],
                          list(self.lgr._generate_label_variants([0x0063])))
         self.assertEqual([],
-                         list(self.lgr._generate_label_variants([0x0063,
-                                                                 0x0064])))
-        self.assertEqual(set([((0x0071, 0x0063), frozenset(['type1']), False),
-                              ((0x0072, 0x0063), frozenset(['type2']), False)]),
-                         set(self.lgr._generate_label_variants([0x0062,
-                                                                0x0063])))
-        self.assertEqual(set([((0x0061, 0x0062), frozenset(), False),
-                              ((0x0061, 0x0071), frozenset(['type1']), False),
-                              ((0x0061, 0x0072), frozenset(['type2']), False),
-                              ((0x0070, 0x0062), frozenset(['type0']), False),
-                              ((0x0070, 0x0071), frozenset(['type0', 'type1']), True),
-                              ((0x0070, 0x0072), frozenset(['type0', 'type2']), True),
-                              ]),
-                         set(self.lgr._generate_label_variants([0x0061,
-                                                                0x0062])))
-        self.assertEqual(set([((0x0061, 0x0062, 0x0062), frozenset(), False),
-                              ((0x0061, 0x0062, 0x0071), frozenset(['type1']), False),
-                              ((0x0061, 0x0062, 0x0072), frozenset(['type2']), False),
-                              ((0x0061, 0x0071, 0x0062), frozenset(['type1']), False),
-                              ((0x0061, 0x0071, 0x0071), frozenset(['type1']), False),
-                              ((0x0061, 0x0071, 0x0072), frozenset(['type1', 'type2']), False),
-                              ((0x0061, 0x0072, 0x0062), frozenset(['type2']), False),
-                              ((0x0061, 0x0072, 0x0071), frozenset(['type1', 'type2']), False),
-                              ((0x0061, 0x0072, 0x0072), frozenset(['type2']), False),
-                              ((0x0070, 0x0062, 0x0062), frozenset(['type0']), False),
-                              ((0x0070, 0x0062, 0x0071), frozenset(['type0', 'type1']), False),
-                              ((0x0070, 0x0062, 0x0072), frozenset(['type0', 'type2']), False),
-                              ((0x0070, 0x0071, 0x0062), frozenset(['type0', 'type1']), False),
-                              ((0x0070, 0x0071, 0x0071), frozenset(['type0', 'type1']), True),
-                              ((0x0070, 0x0071, 0x0072), frozenset(['type0', 'type1', 'type2']), True),
-                              ((0x0070, 0x0072, 0x0062), frozenset(['type0', 'type2']), False),
-                              ((0x0070, 0x0072, 0x0071), frozenset(['type0', 'type1', 'type2']), True),
-                              ((0x0070, 0x0072, 0x0072), frozenset(['type0', 'type2']), True),
-                              ]),
-                         set(self.lgr._generate_label_variants([0x0061,
-                                                                0x0062,
-                                                                0x0062])))
+                         list(self.lgr._generate_label_variants([0x0063, 0x0064])))
+        self.assertCountEqual([
+            ((0x0071, 0x0063), frozenset(['type1']), False, [q, c]),
+            ((0x0072, 0x0063), frozenset(['type2']), False, [r, c])
+        ], self.lgr._generate_label_variants([0x0062, 0x0063]))
+        self.assertCountEqual([
+            ((0x0061, 0x0062), frozenset(), False, [a, b]),
+            ((0x0061, 0x0071), frozenset(['type1']), False, [a, q]),
+            ((0x0061, 0x0072), frozenset(['type2']), False, [a, r]),
+            ((0x0070, 0x0062), frozenset(['type0']), False, [p, b]),
+            ((0x0070, 0x0071), frozenset(['type0', 'type1']), True, [p, q]),
+            ((0x0070, 0x0072), frozenset(['type0', 'type2']), True, [p, r]),
+        ], self.lgr._generate_label_variants([0x0061, 0x0062]))
+        self.assertCountEqual([
+            ((0x0061, 0x0062, 0x0062), frozenset(), False, [a, b, b]),
+            ((0x0061, 0x0062, 0x0071), frozenset(['type1']), False, [a, b, q]),
+            ((0x0061, 0x0062, 0x0072), frozenset(['type2']), False, [a, b, r]),
+            ((0x0061, 0x0071, 0x0062), frozenset(['type1']), False, [a, q, b]),
+            ((0x0061, 0x0071, 0x0071), frozenset(['type1']), False, [a, q, q]),
+            ((0x0061, 0x0071, 0x0072), frozenset(['type1', 'type2']), False, [a, q, r]),
+            ((0x0061, 0x0072, 0x0062), frozenset(['type2']), False, [a, r, b]),
+            ((0x0061, 0x0072, 0x0071), frozenset(['type1', 'type2']), False, [a, r, q]),
+            ((0x0061, 0x0072, 0x0072), frozenset(['type2']), False, [a, r, r]),
+            ((0x0070, 0x0062, 0x0062), frozenset(['type0']), False, [p, b, b]),
+            ((0x0070, 0x0062, 0x0071), frozenset(['type0', 'type1']), False, [p, b, q]),
+            ((0x0070, 0x0062, 0x0072), frozenset(['type0', 'type2']), False, [p, b, r]),
+            ((0x0070, 0x0071, 0x0062), frozenset(['type0', 'type1']), False, [p, q, b]),
+            ((0x0070, 0x0071, 0x0071), frozenset(['type0', 'type1']), True, [p, q, q]),
+            ((0x0070, 0x0071, 0x0072), frozenset(['type0', 'type1', 'type2']), True, [p, q, r]),
+            ((0x0070, 0x0072, 0x0062), frozenset(['type0', 'type2']), False, [p, r, b]),
+            ((0x0070, 0x0072, 0x0071), frozenset(['type0', 'type1', 'type2']), True, [p, r, q]),
+            ((0x0070, 0x0072, 0x0072), frozenset(['type0', 'type2']), True, [p, r, r]),
+        ], self.lgr._generate_label_variants([0x0061, 0x0062, 0x0062]))
 
     def test_generate_variants_reflexive(self):
         self.lgr.add_cp([0x0061])
         self.lgr.add_cp([0x0062])
         self.lgr.add_cp([0x0063])
 
+        a = self.lgr.get_char([0x0061])
+        b = self.lgr.get_char([0x0062])
+        c = self.lgr.get_char([0x0063])
+
         self.lgr.add_variant([0x0062], [0x0062], variant_type="reflexive")
         self.lgr.add_variant([0x0063], [0x0070], variant_type="type")
 
-        self.assertEqual([], list(self.lgr._generate_label_variants([])))
-        self.assertEqual([],
-                         list(self.lgr._generate_label_variants([0x0061])))
-        self.assertEqual([((0x0062,), frozenset(['reflexive']), True)],
-                         list(self.lgr._generate_label_variants([0x0062])))
-        self.assertEqual(set([((0x0062, 0x0063), frozenset(['reflexive']), False),
-                              ((0x0062, 0x0070), frozenset(['reflexive', 'type']), True),
-                              ]),
-                         set(self.lgr._generate_label_variants([0x0062,
-                                                                0x0063])))
+        p = c.get_variant((0x0070,))[0]
+
+        self.assertCountEqual([], list(self.lgr._generate_label_variants([])))
+        self.assertCountEqual([],
+                              list(self.lgr._generate_label_variants([0x0061])))
+        self.assertCountEqual([((0x0062,), frozenset(['reflexive']), True, [b])],
+                              list(self.lgr._generate_label_variants([0x0062])))
+        self.assertCountEqual([
+            ((0x0062, 0x0063), frozenset(['reflexive']), False, [b, c]),
+            ((0x0062, 0x0070), frozenset(['reflexive', 'type']), True, [b, p]),
+        ], self.lgr._generate_label_variants([0x0062, 0x0063]))
 
     def test_generate_variants_sequence_same_cp(self):
         self.lgr.add_cp([0x05D9, 0x05D9])
         self.lgr.add_cp([0X05F2])
         self.lgr.add_cp([0x05D9])
 
+        yod = self.lgr.get_char([0x05D9])
+        yodseq = self.lgr.get_char([0x05D9, 0x05D9])
+
         self.lgr.add_variant([0x05D9, 0x05D9], [0x05F2])
         self.lgr.add_variant([0x05F2], [0x05D9, 0x05D9])
 
-        self.assertEqual(set([((0x05F2, 0x05D9), frozenset(), False),
-                              ((0x05D9, 0x05D9, 0x05D9), frozenset(), False),
-                              ((0x05D9, 0x05F2), frozenset(), False)]),
-                         set(self.lgr._generate_label_variants([0x05D9, 0x05D9, 0x05D9])))
+        dyod_var = yodseq.get_variant((0x05F2,))[0]
+
+        self.assertCountEqual([
+            ((0x05F2, 0x05D9), frozenset(), False, [dyod_var, yod]),
+            ((0x05D9, 0x05D9, 0x05D9), frozenset(), False, [yod, yodseq]),
+            ((0x05D9, 0x05F2), frozenset(), False, [yod, dyod_var])
+        ], self.lgr._generate_label_variants([0x05D9, 0x05D9, 0x05D9]))
 
     def test_label_simple(self):
         self.lgr.add_cp([0x0061])
@@ -560,22 +577,129 @@ class TestLGRCore(unittest.TestCase):
 
     def test_generate_variants_mixed_scripts(self):
         self.lgr.add_cp([0x0061])
-        self.lgr.add_cp(ord('á'))
+        self.lgr.add_cp([0x0062])
+        self.lgr.add_cp([ord('á')])
         self.lgr.add_cp([ord('ά')])
         self.lgr.add_cp([ord('α')])
+
+        b = self.lgr.get_char([0x0062])
+        aacute = self.lgr.get_char([ord('á')])
+        alphagrave = self.lgr.get_char([ord('ά')])
+        alpha = self.lgr.get_char([ord('α')])
 
         self.lgr.add_variant([0x0061], [ord('á')], variant_type="disp")
         self.lgr.add_variant([0x0061], [ord('ά')], variant_type="disp")
         self.lgr.add_variant([0x0061], [ord('α')], variant_type="disp")
 
-        self.lgr.add_cp([0x0062])
+        self.assertCountEqual([
+            ((ord('á'), 0x0062), frozenset(['disp']), False, [aacute, b]),
+            ((ord('ά'), 0x0062), frozenset(['disp']), False, [alphagrave, b]),
+            ((ord('α'), 0x0062), frozenset(['disp']), False, [alpha, b])
+        ], self.lgr._generate_label_variants([0x0061, 0x0062]))
+        self.assertCountEqual([((ord('á'), 0x0062), frozenset(['disp']), False, [aacute, b])],
+                              self.lgr._generate_label_variants([0x0061, 0x0062], hide_mixed_script_variants=True))
 
-        self.assertEqual(set([((ord('á'), 0x0062), frozenset(['disp']), False),
-                              ((ord('ά'), 0x0062), frozenset(['disp']), False),
-                              ((ord('α'), 0x0062), frozenset(['disp']), False)]),
-                         set(self.lgr._generate_label_variants([0x0061, 0x0062])))
-        self.assertEqual(set([((ord('á'), 0x0062), frozenset(['disp']), False)]),
-                         set(self.lgr._generate_label_variants([0x0061, 0x0062], hide_mixed_script_variants=True)))
+    def test_generate_label_partitions(self):
+        self.lgr.add_cp([0x0061])
+        self.lgr.add_cp([0x0062])
+        self.lgr.add_cp([0x0063])
+        self.lgr.add_cp([0x0064])
+        self.lgr.add_cp([0x0061, 0x0062])
+        self.lgr.add_cp([0x0062, 0x0063])
+        self.lgr.add_cp([0x0063, 0x0064])
+
+        a = self.lgr.get_char([0x0061])
+        b = self.lgr.get_char([0x0062])
+        c = self.lgr.get_char([0x0063])
+        d = self.lgr.get_char([0x0064])
+        ab = self.lgr.get_char([0x0061, 0x0062])
+        bc = self.lgr.get_char([0x0062, 0x0063])
+        cd = self.lgr.get_char([0x0063, 0x0064])
+
+        self.assertCountEqual([
+            [a, b, c, d],
+            [a, b, cd],
+            [a, bc, d],
+            [ab, c, d],
+            [ab, cd],
+        ], self.lgr._generate_label_partitions([0x0061, 0x0062, 0x0063, 0x0064]))
+
+    def test_generate_index_label_on_partition(self):
+        self.lgr.add_cp([0x0061])
+        self.lgr.add_cp([0x0062])
+        self.lgr.add_cp([0x0063])
+        self.lgr.add_cp([0x0064])
+        self.lgr.add_cp([0x0065])
+        self.lgr.add_cp([0x0066])
+        self.lgr.add_cp([0x0067])
+        self.lgr.add_cp([0x0068])
+        self.lgr.add_cp([0x0062, 0x0063])
+        self.lgr.add_cp([0x0064, 0x0065])
+
+        a = self.lgr.get_char([0x0061])
+        b = self.lgr.get_char([0x0062])
+        c = self.lgr.get_char([0x0063])
+        d = self.lgr.get_char([0x0064])
+        e = self.lgr.get_char([0x0065])
+        f = self.lgr.get_char([0x0066])
+        bc = self.lgr.get_char([0x0062, 0x0063])
+        de = self.lgr.get_char([0x0064, 0x0065])
+
+        self.lgr.add_variant([0x0062, 0x0063], [0x0066])
+        self.lgr.add_variant([0x0066], [0x0062, 0x0063])
+        self.lgr.add_variant([0x0064, 0x0065], [0x0061])
+        self.lgr.add_variant([0x0061], [0x0064, 0x0065])
+        self.lgr.add_variant([0x0062], [0x0064])
+        self.lgr.add_variant([0x0064], [0x0062])
+
+        self.assertEqual((0x0061, 0x0062, 0x0063, 0x0062, 0x0065, 0x0062, 0x0063),
+                         self.lgr._generate_index_label_on_partition([a, b, c, d, e, f]))
+        self.assertEqual((0x0061, 0x0062, 0x0063, 0x0061, 0x0062, 0x0063),
+                         self.lgr._generate_index_label_on_partition([a, bc, de, f]))
+        self.assertEqual((0x0061, 0x0062, 0x0063, 0x0061, 0x0062, 0x0063),
+                         self.lgr._generate_index_label_on_partition([a, b, c, de, f]))
+
+    def test_generate_index_label_on_partition_with_context_rule(self):
+        self.lgr.add_cp([0x0061])
+        self.lgr.add_cp([0x0062])
+        self.lgr.add_cp([0x0063])
+        self.lgr.add_cp([0x0064])
+        self.lgr.add_cp([0x0065])
+        self.lgr.add_cp([0x0066])
+        self.lgr.add_cp([0x0067])
+        self.lgr.add_cp([0x0068])
+        self.lgr.add_cp([0x0062, 0x0063])
+        self.lgr.add_cp([0x0064, 0x0065])
+
+        a = self.lgr.get_char([0x0061])
+        f = self.lgr.get_char([0x0066])
+        bc = self.lgr.get_char([0x0062, 0x0063])
+        de = self.lgr.get_char([0x0064, 0x0065])
+
+        self.lgr.add_variant([0x0062, 0x0063], [0x0066])
+        self.lgr.add_variant([0x0066], [0x0062, 0x0063])
+        self.lgr.add_variant([0x0064, 0x0065], [0x0061], not_when='after-c')
+        self.lgr.add_variant([0x0061], [0x0064, 0x0065])
+        self.lgr.add_variant([0x0062], [0x0064])
+        self.lgr.add_variant([0x0064], [0x0062])
+
+        rule = Rule(name='after-c')
+        look = LookBehindMatcher()
+        look.add_child(CharMatcher((0x0063,)))
+        rule.add_child(look)
+        rule.add_child(AnchorMatcher())
+        self.lgr.add_rule(rule)
+
+        self.assertEqual((0x0061, 0x0062, 0x0063, 0x0064, 0x0065, 0x0062, 0x0063),
+                         self.lgr._generate_index_label_on_partition([a, bc, de, f]))
+
+        self.lgr.del_variant([0x0064, 0x0065], [0x0061])
+        self.lgr.add_variant([0x0064, 0x0065], [0x0061], when='after-c')
+
+        self.assertEqual((0x0061, 0x0062, 0x0063, 0x0061, 0x0062, 0x0063),
+                         self.lgr._generate_index_label_on_partition([a, bc, de, f]))
+
+
 
 
 if __name__ == '__main__':

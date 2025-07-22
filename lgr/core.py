@@ -1145,6 +1145,10 @@ class LGR(object):
             #  then decide which disposition to keep, and not only handle the first one
             if not generate_chars and variant_cp in already_handled:
                 continue
+
+            # TODO we may have another method that doesn't retrieve all variants then loop to
+            # find with_labels, but only loop on the labels in with_labels, and ensure they
+            # share the same index for sanity checking
             if with_labels and variant_cp not in with_labels:
                 continue
             already_handled.add(variant_cp)
@@ -1295,31 +1299,99 @@ class LGR(object):
         """
         logger.debug("Generating index label for '%s'", format_cp(label))
 
-        (result, _, not_in_lgr, chars) = self._test_preliminary_eligibility(label,
-                                                                            generate_chars=True)
+        (result, _, not_in_lgr, _) = self._test_preliminary_eligibility(label, generate_chars=True)
         if not result:
             logger.error('Label %s is not in LGR', format_cp(label))
             # If not result, there is at least on element in not_in_lgr.
             # See _test_preliminary_eligibility()
             raise NotInLGR(not_in_lgr[0][0])
 
+        logger.debug("Generating label partitions for '%s'", format_cp(label))
+        partitions = self._generate_label_partitions(label)
+        logger.debug("%d partition(s) found", len(partitions))
+
+        indexes = []
+        # We compute the index label for each partition then select the lowest in code point order
+        # Most cases would work by only computing the happy path, but some edge cases would prevent this.
+        # For instance, if THE sequence {a,c} has variant {a}, then a happy path would lead to index 'ac' while
+        # full computation would bring 'abc' which is lower in code point order.
+        for partition in partitions:
+            indexes.append(self._generate_index_label_on_partition(partition))
+
+        index_label = min(indexes)
+        logger.debug("Index label: '%s'", index_label)
+
+        return tuple(index_label)
+
+    def _generate_index_label_on_partition(self, chars):
+        """
+        Generate the "index label" for a list of chars.
+
+        :param chars: The list of chars to compute the disposition of.
+
+        :return: The index label, as a list and the index computed with minimum code point algorithm if required.
+        """
+        logger.debug("Computing index label for partition: %s", chars)
         index_label = []
+        prefix = tuple()
+        suffix = tuple(c for cp in chars[1:] for c in cp.cp)
+        idx = 0
         for char in chars:
             logger.debug('Char CP: %s', format_cp(char.cp))
             # Index: smallest id of the char and its variants
-            # FIXME: This index algorithm has some problems when dealing with sequences and should be fixed
-            ids = [char.as_index()]
+            ids = [list(char.cp)]
             for var in char.get_variants():
-                var_char = self.repertoire.get_char(var.cp)
-                logger.debug('Variant CP: %r', var_char)
-                ids.append(var_char.as_index())
+                var_label = prefix + var.cp + suffix
+                logger.debug('Variant: %r', var)
+                if not self._test_context_rules(var, var_label, idx):
+                    logger.debug('Variant %r does not satisfy context rule, skip', var)
+                    continue
+                ids.append(list(var.cp))
             logger.debug('List of variant ids: %s', ids)
-
-            index_label.append(min(ids))
+            index_label.extend(list(min(ids)))
+            prefix += char.cp
+            suffix = suffix[len(char):]
+            idx += len(char)
 
         logger.debug("Index label: '%s'", index_label)
 
         return tuple(index_label)
+
+
+    def _generate_label_partitions(self, label):
+        """
+        Retrieve all partitions of a given label.
+
+        Partitions are distinct divisions of the same label into sequences.
+        For instance, if a repertoire contains code points 'a', 'b', and 'ab',
+        then label 'abc' can be partitioned as: ab c and a b c.
+
+        :param label: The label to compute the disposition of, as a sequence of code points.
+
+        :return: A list of label partitions, as lists of chars. An empty list if label in invalid.
+        """
+        all_partitions = []
+        cp = label[0]
+
+        try:
+            char_list = self.repertoire.get_chars_from_prefix(cp)
+        except NotInLGR:
+            return []
+
+        for char in char_list:
+            if not char.is_prefix_of(label):
+                continue
+            if len(label) > len(char):
+                partitions = self._generate_label_partitions(label[len(char):])
+                if not partitions:
+                    continue
+                for label_partition in partitions:
+                    chars = [char] + label_partition
+                    all_partitions.append(chars)
+            else:
+                all_partitions.append([char])
+
+        return all_partitions
 
     def all_tags(self):
         """
