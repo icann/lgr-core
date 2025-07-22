@@ -1,7 +1,7 @@
 from unittest import TestCase
 from unittest.mock import Mock
 
-from tools.utils import get_rz_label_script
+from lgr.tools.utils import get_rz_label_script
 
 
 class TestGetRZLabelScript(TestCase):
