@@ -811,7 +811,29 @@ class TestLGRCore(unittest.TestCase):
         self.assertEqual((0x062, 0x006C, 0x0075, 0x0065),
                          self.lgr.generate_index_label([0x044B, 0x045F, 0x0435]))
 
+    def test_generate_index_label_overlap_recurse(self):
+        self.lgr.add_cp([0x0062])  # a
+        self.lgr.add_cp([0x0062, 0x006C])  # bl
+        self.lgr.add_cp([0x0065])  # e
+        self.lgr.add_cp([0x0069])  # i
+        self.lgr.add_cp([0x006C])  # l
+        self.lgr.add_cp([0x0075])  # u
+        self.lgr.add_cp([0x0435])  # е (Cyrillic)
+        self.lgr.add_cp([0x044B])  # ы (Cyrillic)
+        self.lgr.add_cp([0x045F])  # џ (Cyrillic)
 
+        self.lgr.add_variant([0x0062, 0x006C], [0x044B])
+        self.lgr.add_variant([0x044B], [0x0062, 0x006C])
+        self.lgr.add_variant([0x0065], [0x0435])
+        self.lgr.add_variant([0x0435], [0x0065])
+        self.lgr.add_variant([0x0069], [0x006C])
+        self.lgr.add_variant([0x006C], [0x0069])
+        self.lgr.add_variant([0x0075], [0x045F])
+        self.lgr.add_variant([0x045F], [0x0075])
+
+        # one more recursion will make the index label right
+        self.assertEqual((0x062, 0x0069, 0x0075, 0x0065),
+                         self.lgr.generate_index_label([0x044B, 0x045F, 0x0435], max_recursion=1))
 
 
 

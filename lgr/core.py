@@ -1279,7 +1279,7 @@ class LGR(object):
                 variant_number *= len(vars_excl_reflexive(char)) + 1  # Take into account original code point
         return variant_number
 
-    def generate_index_label(self, label):
+    def generate_index_label(self, label, max_recursion=0):
         """
         Generate the "index label" of a given label.
 
@@ -1295,6 +1295,7 @@ class LGR(object):
         Pre-requires: Symmetric and transitive LGR.
 
         :param label: The label to compute the disposition of, as a sequence of code points.
+        :param max_recursion: Maximum number of recursions to perform.
 
         :return: The index label, as a list and the index computed with minimum code point algorithm if required.
         :raises NotInLgr: If the label is not in the LGR
@@ -1324,6 +1325,18 @@ class LGR(object):
 
         index_label = min(indexes)
         logger.debug("Index label: '%s'", index_label)
+
+        # max_recursion should be 0 to be compliant with the Index Label Calculation reference
+        if max_recursion > 0 and index_label != label:
+            # if the LGR is not well-built, you might have an index_label that when run against the
+            # same computation ends up with a different index label
+            old_index_label = tuple(index_label)
+            try:
+                index_label = self.generate_index_label(index_label, max_recursion=max_recursion - 1)
+                if index_label != old_index_label:
+                    logger.warning("Index label '%s' changed to '%s' after a new itertion", old_index_label, index_label)
+            except Exception:
+                pass
 
         return tuple(index_label)
 
