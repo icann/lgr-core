@@ -1288,6 +1288,10 @@ class LGR(object):
 
         For more details, see Section 8.5 of RFC7940.
 
+        Index Label Calculation is explained in Root Zone Label Generation Rules (RZ LGR-6)
+        Overview and Summary, section 5.5.
+        Steps are described in section 5.5.4.
+
         Pre-requires: Symmetric and transitive LGR.
 
         :param label: The label to compute the disposition of, as a sequence of code points.
@@ -1344,6 +1348,9 @@ class LGR(object):
                 var_label = prefix + var.cp + suffix
                 logger.debug('Variant: %r', var)
                 if not self._test_context_rules(var, var_label, idx):
+                    # As per Root Zone Label Generation Rules (RZ LGR-6) Overview and Summary, section 5.5.4, step 2.c,
+                    # "In determining available variants for the following, any variant that has a variant context rule
+                    #  and does not satisfy that rule for the input label at that location is ignored."
                     logger.debug('Variant %r does not satisfy context rule, skip', var)
                     continue
                 ids.append(list(var.cp))
@@ -1358,7 +1365,7 @@ class LGR(object):
         return tuple(index_label)
 
 
-    def _generate_label_partitions(self, label):
+    def _generate_label_partitions(self, label, prefix=None):
         """
         Retrieve all partitions of a given label.
 
@@ -1372,6 +1379,8 @@ class LGR(object):
         """
         all_partitions = []
         cp = label[0]
+        prefix = prefix or ()
+        original_label = prefix + tuple(label)
 
         try:
             char_list = self.repertoire.get_chars_from_prefix(cp)
@@ -1381,8 +1390,13 @@ class LGR(object):
         for char in char_list:
             if not char.is_prefix_of(label):
                 continue
+            if not self._test_context_rules(char, original_label, len(prefix)):
+                # As per Root Zone Label Generation Rules (RZ LGR-6) Overview and Summary, section 5.5.4, step 2.b,
+                # "Further evaluation is skipped for any [partition] that have a code point context rule and do not
+                #  satisfy that rule for the input label at that location."
+                continue
             if len(label) > len(char):
-                partitions = self._generate_label_partitions(label[len(char):])
+                partitions = self._generate_label_partitions(label[len(char):], prefix=prefix + char.cp)
                 if not partitions:
                     continue
                 for label_partition in partitions:

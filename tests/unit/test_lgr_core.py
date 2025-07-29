@@ -624,6 +624,36 @@ class TestLGRCore(unittest.TestCase):
             [ab, cd],
         ], self.lgr._generate_label_partitions([0x0061, 0x0062, 0x0063, 0x0064]))
 
+    def test_generate_label_partitions_with_code_point_context_rule(self):
+        self.lgr.add_cp([0x0061])
+        self.lgr.add_cp([0x0062])
+        self.lgr.add_cp([0x0063])
+        self.lgr.add_cp([0x0064])
+        self.lgr.add_cp([0x0061, 0x0062])
+        self.lgr.add_cp([0x0062, 0x0063], not_when='after-a')
+        self.lgr.add_cp([0x0063, 0x0064])
+
+        a = self.lgr.get_char([0x0061])
+        b = self.lgr.get_char([0x0062])
+        c = self.lgr.get_char([0x0063])
+        d = self.lgr.get_char([0x0064])
+        ab = self.lgr.get_char([0x0061, 0x0062])
+        cd = self.lgr.get_char([0x0063, 0x0064])
+
+        rule = Rule(name='after-a')
+        look = LookBehindMatcher()
+        look.add_child(CharMatcher((0x0061,)))
+        rule.add_child(look)
+        rule.add_child(AnchorMatcher())
+        self.lgr.add_rule(rule)
+
+        self.assertCountEqual([
+            [a, b, c, d],
+            [a, b, cd],
+            [ab, c, d],
+            [ab, cd],
+        ], self.lgr._generate_label_partitions([0x0061, 0x0062, 0x0063, 0x0064]))
+
     def test_generate_index_label_on_partition(self):
         self.lgr.add_cp([0x0061])
         self.lgr.add_cp([0x0062])
@@ -659,7 +689,7 @@ class TestLGRCore(unittest.TestCase):
         self.assertEqual((0x0061, 0x0062, 0x0063, 0x0061, 0x0062, 0x0063),
                          self.lgr._generate_index_label_on_partition([a, b, c, de, f]))
 
-    def test_generate_index_label_on_partition_with_context_rule(self):
+    def test_generate_index_label_on_partition_with_variant_context_rule(self):
         self.lgr.add_cp([0x0061])
         self.lgr.add_cp([0x0062])
         self.lgr.add_cp([0x0063])
@@ -698,6 +728,89 @@ class TestLGRCore(unittest.TestCase):
 
         self.assertEqual((0x0061, 0x0062, 0x0063, 0x0061, 0x0062, 0x0063),
                          self.lgr._generate_index_label_on_partition([a, bc, de, f]))
+
+    def test_generate_index_label(self):
+        self.lgr.add_cp([0x0061])
+        self.lgr.add_cp([0x0062])
+        self.lgr.add_cp([0x0063])
+        self.lgr.add_cp([0x0064])
+        self.lgr.add_cp([0x0065])
+        self.lgr.add_cp([0x0066])
+        self.lgr.add_cp([0x0067])
+        self.lgr.add_cp([0x0068])
+        self.lgr.add_cp([0x0062, 0x0063])
+        self.lgr.add_cp([0x0064, 0x0065])
+
+        self.lgr.add_variant([0x0062, 0x0063], [0x0066])
+        self.lgr.add_variant([0x0066], [0x0062, 0x0063])
+        self.lgr.add_variant([0x0064, 0x0065], [0x0061])
+        self.lgr.add_variant([0x0061], [0x0064, 0x0065])
+
+        self.assertEqual((0x0061, 0x0062, 0x0063, 0x0061, 0x0062, 0x0063),
+                         self.lgr.generate_index_label([0x0061, 0x0062, 0x0063, 0x0064, 0x0065, 0x0066]))
+
+    def test_generate_index_label_effective_null_variant(self):
+        self.lgr.add_cp([0x0061])
+        self.lgr.add_cp([0x0062])
+        self.lgr.add_cp([0x0063])
+        self.lgr.add_cp([0x0064])
+        self.lgr.add_cp([0x0062, 0x0063])
+
+        self.lgr.add_variant([0x0062, 0x0063], [0x0062])
+        self.lgr.add_variant([0x0062], [0x0062, 0x0063])
+
+        # partitions are {a}{b}{c} and {a}{b,c}, with possible indexes {a}{b}{c} and {a}{b}
+        self.assertEqual((0x0061, 0x0062),
+                         self.lgr.generate_index_label([0x0061, 0x0062, 0x0063]))
+        # partitions are {b}{c}{d} and {b,c}{d}, with possible indexes {b}{c}{d} and {b}{d}, however,
+        # {b}{c}{d} is lower in code point order
+        self.assertEqual((0x0062, 0x0063, 0x0064),
+                         self.lgr.generate_index_label([0x0062, 0x0063, 0x0064]))
+        # partitions are {b}{c}{d} and {b,c}{d}, with possible indexes {b}{c}{a} and {b}{a}
+        self.assertEqual((0x0062, 0x0061),
+                         self.lgr.generate_index_label([0x0062, 0x0063, 0x0061]))
+
+    def test_generate_index_label_overlap(self):
+        self.lgr.add_cp([0x0062])  # a
+        self.lgr.add_cp([0x0062, 0x006C])  # bl
+        self.lgr.add_cp([0x0065])  # e
+        self.lgr.add_cp([0x0069])  # i
+        self.lgr.add_cp([0x006C])  # l
+        self.lgr.add_cp([0x0075])  # u
+        self.lgr.add_cp([0x0435])  # е (Cyrillic)
+        self.lgr.add_cp([0x044B])  # ы (Cyrillic)
+        self.lgr.add_cp([0x045F])  # џ (Cyrillic)
+
+        self.lgr.add_variant([0x0062, 0x006C], [0x044B])
+        self.lgr.add_variant([0x044B], [0x0062, 0x006C])
+        self.lgr.add_variant([0x0065], [0x0435])
+        self.lgr.add_variant([0x0435], [0x0065])
+        self.lgr.add_variant([0x0069], [0x006C])
+        self.lgr.add_variant([0x006C], [0x0069])
+        self.lgr.add_variant([0x0075], [0x045F])
+        self.lgr.add_variant([0x045F], [0x0075])
+
+        # if not context rule is provided, those 2 variant labels (blue and ыџе) end up with different indexes
+        self.assertEqual((0x062, 0x0069, 0x0075, 0x0065),
+                         self.lgr.generate_index_label([0x062, 0x006C, 0x0075, 0x0065]))
+        self.assertEqual((0x062, 0x006C, 0x0075, 0x0065),
+                         self.lgr.generate_index_label([0x044B, 0x045F, 0x0435]))
+
+        # adding a rule to make it right
+        self.lgr.del_variant([0x006C], [0x0069])
+        self.lgr.add_variant([0x006C], [0x0069], not_when='preceded-by-0062')
+        rule = Rule(name='preceded-by-0062')
+        look = LookBehindMatcher()
+        look.add_child(CharMatcher((0x0062,)))
+        rule.add_child(look)
+        rule.add_child(AnchorMatcher())
+        self.lgr.add_rule(rule)
+
+        self.assertEqual((0x062, 0x006C, 0x0075, 0x0065),
+                         self.lgr.generate_index_label([0x062, 0x006C, 0x0075, 0x0065]))
+        self.assertEqual((0x062, 0x006C, 0x0075, 0x0065),
+                         self.lgr.generate_index_label([0x044B, 0x045F, 0x0435]))
+
 
 
 
