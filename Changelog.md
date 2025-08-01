@@ -1,5 +1,21 @@
 # Changelog for lgr-core
 
+## 6.1.3 (2025-08-01)
+### New features
+- Made some test utilities available for use
+- Add utility function to get the Root Zone label script for a given label
+- Update dependencies for the support of Unicode up to 16.0.0.
+
+### Fixes
+- Prevent adding duplicate languages in Metadata
+- Log correct Unicode version in LGR validation
+- Fix codepoints in Common script should return True for cp_in_script()
+
+### Improvements
+- Precalculate patterns in LGR rules for performance improvements
+- Better management of project dependencies
+- Update dependencies
+
 ## 6.1.2 (2024-09-08)
 
 ### Fixes
