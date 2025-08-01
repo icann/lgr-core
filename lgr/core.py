@@ -1297,11 +1297,15 @@ class LGR(object):
         :param label: The label to compute the disposition of, as a sequence of code points.
         :param max_recursion: Maximum number of recursions to perform.
 
-        :return: The index label, as a list and the index computed with minimum code point algorithm if required.
+        :return: The index label, as a tuple and the index computed with minimum code point algorithm if required.
         :raises NotInLgr: If the label is not in the LGR
                           (does not pass preliminary eligibility testing).
         :raises RuleError: If rule is invalid.
         """
+        if not label:
+            logger.debug('No label provided, skipping the generation of index label')
+            return tuple()
+
         logger.debug("Generating index label for '%s'", format_cp(label))
 
         (result, _, not_in_lgr, _) = self._test_preliminary_eligibility(label, generate_chars=True)
