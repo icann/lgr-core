@@ -836,6 +836,47 @@ class TestLGRCore(unittest.TestCase):
                          self.lgr.generate_index_label([0x044B, 0x045F, 0x0435], max_recursion=1))
 
 
+    def test_generate_variant_dispositions(self):
+        self.lgr.add_cp([0x0061])
+        self.lgr.add_cp([0x0062])
+        self.lgr.add_cp([0x0063])
+        self.lgr.add_cp([0x0064])
+        self.lgr.add_cp([0x0070])
+        self.lgr.add_cp([0x0071])
+        self.lgr.add_cp([0x0072])
+
+        a = self.lgr.get_char([0x0061])
+        b = self.lgr.get_char([0x0062])
+        c = self.lgr.get_char([0x0063])
+
+        self.lgr.add_variant([0x0061], [0x0070], variant_type="type0")
+        self.lgr.add_variant([0x0062], [0x0071], variant_type="type1")
+        self.lgr.add_variant([0x0062], [0x0072], variant_type="type2")
+
+        p = a.get_variant((0x0070,))[0]
+        q = b.get_variant((0x0071,))[0]
+        r = b.get_variant((0x0072,))[0]
+
+        self.assertEqual([], list(self.lgr._generate_variant_dispositions([], [])))
+        self.assertCountEqual([
+            ((0x0071, 0x0063), frozenset(['type1']), False, [q, c]),
+        ], self.lgr._generate_variant_dispositions([0x0062, 0x0063], [0x0071, 0x0063]))
+        self.assertCountEqual([
+            ((0x0072, 0x0063), frozenset(['type2']), False, [r, c])
+        ], self.lgr._generate_variant_dispositions([0x0062, 0x0063], [0x0072, 0x0063]))
+        self.assertCountEqual([
+            ((0x0061, 0x0072), frozenset(['type2']), False, [a, r]),
+        ], self.lgr._generate_variant_dispositions([0x0061, 0x0062], [0x0061, 0x0072]))
+        self.assertCountEqual([
+            ((0x0061, 0x0062, 0x0062), frozenset(), False, [a, b, b]),
+        ], self.lgr._generate_variant_dispositions([0x0061, 0x0062, 0x0062], [0x0061, 0x0062, 0x0062]))
+        self.assertCountEqual([
+            ((0x0070, 0x0071, 0x0062), frozenset(['type0', 'type1']), False, [p, q, b]),
+        ], self.lgr._generate_variant_dispositions([0x0061, 0x0062, 0x0062], [0x0070, 0x0071, 0x0062]))
+        self.assertCountEqual([
+            ((0x0070, 0x0072, 0x0072), frozenset(['type0', 'type2']), True, [p, r, r]),
+        ], self.lgr._generate_variant_dispositions([0x0061, 0x0062, 0x0062], [0x0070, 0x0072, 0x0072]))
+
 
 if __name__ == '__main__':
     import logging
