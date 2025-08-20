@@ -53,6 +53,24 @@ class TestGetRZLabelScript(TestCase):
         self.assertEqual(result, 'und-Hani')
         self.assertEqual(self.unidb.get_script.call_count, 2)
 
+    def test_returns_zyyy_when_label_contains_only_common_script_characters(self):
+        label = 'ーー'
+        self.unidb.get_script.side_effect = ['Zyyy', 'Zyyy']
+
+        result = get_rz_label_script(label, self.unidb)
+
+        self.assertEqual(result, 'und-Zyyy')
+        self.assertEqual(self.unidb.get_script.call_count, 2)
+
+    def test_returns_jpan_when_label_mixes_common_with_hira_or_kana(self):
+        label = 'ーマルマル'
+        self.unidb.get_script.side_effect = ['Zyyy', 'Kana']
+
+        result = get_rz_label_script(label, self.unidb)
+
+        self.assertEqual(result, 'und-Jpan')
+        self.assertEqual(self.unidb.get_script.call_count, 2)
+
     def test_returns_none_when_label_is_empty(self):
         label = ''
 
