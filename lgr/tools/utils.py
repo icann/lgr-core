@@ -275,6 +275,42 @@ def merge_lgrs(input_lgrs, name=None, rng=None, unidb=None):
     return merged_lgr, lgr_set
 
 
+def get_rz_label_script(label: str, unidb: UnicodeDatabase) -> str | None:
+    """
+    Returns the script in which the label belongs to.
+
+    :param label: Input label
+    :param unidb: The UnicodeDatabase
+    :return: The name of the script if one is found
+    """
+    if not label:
+        return None
+
+    script = unidb.get_script(label[0], alpha4=True)
+
+    if script == 'Hani':
+        script = 'Hani'
+        # We keep looking on the other characters to determine if the script can be Jpan.
+        for character in label[1:]:
+            if unidb.get_script(character, alpha4=True) in ['Hira', 'Kana']:
+                script = 'Jpan'
+                break
+
+    elif script == 'Zyyy':
+        # Since the first character is from the Common script, we keep looking to se if the rest match another script
+        for character in label[1:]:
+            script = unidb.get_script(character, alpha4=True)
+            if script != 'Zyyy':
+                break
+
+    if script in ['Hira', 'Kana']:
+        script = 'Jpan'
+    elif script == 'Hang':
+        script = 'Kore'
+
+    return f'und-{script}'
+
+
 # Helpers for CLI tools
 
 
@@ -317,34 +353,6 @@ def parse_lgr(xml, rng=None, unidb=None):
 
     lgr = lgr_parser.parse_document()
     return lgr
-
-
-def get_rz_label_script(label: str, unidb: UnicodeDatabase) -> str | None:
-    """
-    Returns the script in which the label belongs to.
-
-    :param label: Input label
-    :param unidb: The UnicodeDatabase
-    :return: The name of the script if one is found
-    """
-    if not label:
-        return None
-
-    script = unidb.get_script(label[0], alpha4=True)
-    if script in ['Hira', 'Kana']:
-        script = 'Jpan'
-    elif script == 'Hang':
-        script = 'Kore'
-
-    elif script == 'Hani':
-        script = 'Hani'
-        # We keep looking on the other characters to determine if the script can be Jpan.
-        for character in label[1:]:
-            if unidb.get_script(character, alpha4=True) in ['Hira', 'Kana']:
-                script = 'Jpan'
-                break
-
-    return f'und-{script}'
 
 
 class LgrToolArgParser(argparse.ArgumentParser):
