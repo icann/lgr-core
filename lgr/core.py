@@ -4,14 +4,13 @@ core.py - Definition of main object and methods of a LGR structure.
 """
 from __future__ import unicode_literals
 
-import logging
 import collections
+import logging
 from collections import OrderedDict
 from io import StringIO
 
-from lgr.metadata import ReferenceManager, Metadata
-from lgr.char import Repertoire, CharSequence
 from lgr.action import Action
+from lgr.char import CharSequence, Repertoire
 from lgr.classes import Class, TAG_CLASSNAME_PREFIX
 from lgr.exceptions import (LGRApiInvalidParameter,
                             CharAlreadyExists,
@@ -27,11 +26,16 @@ from lgr.exceptions import (LGRApiInvalidParameter,
                             LGRFormatException,
                             LGRApiException,
                             LGRException)
-from lgr.mixed_scripts_variant_filter import MixedScriptsVariantFilter, BaseMixedScriptsVariantFilter
-from lgr.validate import validate_lgr
+from lgr.metadata import Metadata, ReferenceManager
+from lgr.mixed_scripts_variant_filter import BaseMixedScriptsVariantFilter, MixedScriptsVariantFilter
 from lgr.populate import populate_lgr
-from lgr.utils import (collapse_codepoints,
-                       format_cp, is_idna_valid_cp_or_sequence)
+from lgr.utils import (
+    COMMON_SCRIPT,
+    INHERITED_SCRIPT,
+    collapse_codepoints,
+    format_cp,
+    is_idna_valid_cp_or_sequence)
+from lgr.validate import validate_lgr
 
 logger = logging.getLogger(__name__)
 rule_logger = logging.getLogger('lgr-rule-logger')
@@ -71,8 +75,6 @@ MAX_NUMBER_GENERATED_VARIANTS = 1000
 # From RFC1035, 2.3.4 Size limits
 PROTOCOL_LABEL_MAX_LENGTH = 63
 
-COMMON_SCRIPT = 'Zyyy'
-INHERITED_SCRIPT = 'Zinh'
 
 class LGR(object):
     """

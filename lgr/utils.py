@@ -14,13 +14,10 @@ from lgr import text_type, wide_unichr
 logger = logging.getLogger(__name__)
 
 
-VALID_IDNA_PROPERTY_VALUES = set([
-    "PVALID",
-    "CONTEXTJ",
-    "CONTEXTO",
-])
+VALID_IDNA_PROPERTY_VALUES = {"PVALID", "CONTEXTJ", "CONTEXTO"}
 
-
+COMMON_SCRIPT = 'Zyyy'
+INHERITED_SCRIPT = 'Zinh'
 
 def cp_to_ulabel(cp_or_sequence):
     """

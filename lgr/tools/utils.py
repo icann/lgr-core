@@ -21,7 +21,7 @@ from lgr import text_type
 from lgr.parser.xml_parser import XMLParser
 from lgr.parser.xml_serializer import serialize_lgr_xml
 from lgr.tools.merge_set import merge_lgr_set
-from lgr.utils import cp_to_ulabel
+from lgr.utils import COMMON_SCRIPT, INHERITED_SCRIPT, cp_to_ulabel
 
 logger = logging.getLogger(__name__)
 
@@ -296,11 +296,12 @@ def get_rz_label_script(label: str, unidb: UnicodeDatabase) -> str | None:
                 script = 'Jpan'
                 break
 
-    elif script == 'Zyyy':
-        # Since the first character is from the Common script, we keep looking to se if the rest match another script
+    elif script in [COMMON_SCRIPT, INHERITED_SCRIPT]:
+        # Since the first character is from the Common or Inherited
+        # scripts, we keep looking to see if the rest match another one.
         for character in label[1:]:
             script = unidb.get_script(character, alpha4=True)
-            if script != 'Zyyy':
+            if script not in [COMMON_SCRIPT, INHERITED_SCRIPT]:
                 break
 
     if script in ['Hira', 'Kana']:
