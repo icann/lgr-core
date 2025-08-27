@@ -54,13 +54,16 @@ class TestGetRZLabelScript(TestCase):
         self.assertEqual(self.unidb.get_script.call_count, 2)
 
     def test_returns_jpan_when_label_contains_only_specific_common_script_characters(self):
-        labels = ['ーー','〆〆','〆ー']
+        labels = ['ーー', '〆〆', '〆ー', 'ー〆']
 
         for label in labels:
-            result = get_rz_label_script(label, self.unidb)
-            self.assertEqual(result, 'und-Jpan')
-            self.unidb.get_script.assert_not_called()
+            self.unidb.get_script.reset_mock()
+            self.unidb.get_script.side_effect = ['Zyyy', 'Zyyy']
 
+            result = get_rz_label_script(label, self.unidb)
+
+            self.assertEqual(result, 'und-Jpan')
+            self.assertEqual(self.unidb.get_script.call_count, 2)
 
     def test_returns_zyyy_when_label_contains_only_common_script_characters(self):
         label = '@@'
