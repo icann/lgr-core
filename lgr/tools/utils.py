@@ -287,35 +287,34 @@ def get_rz_label_script(label: str, unidb: UnicodeDatabase) -> str | None:
     if not label:
         return None
 
-    if bool(re.fullmatch(r'[〆ー]+', label)):
-        # There is a specific exception for U+3006 and U+30FC.
-        # They are part of the Common script, but if not paired with
-        # characters from another script, they must be considered part
-        # of Jpan.
-        script = 'Jpan'
-    else:
-        script = unidb.get_script(label[0], alpha4=True)
+    script = unidb.get_script(label[0], alpha4=True)
 
-        if script == 'Hani':
-            script = 'Hani'
-            # We keep looking on the other characters to determine if the script can be Jpan.
-            for character in label[1:]:
-                if unidb.get_script(character, alpha4=True) in ['Hira', 'Kana']:
-                    script = 'Jpan'
-                    break
+    if script == 'Hani':
+        script = 'Hani'
+        # We keep looking on the other characters to determine if the script can be Jpan.
+        for character in label[1:]:
+            if unidb.get_script(character, alpha4=True) in ['Hira', 'Kana']:
+                script = 'Jpan'
+                break
 
-        elif script in [COMMON_SCRIPT, INHERITED_SCRIPT]:
-            # Since the first character is from the Common or Inherited
-            # scripts, we keep looking to see if the rest match another one.
-            for character in label[1:]:
-                script = unidb.get_script(character, alpha4=True)
-                if script not in [COMMON_SCRIPT, INHERITED_SCRIPT]:
-                    break
-
-        if script in ['Hira', 'Kana']:
+    elif script in [COMMON_SCRIPT, INHERITED_SCRIPT]:
+        # Since the first character is from the Common or Inherited
+        # scripts, we keep looking to see if the rest match another one.
+        for character in label[1:]:
+            script = unidb.get_script(character, alpha4=True)
+            if script not in [COMMON_SCRIPT, INHERITED_SCRIPT]:
+                break
+        if script in [COMMON_SCRIPT, INHERITED_SCRIPT] and any(character in label for character in ['〆','ー']):
+            # There is a specific exception for U+3006 and U+30FC.
+            # They are part of the Common script, but if not paired with
+            # characters from another script, they must be considered part
+            # of Jpan.
             script = 'Jpan'
-        elif script == 'Hang':
-            script = 'Kore'
+
+    if script in ['Hira', 'Kana']:
+        script = 'Jpan'
+    elif script == 'Hang':
+        script = 'Kore'
 
     return f'und-{script}'
 
