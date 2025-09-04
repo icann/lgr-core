@@ -835,7 +835,6 @@ class TestLGRCore(unittest.TestCase):
         self.assertEqual((0x062, 0x0069, 0x0075, 0x0065),
                          self.lgr.generate_index_label([0x044B, 0x045F, 0x0435], max_recursion=1))
 
-
     def test_generate_variant_dispositions(self):
         self.lgr.add_cp([0x0061])
         self.lgr.add_cp([0x0062])
@@ -876,6 +875,28 @@ class TestLGRCore(unittest.TestCase):
         self.assertCountEqual([
             ((0x0070, 0x0072, 0x0072), frozenset(['type0', 'type2']), True, [p, r, r]),
         ], self.lgr._generate_variant_dispositions([0x0061, 0x0062, 0x0062], [0x0070, 0x0072, 0x0072]))
+
+    def test_generate_index_label_sequence_and_rule(self):
+        self.lgr.add_cp([0x092F])
+        self.lgr.add_cp([0x093E])
+        self.lgr.add_cp([0x093E, 0x093C])
+        self.lgr.add_cp([0x093C])
+        self.lgr.add_cp([0x0941])
+        self.lgr.add_cp([0x097B])
+
+        self.lgr.add_variant([0x093E], [0x093E, 0x093C], not_when='Deva--followed-by-N')
+        self.lgr.add_variant([0x093E, 0x093C], [0x093E], not_when='Deva--followed-by-N')
+
+        rule = Rule(name='Deva--followed-by-N')
+        rule.add_child(AnchorMatcher())
+        look = LookAheadMatcher()
+        look.add_child(CharMatcher((0x093C,)))
+        rule.add_child(look)
+        self.lgr.add_rule(rule)
+
+        self.assertEqual((0x092F, 0x0941, 0x097B, 0x093E),
+                         self.lgr.generate_index_label([0x092F, 0x0941, 0x097B, 0x093E, 0x093C]))
+
 
 
 if __name__ == '__main__':
