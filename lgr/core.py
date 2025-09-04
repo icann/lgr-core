@@ -1430,9 +1430,10 @@ class LGR(object):
         logger.debug("Computing index label for partition: %s", chars)
         index_label = []
         prefix = tuple()
-        suffix = tuple(c for cp in chars[1:] for c in cp.cp)
+        suffix = tuple(c for cp in chars for c in cp.cp)
         idx = 0
         for char in chars:
+            suffix = suffix[len(char):]
             logger.debug('Char CP: %s', format_cp(char.cp))
             # Index: smallest id of the char and its variants
             ids = [list(char.cp)]
@@ -1449,7 +1450,6 @@ class LGR(object):
             logger.debug('List of variant ids: %s', ids)
             index_label.extend(list(min(ids)))
             prefix += char.cp
-            suffix = suffix[len(char):]
             idx += len(char)
 
         logger.debug("Index label: '%s'", index_label)
