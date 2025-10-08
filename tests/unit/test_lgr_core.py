@@ -440,7 +440,6 @@ class TestLGRCore(unittest.TestCase):
         self.lgr.add_cp([0x0062])
         self.lgr.add_cp([0x0063])
 
-        a = self.lgr.get_char([0x0061])
         b = self.lgr.get_char([0x0062])
         c = self.lgr.get_char([0x0063])
 
@@ -482,15 +481,19 @@ class TestLGRCore(unittest.TestCase):
         self.lgr.add_cp([0x0061])
         self.lgr.add_cp([0x0062, 0x0063])
         self.lgr.add_range(0x0064, 0x0068)
+        a = self.lgr.get_char([0x0061])
+        bc = self.lgr.get_char([0x0062, 0x0063])
+        d = self.lgr.get_char(0x0064)
+        g = self.lgr.get_char(0x0068)
 
         valid_labels = (
-            [0x0061],
-            [0x0062, 0x0063],
-            [0x0064],
-            [0x0068],
-            [0x0061, 0x0064],
-            [0x0061, 0x0062, 0x0063, 0x0064],
-            [0x0062, 0x0063, 0x0068]
+            ([0x0061], [a]),
+            ([0x0062, 0x0063], [bc]),
+            ([0x0064], [d]),
+            ([0x0068], [g]),
+            ([0x0061, 0x0064], [a, d]),
+            ([0x0061, 0x0062, 0x0063, 0x0064], [a, bc, d]),
+            ([0x0062, 0x0063, 0x0068], [bc, g]),
         )
         invalid_labels = (
             ([0x0060], [], [(0x0060, None)]),
@@ -500,22 +503,39 @@ class TestLGRCore(unittest.TestCase):
             ([0x0061, 0x0062], [0x0061], [(0x0062, None)])
         )
 
-        for label in valid_labels:
-            self.assertEqual((True, label, []),
+        for label, chars in valid_labels:
+            self.assertEqual((True, label, [], chars),
                              self.lgr._test_preliminary_eligibility(label))
         for (label, label_part, not_in_lgr) in invalid_labels:
-            self.assertEqual((False, label_part, not_in_lgr),
+            self.assertEqual((False, label_part, not_in_lgr, []),
                              self.lgr._test_preliminary_eligibility(label))
 
     def test_label_eligibility_multiple_choices(self):
         self.lgr.add_cp([0x0061])
         self.lgr.add_cp([0x0061, 0x0062, 0x0063])
         self.lgr.add_cp([0x0064])
+        abc = self.lgr.get_char([0x0061, 0x0062, 0x0063])
+        d = self.lgr.get_char([0x0064])
 
         self.assertEqual(self.lgr._test_preliminary_eligibility([0x0062]),
-                         (False, [], [(0x0062, None)]))
+                         (False, [], [(0x0062, None)], []))
         self.assertEqual(self.lgr._test_preliminary_eligibility([0x0061, 0x0062, 0x0063, 0x0064]),
-                         (True, [0x0061, 0x0062, 0x0063, 0x0064], []))
+                         (True, [0x0061, 0x0062, 0x0063, 0x0064], [], [abc, d]))
+
+
+    def test_label_eligibility_invalid_code_point_in_sequence(self):
+        self.lgr.add_cp([0x0061])
+        self.lgr.add_cp([0x0065])
+        self.lgr.add_cp([0x006B])
+        self.lgr.add_cp([0x0061, 0x0065])
+        self.lgr.add_cp([0x0065, 0x0331])
+        a = self.lgr.get_char([0x0061])
+        k = self.lgr.get_char([0x006B])
+        e_ = self.lgr.get_char([0x0065, 0x0331])
+
+        self.assertEqual(self.lgr._test_preliminary_eligibility([0x0061, 0x0065, 0x0331, 0x006B]),
+                         (True, [0x0061, 0x0065, 0x0331, 0x006B], [], [a, e_, k]))
+
 
     def test_label_delayed_eligibilty(self):
         self.lgr.add_cp([0x0061])

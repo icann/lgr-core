@@ -10,7 +10,7 @@ from collections import OrderedDict
 from io import StringIO
 
 from lgr.action import Action
-from lgr.char import CharSequence, Repertoire
+from lgr.char import CharBase, CharSequence, Repertoire
 from lgr.classes import Class, TAG_CLASSNAME_PREFIX
 from lgr.exceptions import (LGRApiInvalidParameter,
                             CharAlreadyExists,
@@ -1056,13 +1056,7 @@ class LGR(object):
             rule_logger.addHandler(ch)
 
         # Start by testing presence of code points in LGR
-        chars = []
-        if generate_chars:
-            (valid, label_parts, label_invalid_parts, chars) = self._test_preliminary_eligibility(label,
-                                                                                                  generate_chars=generate_chars)
-        else:
-            (valid, label_parts, label_invalid_parts) = self._test_preliminary_eligibility(label,
-                                                                                           generate_chars=generate_chars)
+        (valid, label_parts, label_invalid_parts, chars) = self._test_preliminary_eligibility(label)
         if not valid:
             rule_logger.error("Label '%s' is not in the LGR", format_cp(label))
             if collect_log:
@@ -1326,7 +1320,7 @@ class LGR(object):
         :param hide_mixed_script_variants: Whether we count mixed scripts variants.
         :return: Estimated number of generated variants.
         """
-        (_, _, _, chars) = self._test_preliminary_eligibility(label, generate_chars=True)
+        (_, _, _, chars) = self._test_preliminary_eligibility(label)
         variant_number = 1
 
         def vars_excl_reflexive(current_char):
@@ -1382,7 +1376,7 @@ class LGR(object):
 
         logger.debug("Generating index label for '%s'", format_cp(label))
 
-        (result, _, not_in_lgr, _) = self._test_preliminary_eligibility(label, generate_chars=True)
+        (result, _, not_in_lgr, _) = self._test_preliminary_eligibility(label)
         if not result:
             logger.error('Label %s is not in LGR', format_cp(label))
             # If not result, there is at least on element in not_in_lgr.
@@ -1456,7 +1450,7 @@ class LGR(object):
 
         return tuple(index_label)
 
-    def _generate_label_partitions(self, label, prefix=None):
+    def _generate_label_partitions(self, label, prefix=None) -> list[list[CharBase]]:
         """
         Retrieve all partitions of a given label.
 
@@ -1583,7 +1577,7 @@ class LGR(object):
         logger.debug('Populate LGR variants')
         return populate_lgr(self)
 
-    def _test_preliminary_eligibility(self, label, generate_chars=False):
+    def _test_preliminary_eligibility(self, label: list[int]) -> tuple[bool, list[tuple[int]], list, list[CharBase]]:
         """
         Test label eligibility against an LGR.
 
@@ -1600,10 +1594,47 @@ class LGR(object):
                     * rule_specs: None if code point is not in the repertoire, list of rule names that does not comply
                                   for all characters starting with the code point.
                  * chars: List of the LGR chars included in label
-                          (only if generate_chars=True).
         :raises RuleError: If rule is invalid.
         """
         rule_logger.debug("Testing label '%s'", format_cp(label))
+
+        partitions = self._generate_label_partitions(label)
+        if partitions:
+            return self._retrieve_valid_label_parts(partitions)
+        else:
+            return self._retrieve_invalid_label_parts(label)
+
+    def _retrieve_valid_label_parts(self, partitions: list[list[CharBase]]) -> tuple[bool, list[tuple[int]], list, list[CharBase]]:
+        label_parts = []
+        chars = []
+
+        for char in partitions[0]:
+            rule_logger.debug("Code point '%s' in LGR", format_cp(char.cp))
+            label_parts += char.cp
+            chars.append(char)
+        return True, label_parts, [], chars
+
+    def _retrieve_invalid_label_parts(self, label) -> tuple[bool, list[tuple[int]], list, list[CharBase]]:
+        """
+        Extract valid and invalid parts from an invalid label.
+
+        Warning: this method does not go through all the possible paths, if multiple combinations exist with various
+        valid/invalid parts exits, only one is returned. That is because once a char is valid it goes to the next
+        without checking other prefixes.
+
+        :param label: The label to test, as an array of codepoints.
+        :param generate_chars: Return list of corresponding char objects.
+        :return: (result, label_parts, label_invalid_parts, chars), with:
+
+                 * result: True if the label is eligible according to the LGR,
+                           False otherwise.
+                 * label_parts: List of the code points valid in the LGR.
+                 * label_invalid_parts: List of (code point, rule_specs) not valid in the LGR, with:
+                    * rule_specs: None if code point is not in the repertoire, list of rule names that does not comply
+                                  for all characters starting with the code point.
+                 * chars: List of the LGR chars included in label
+        :raises RuleError: If rule is invalid.
+        """
         i = 0
         label_length = len(label)
 
@@ -1644,7 +1675,7 @@ class LGR(object):
 
                 i += len(char)
                 valid = True
-                rule_logger.debug("Code point '%s' in LGR", format_cp(cp))
+                rule_logger.debug("Code point '%s' in LGR", format_cp(char.cp))
                 label_parts += char.cp
                 chars.append(char)
                 break
@@ -1656,10 +1687,7 @@ class LGR(object):
                 label_invalid_parts.append((cp, pending_rules_not_in_lgr or None))
                 i += 1
 
-        if not generate_chars:
-            return result, label_parts, label_invalid_parts
-        else:
-            return result, label_parts, label_invalid_parts, chars
+        return result, label_parts, label_invalid_parts, chars if result else []
 
     def _test_label_disposition(self, label, apply_reflexive_mapping=True):
         """
@@ -2059,7 +2087,6 @@ class LGR(object):
                     var_disp = frozenset()
                 else:
                     var_disp = frozenset([var.type])
-
 
                 if len(label) > len(char):
                     # Generate variants for reminder of label
