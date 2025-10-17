@@ -1303,11 +1303,10 @@ class LGR(object):
                     variant_disp = DEFAULT_DISPOSITION
 
             if (variant_disp != INVALID_DISPOSITION):
-                    yield variant_cp, variant_disp, variant_invalid_parts, idx, disp_set, log_output.getvalue(), chars
+                yield variant_cp, variant_disp, variant_invalid_parts, idx, disp_set, log_output.getvalue(), chars
 
             if collect_log:
                 rule_logger.removeHandler(ch)
-
 
     def estimate_variant_number(self, label, hide_mixed_script_variants=False):
         """
