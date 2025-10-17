@@ -393,8 +393,8 @@ class LgrToolArgParser(argparse.ArgumentParser):
         self.add_argument('-r', '--rng', metavar='RNG',
                           help='RelaxNG XML schema')
 
-    def add_xml_meta(self):
-        self.add_argument('xml', metavar='XML')
+    def add_xml_meta(self, help=''):
+        self.add_argument('xml', metavar='XML', help=help)
 
     def parse_args(self, *args, **kwargs):
         if not self.args:

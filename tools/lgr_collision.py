@@ -35,8 +35,6 @@ def main():
     parser.add_common_args()
     parser.add_argument('-g', '--generate', action='store_true',
                         help='Generate variants')
-    parser.add_argument('-l', '--libs', metavar='LIBS',
-                        help='ICU libraries', required=True)
     parser.add_argument('-s', '--set', metavar='SET FILE',
                         help='Filepath to the set of reference labels',
                         required=True)
