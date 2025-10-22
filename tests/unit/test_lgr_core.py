@@ -855,6 +855,27 @@ class TestLGRCore(unittest.TestCase):
         self.assertEqual((0x062, 0x0069, 0x0075, 0x0065),
                          self.lgr.generate_index_label([0x044B, 0x045F, 0x0435], max_recursion=1))
 
+    def test_generate_index_label_sequence_and_rule(self):
+        self.lgr.add_cp([0x092F])
+        self.lgr.add_cp([0x093E])
+        self.lgr.add_cp([0x093E, 0x093C])
+        self.lgr.add_cp([0x093C])
+        self.lgr.add_cp([0x0941])
+        self.lgr.add_cp([0x097B])
+
+        self.lgr.add_variant([0x093E], [0x093E, 0x093C], not_when='Deva--followed-by-N')
+        self.lgr.add_variant([0x093E, 0x093C], [0x093E], not_when='Deva--followed-by-N')
+
+        rule = Rule(name='Deva--followed-by-N')
+        rule.add_child(AnchorMatcher())
+        look = LookAheadMatcher()
+        look.add_child(CharMatcher((0x093C,)))
+        rule.add_child(look)
+        self.lgr.add_rule(rule)
+
+        self.assertEqual((0x092F, 0x0941, 0x097B, 0x093E),
+                         self.lgr.generate_index_label([0x092F, 0x0941, 0x097B, 0x093E, 0x093C]))
+
     def test_generate_variant_dispositions(self):
         self.lgr.add_cp([0x0061])
         self.lgr.add_cp([0x0062])
@@ -896,26 +917,58 @@ class TestLGRCore(unittest.TestCase):
             ((0x0070, 0x0072, 0x0072), frozenset(['type0', 'type2']), True, [p, r, r]),
         ], self.lgr._generate_variant_dispositions([0x0061, 0x0062, 0x0062], [0x0070, 0x0072, 0x0072]))
 
-    def test_generate_index_label_sequence_and_rule(self):
-        self.lgr.add_cp([0x092F])
-        self.lgr.add_cp([0x093E])
-        self.lgr.add_cp([0x093E, 0x093C])
-        self.lgr.add_cp([0x093C])
-        self.lgr.add_cp([0x0941])
-        self.lgr.add_cp([0x097B])
 
-        self.lgr.add_variant([0x093E], [0x093E, 0x093C], not_when='Deva--followed-by-N')
-        self.lgr.add_variant([0x093E, 0x093C], [0x093E], not_when='Deva--followed-by-N')
+    def test_generate_variant_dispositions_sequence(self):
+        self.lgr.add_cp([0x0061])
+        self.lgr.add_cp([0x0062])
+        self.lgr.add_cp([0x0063])
+        self.lgr.add_cp([0x0061, 0x0062])
+        self.lgr.add_cp([0x0062, 0x0062])
+        self.lgr.add_cp([0x0070])
+        self.lgr.add_cp([0x0071])
+        self.lgr.add_cp([0x0072])
 
-        rule = Rule(name='Deva--followed-by-N')
-        rule.add_child(AnchorMatcher())
-        look = LookAheadMatcher()
-        look.add_child(CharMatcher((0x093C,)))
-        rule.add_child(look)
-        self.lgr.add_rule(rule)
+        a = self.lgr.get_char([0x0061])
+        b = self.lgr.get_char([0x0062])
+        ab = self.lgr.get_char([0x0061, 0x0062])
+        bb = self.lgr.get_char([0x0062, 0x0062])
 
-        self.assertEqual((0x092F, 0x0941, 0x097B, 0x093E),
-                         self.lgr.generate_index_label([0x092F, 0x0941, 0x097B, 0x093E, 0x093C]))
+        self.lgr.add_variant([0x0061], [0x0070], variant_type="type0")
+        self.lgr.add_variant([0x0062], [0x0071], variant_type="type1")
+        self.lgr.add_variant([0x0061, 0x0062], [0x0070], variant_type="type2")
+        self.lgr.add_variant([0x0062, 0x0062], [0x0071], variant_type="type3")
+        self.lgr.add_variant([0x0070], [0x0061], variant_type="type5")
+        self.lgr.add_variant([0x0071], [0x0062], variant_type="type6")
+        self.lgr.add_variant([0x0070], [0x0061, 0x0062], variant_type="type7")
+        self.lgr.add_variant([0x0071], [0x0062, 0x0062], variant_type="type8")
+
+        p = a.get_variant((0x0070,))[0]
+        q = b.get_variant((0x0071,))[0]
+
+        self.assertCountEqual([
+            ((0x0070, 0x0071), frozenset(['type2', 'type1']), True, [p, q]),
+            ((0x0070, 0x0071), frozenset(['type3', 'type0']), True, [p, q]),
+        ], self.lgr._generate_variant_dispositions([0x0061, 0x0062, 0x0062], [0x0070, 0x0071]))
+        self.assertCountEqual([
+            ((0x0061, 0x0062, 0x0062), frozenset(['type7', 'type6']), True, [ab, b]),
+            ((0x0061, 0x0062, 0x0062), frozenset(['type5', 'type8']), True, [a, bb]),
+        ], self.lgr._generate_variant_dispositions([0x0070, 0x0071], [0x0061, 0x0062, 0x0062]))
+
+
+    def test_generate_variant_dispositions_reflexive(self):
+        self.lgr.add_cp([0x0061])
+        self.lgr.add_cp([0x0062])
+
+        a = self.lgr.get_char([0x0061])
+        b = self.lgr.get_char([0x0062])
+
+        self.lgr.add_variant([0x0061], [0x0061], variant_type="type0")
+
+        vara = a.get_variant((0x0061,))[0]
+
+        self.assertCountEqual([
+            ((0x0061, 0x0062, 0x0061), frozenset(['type0']), False, [vara, b, vara]),
+        ], self.lgr._generate_variant_dispositions([0x0061, 0x0062, 0x0061], [0x0061, 0x0062, 0x0061]))
 
 
 

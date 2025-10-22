@@ -8,6 +8,7 @@ import collections
 import logging
 from collections import OrderedDict
 from io import StringIO
+from typing import Optional, Iterator
 
 from lgr.action import Action
 from lgr.char import CharBase, CharSequence, Repertoire
@@ -75,9 +76,12 @@ MAX_NUMBER_GENERATED_VARIANTS = 1000
 # From RFC1035, 2.3.4 Size limits
 PROTOCOL_LABEL_MAX_LENGTH = 63
 
+Label = tuple[int] | list[int]
+InvalidLabelParts = list[tuple[int, None | list[str]]] | None
+LabelPartition = list[CharBase]
 
 
-class LGR(object):
+class LGR:
     """
     The main LGR object.
     """
@@ -1019,8 +1023,8 @@ class LGR(object):
         self.classes_lookup[cls.name] = cls
         self.classes.append(cls.name)
 
-    # TODO get rid of generate_chars and always return them
-    def test_label_eligible(self, label, is_variant=False, collect_log=True, generate_chars=False):
+    def test_label_eligible(self, label: Label, is_variant=False, collect_log=True) -> tuple[
+        bool, Label, InvalidLabelParts, str, int, str, LabelPartition]:
         """
         Test label eligibility against an LGR.
 
@@ -1030,7 +1034,7 @@ class LGR(object):
         :param label: The label to test, as an array of codepoints.
         :param is_variant: Whether we are testing a variant label eligibility.
         :param collect_log: If False, do not collect rule processing log.
-        :return: (result, label_parts, label_invalid_parts, disposition, action_idx, log)
+        :return: (result, label_parts, label_invalid_parts, disposition, action_idx, log, chars)
                  with:
 
                      - result: True if the label is eligible according to the LGR,
@@ -1043,7 +1047,7 @@ class LGR(object):
                                    -1 if the label is not in the LGR.
                      - log: Log of the disposition computation,
                             empty if collect_log is False
-                     - chars: List of the LGR chars included in label (as a CharBase class) if generate_chars is True
+                     - chars: List of the LGR chars included in label (as a CharBase class) (TODO: it returns only one chars partition)
         """
         if not label:
             raise LGRApiInvalidParameter('label')
@@ -1061,10 +1065,7 @@ class LGR(object):
             rule_logger.error("Label '%s' is not in the LGR", format_cp(label))
             if collect_log:
                 rule_logger.removeHandler(ch)
-            if generate_chars:
-                return False, label_parts, label_invalid_parts, INVALID_DISPOSITION, -1, log_output.getvalue(), chars
-            else:
-                return False, label_parts, label_invalid_parts, INVALID_DISPOSITION, -1, log_output.getvalue()
+            return False, label_parts, label_invalid_parts, INVALID_DISPOSITION, -1, log_output.getvalue(), chars
 
         # Compute label disposition by analyzing reflexive mappings
         (disposition, action_idx) = self._test_label_disposition(label, apply_reflexive_mapping=not is_variant)
@@ -1073,26 +1074,23 @@ class LGR(object):
                               "triggered by action #%d", action_idx)
             if collect_log:
                 rule_logger.removeHandler(ch)
-            if generate_chars:
-                return False, [], [], disposition, action_idx, log_output.getvalue(), chars
-            else:
-                return False, [], [], disposition, action_idx, log_output.getvalue()
+            return False, [], [], disposition, action_idx, log_output.getvalue(), chars
 
         if collect_log:
             rule_logger.removeHandler(ch)
-        if generate_chars:
-            return True, label, [], disposition, action_idx, log_output.getvalue(), chars
-        else:
-            return True, label, [], disposition, action_idx, log_output.getvalue()
+        return True, label, [], disposition, action_idx, log_output.getvalue(), chars
 
-    def compute_label_disposition(self, label, include_invalid=False,
+    def compute_label_disposition(self, label: tuple[int], include_invalid=False,
                                   collect_log=True, hide_mixed_script_variants=False,
-                                  with_labels=None, generate_chars=False):
+                                  with_labels=None, generate_chars=False) -> Iterator[tuple[
+        tuple[int], str | None, InvalidLabelParts, int, set[str] | None, str, Optional[LabelPartition]]]:
         """
         Given a label, compute its disposition and its variants.
 
         The original label (unpermuted or with reflexive variants) will be the
         last label returned.
+
+        When generate_chars is True, you may get duplicated variants with different partitions.
 
         :param label: The label to compute the disposition of,
                       as a sequence of code points.
@@ -1103,6 +1101,7 @@ class LGR(object):
         :param collect_log: If False, do not collect rule processing log.
         :param hide_mixed_script_variants: Whether we hide mixed scripts variants.
         :param with_labels: Compute disposition of selected labels only, all if None
+        :param generate_chars: Whether we should return the char of the variants.
         :return: Generator of (variant_cp, variant_invalid_parts, disp, action_idx, disp_set, log[, chars])
                  with:
                      - variant_cp: The code point sequence of a variant.
@@ -1144,37 +1143,11 @@ class LGR(object):
             if not generate_chars and variant_cp in already_handled:
                 continue
 
-            # TODO we may have another method that doesn't retrieve all variants then loop to
-            # find with_labels, but only loop on the labels in with_labels, and ensure they
-            # share the same index for sanity checking
             if with_labels and variant_cp not in with_labels:
                 continue
             already_handled.add(variant_cp)
-            # Configure log system to redirect logs to local attribute
-            log_output = StringIO()
-            if collect_log:
-                ch = logging.StreamHandler(log_output)
-                ch.setLevel(logging.DEBUG)
-                rule_logger.addHandler(ch)
-
-            # 8.3.  Determining a Disposition for a Label or Variant Label
-            # Step 1
-            eligible, _, variant_invalid_parts, _, idx, _ = self.test_label_eligible(variant_cp,
-                                                                                     is_variant=variant_cp != label,
-                                                                                     collect_log=collect_log)
-            if not eligible:
-                variant_disp = INVALID_DISPOSITION
-            else:
-                # 8.3.  Determining a Disposition for a Label or Variant Label
-                # Step 2 - 3
-                (variant_disp, idx) = self._apply_actions(variant_cp,
-                                                          disp_set,
-                                                          only_variants)
-
-                if variant_disp is None:
-                    # 8.3.  Determining a Disposition for a Label or Variant Label
-                    # Step 4
-                    variant_disp = DEFAULT_DISPOSITION
+            variant_disp, variant_invalid_parts, idx, log_output = self._check_label_disp(label, variant_cp, disp_set,
+                                                                                          only_variants, collect_log)
 
             if (variant_disp != INVALID_DISPOSITION) or include_invalid:
                 if variant_cp == label:
@@ -1189,22 +1162,47 @@ class LGR(object):
                     else:
                         yield variant_cp, variant_disp, variant_invalid_parts, idx, disp_set, log_output.getvalue()
 
-            if collect_log:
-                rule_logger.removeHandler(ch)
 
         if not original_label:
-            # TODO: already computed since label MUST be eligible
             rule_logger.debug('Add original label')
+            _, _, _, disposition, action_idx, log, chars = self.test_label_eligible(label, collect_log=collect_log)
             if generate_chars:
-                _, _, _, disposition, action_idx, log, chars = self.test_label_eligible(label, collect_log=collect_log,
-                                                                                        generate_chars=generate_chars)
                 original_label = label, disposition, None, action_idx, set(), log, chars
             else:
-                _, _, _, disposition, action_idx, log = self.test_label_eligible(label, collect_log=collect_log,
-                                                                                 generate_chars=generate_chars)
                 original_label = label, disposition, None, action_idx, set(), log
 
         yield original_label
+
+    def _check_label_disp(self, label: Label, variant_cp: Label, disp_set: set[str], only_variants: bool,
+                          collect_log: bool) -> tuple[str | None, InvalidLabelParts, int, StringIO]:
+        # Configure log system to redirect logs to local attribute
+        log_output = StringIO()
+        if collect_log:
+            ch = logging.StreamHandler(log_output)
+            ch.setLevel(logging.DEBUG)
+            rule_logger.addHandler(ch)
+
+        # 8.3.  Determining a Disposition for a Label or Variant Label
+        # Step 1
+        # TODO we should test_label_eligible with chars as input here since we have a partition in the loop above
+        eligible, _, variant_invalid_parts, _, idx, _, _ = self.test_label_eligible(variant_cp,
+                                                                                    is_variant=variant_cp != label,
+                                                                                    collect_log=collect_log)
+        if not eligible:
+            variant_disp = INVALID_DISPOSITION
+        else:
+            # 8.3.  Determining a Disposition for a Label or Variant Label
+            # Step 2 - 3
+            (variant_disp, idx) = self._apply_actions(variant_cp, disp_set, only_variants)
+
+            if variant_disp is None:
+                # 8.3.  Determining a Disposition for a Label or Variant Label
+                # Step 4
+                variant_disp = DEFAULT_DISPOSITION
+
+        if collect_log:
+            rule_logger.removeHandler(ch)
+        return variant_disp, variant_invalid_parts, idx, log_output
 
     def compute_label_disposition_summary(self, label, include_invalid=False, hide_mixed_script_variants=False):
         """
@@ -1239,7 +1237,9 @@ class LGR(object):
                                        in label_dispositions])
         return summary, label_dispositions
 
-    def compute_variant_disposition(self, label, variant, collect_log=True):
+    def compute_variant_disposition(self, label: Label, variant: tuple[int],
+                                    collect_log: bool = False) -> Iterator[tuple[
+        tuple[int], str, InvalidLabelParts, int, set[str], str, LabelPartition]]:
         """
         Given a label and its variant, compute the variant dispositions.
 
@@ -1282,31 +1282,11 @@ class LGR(object):
         variant_set = self._generate_variant_dispositions(label, variant)
 
         for (variant_cp, disp_set, only_variants, chars) in variant_set:
-            # Configure log system to redirect logs to local attribute
-            log_output = StringIO()
-            if collect_log:
-                ch = logging.StreamHandler(log_output)
-                ch.setLevel(logging.DEBUG)
-                rule_logger.addHandler(ch)
-
-            eligible, _, variant_invalid_parts, _, idx, _ = self.test_label_eligible(variant_cp,
-                                                                                     is_variant=True,
-                                                                                     collect_log=collect_log)
-            if not eligible:
-                variant_disp = INVALID_DISPOSITION
-            else:
-                (variant_disp, idx) = self._apply_actions(variant_cp,
-                                                          disp_set,
-                                                          only_variants)
-
-                if variant_disp is None:
-                    variant_disp = DEFAULT_DISPOSITION
-
-            if (variant_disp != INVALID_DISPOSITION):
+            variant_disp, variant_invalid_parts, idx, log_output = self._check_label_disp(label, variant_cp, disp_set,
+                                                                                          only_variants, collect_log)
+            if variant_disp != INVALID_DISPOSITION:
                 yield variant_cp, variant_disp, variant_invalid_parts, idx, disp_set, log_output.getvalue(), chars
 
-            if collect_log:
-                rule_logger.removeHandler(ch)
 
     def estimate_variant_number(self, label, hide_mixed_script_variants=False):
         """
@@ -1346,7 +1326,7 @@ class LGR(object):
                 variant_number *= len(vars_excl_reflexive(char)) + 1  # Take into account original code point
         return variant_number
 
-    def generate_index_label(self, label, max_recursion=0):
+    def generate_index_label(self, label: Label, max_recursion=0) -> tuple[int]:
         """
         Generate the "index label" of a given label.
 
@@ -1412,7 +1392,7 @@ class LGR(object):
 
         return tuple(index_label)
 
-    def _generate_index_label_on_partition(self, chars):
+    def _generate_index_label_on_partition(self, chars: LabelPartition) -> tuple[int]:
         """
         Generate the "index label" for a list of chars.
 
@@ -1449,7 +1429,7 @@ class LGR(object):
 
         return tuple(index_label)
 
-    def _generate_label_partitions(self, label, prefix=None) -> list[list[CharBase]]:
+    def _generate_label_partitions(self, label: Label, prefix=None) -> list[LabelPartition]:
         """
         Retrieve all partitions of a given label.
 
@@ -1576,14 +1556,14 @@ class LGR(object):
         logger.debug('Populate LGR variants')
         return populate_lgr(self)
 
-    def _test_preliminary_eligibility(self, label: list[int]) -> tuple[bool, list[tuple[int]], list, list[CharBase]]:
+    def _test_preliminary_eligibility(self, label: Label) -> tuple[
+        bool, list[int], InvalidLabelParts, LabelPartition]:
         """
         Test label eligibility against an LGR.
 
         A label is eligible if each of its code point is in the LGR.
 
         :param label: The label to test, as an array of codepoints.
-        :param generate_chars: Return list of corresponding char objects.
         :return: (result, label_parts, label_invalid_parts, chars), with:
 
                  * result: True if the label is eligible according to the LGR,
@@ -1603,7 +1583,8 @@ class LGR(object):
         else:
             return self._retrieve_invalid_label_parts(label)
 
-    def _retrieve_valid_label_parts(self, partitions: list[list[CharBase]]) -> tuple[bool, list[tuple[int]], list, list[CharBase]]:
+    def _retrieve_valid_label_parts(self, partitions: list[LabelPartition]) -> tuple[
+        bool, list[int], list, LabelPartition]:
         label_parts = []
         chars = []
 
@@ -1613,7 +1594,8 @@ class LGR(object):
             chars.append(char)
         return True, label_parts, [], chars
 
-    def _retrieve_invalid_label_parts(self, label) -> tuple[bool, list[tuple[int]], list, list[CharBase]]:
+    def _retrieve_invalid_label_parts(self, label) -> tuple[
+        bool, list[int], InvalidLabelParts, LabelPartition]:
         """
         Extract valid and invalid parts from an invalid label.
 
@@ -1688,12 +1670,14 @@ class LGR(object):
 
         return result, label_parts, label_invalid_parts, chars if result else []
 
-    def _test_label_disposition(self, label, apply_reflexive_mapping=True):
+    def _test_label_disposition(self, label: Label, apply_reflexive_mapping=True) -> tuple[str | None, int]:
         """
         Compute the final disposition of a label.
 
         This function iterates through the reflexive variants of a label,
         collects the disposition types, and apply the defined actions.
+
+        TODO: this computes the disposition for one partition
 
         :param label: Input label to test.
                       Must have passed the 'preliminary' eligibility test.
@@ -1770,7 +1754,8 @@ class LGR(object):
 
         return self._apply_actions(label, disp_set, only_variants)
 
-    def _get_prefix_list(self, label, label_prefix):
+    # TODO refactors other with this (see where we use get_chars_from_prefix)
+    def _get_prefix_list(self, label: Label, label_prefix: tuple[int]) -> LabelPartition:
         """
         Generate the list of characters with same prefix.
 
@@ -1783,8 +1768,7 @@ class LGR(object):
         :return: list of valid prefix characters.
         """
         prefix_list = []
-        for prefix in self.repertoire.get_chars_from_prefix(label[0],
-                                                            only_variants=True):
+        for prefix in self.repertoire.get_chars_from_prefix(label[0]):
             # Ensure prefix is valid for label
             if not prefix.is_prefix_of(label):
                 continue
@@ -1796,9 +1780,7 @@ class LGR(object):
             prefixed_label = label_prefix + prefix.cp + tuple(label[len(prefix):])
 
             # Test when/not-when rules on prefixed_label
-            if not self._test_context_rules(prefix,
-                                            prefixed_label,
-                                            len(label_prefix)):
+            if not self._test_context_rules(prefix, prefixed_label, len(label_prefix)):
                 rule_logger.debug('No context rule')
                 continue
 
@@ -1806,11 +1788,12 @@ class LGR(object):
 
         return prefix_list
 
-    def _generate_label_variants(self, label,
+    def _generate_label_variants(self, label: Label,
                                  orig_label=None, label_prefix=None,
                                  has_variant=False,
                                  mixed_script_filter: BaseMixedScriptsVariantFilter = None,
-                                 hide_mixed_script_variants=False):
+                                 hide_mixed_script_variants=False) -> Iterator[
+        tuple[tuple[int], set[str], bool, LabelPartition]]:
         """
         Generate a list of all the variants for a given label.
 
@@ -1863,34 +1846,8 @@ class LGR(object):
         if hide_mixed_script_variants and not mixed_script_filter:
             mixed_script_filter = MixedScriptsVariantFilter(label, self.repertoire, unidb=self._unicode_database)
 
-        try:
-            same_prefix = self._get_prefix_list(label, label_prefix)
-        except NotInLGR:
-            rule_logger.debug('Char is not in LGR,'
-                              'assume we are handling a sequence')
-            # This is not an error: we might be handling code points
-            # belonging to a sequence which is being decomposed by the
-            # variant generation process.
-            # The sequence is part of the LGR,
-            # but not the individual code points.
-            same_prefix = []
-        else:
-            if len(same_prefix) == 0:
-                # No code point in LGR with variants,
-                # stick to first one found (longest in label)
-                for cp in self.repertoire.get_chars_from_prefix(label[0]):
-                    if cp.is_prefix_of(label):
-                        same_prefix = [cp]
-                        break
-
-        for char in [ch for ch in same_prefix if isinstance(ch, CharSequence)]:
-            # char is a sequence, if first code point of the sequence is in the LGR we need to consider it
-            for cp in self.repertoire.get_chars_from_prefix(label[0]):
-                if len(cp) < len(char) and cp.is_prefix_of(label):
-                    same_prefix.append(cp)
-
         # Iterate through characters matching the start of the label
-        for char in same_prefix:
+        for char in self._list_label_prefixes(label, label_prefix):
             rule_logger.debug("Char %s", format_cp(char.cp))
 
             has_reflexive_mapping = False
@@ -1973,26 +1930,40 @@ class LGR(object):
                 for (char_perm, disp, is_variant, chars) in char_perms:
                     yield char_perm.cp, disp, is_variant, [char_perm]
 
-    def _generate_variant_dispositions(self, label, variant, label_prefix=None, has_variant=False):
+    def _list_label_prefixes(self, label: Label, label_prefix: tuple[int]) -> LabelPartition:
+        try:
+            same_prefix = self._get_prefix_list(label, label_prefix)
+        except NotInLGR:
+            rule_logger.debug('Char is not in LGR,'
+                              'assume we are handling a sequence')
+            # This is not an error: we might be handling code points
+            # belonging to a sequence which is being decomposed by the
+            # variant generation process.
+            # The sequence is part of the LGR,
+            # but not the individual code points.
+            same_prefix = []
+        else:
+            if len(same_prefix) == 0:
+                # No code point in LGR with variants,
+                # stick to first one found (longest in label)
+                for cp in self.repertoire.get_chars_from_prefix(label[0]):
+                    if cp.is_prefix_of(label):
+                        same_prefix = [cp]
+                        break
+
+        return same_prefix
+
+    def _generate_variant_dispositions(self, label: Label, variant: Label, label_prefix=None) -> \
+            Iterator[tuple[tuple[int], set[str], bool, LabelPartition]]:
         """
-        Generate a list of all the variants for a given label.
+        Generate dispositions for a variant of a given label
 
-        Takes a label as input, and output the _variants_ of the label.
-        If there is no code point with at least one variant defined,
-        then the output is empty.
-        Output may contain the reflexive variant of a label, if any reflexive
-        mapping is defined and valid in the label context.
+        Takes a label and variant as input, and output the dispositions of the variant.
+        If variant is not a variant of the input label, then the output is empty.
 
-        :param label: The label to generate the variants of,
-                      as a sequence of code points.
-        :param orig_label: The full original label,
-                           used when evaluating when/not-when rules
-                           (used for recursion).
+        :param label: The primary label as a sequence of code points.
+        :param variant: The variant of the primary label as a sequence of code points
         :param label_prefix: The prefix of the label (used for recursion).
-        :param has_variant: True if the prefix has at least one variant
-                            (used for recursion).
-        :param mixed_script_filter: Filter for mixed script (used for recursion).
-        :param hide_mixed_script_variants: Whether we hide mixed scripts variants.
         :return: A generator of (variant_cp, variant_disp, only_variants, chars),
                  with:
 
@@ -2017,43 +1988,16 @@ class LGR(object):
         label = tuple(label)
         variant = tuple(variant)
 
-        try:
-            same_prefix = self._get_prefix_list(label, label_prefix)
-        except NotInLGR:
-            rule_logger.debug('Char is not in LGR,'
-                              'assume we are handling a sequence')
-            # This is not an error: we might be handling code points
-            # belonging to a sequence which is being decomposed by the
-            # variant generation process.
-            # The sequence is part of the LGR,
-            # but not the individual code points.
-            same_prefix = []
-        else:
-            if len(same_prefix) == 0:
-                # No code point in LGR with variants,
-                # stick to first one found (longest in label)
-                for cp in self.repertoire.get_chars_from_prefix(label[0]):
-                    if cp.is_prefix_of(label):
-                        same_prefix = [cp]
-                        break
-
-        for char in [ch for ch in same_prefix if isinstance(ch, CharSequence)]:
-            # char is a sequence, if first code point of the sequence is in the LGR we need to consider it
-            for cp in self.repertoire.get_chars_from_prefix(label[0]):
-                if len(cp) < len(char) and cp.is_prefix_of(label):
-                    same_prefix.append(cp)
-
         # Iterate through characters matching the start of the label
-        for char in same_prefix:
+        for char in self._list_label_prefixes(label, label_prefix):
             rule_logger.debug("Char %s", format_cp(char.cp))
 
-            if char.is_prefix_of(variant):
-                # variant and char have same characters
+            if char.is_prefix_of(variant) and not char.get_variant(char.cp):
+                # variant and char have same characters, and variant has no reflexive mapping
                 if len(label) > len(char):
                     for (perm_cps, perm_disp, _, perm_chars) in \
                             self._generate_variant_dispositions(label[len(char):], variant[len(char):],
-                                                                label_prefix=label_prefix + label[:len(char)],
-                                                                has_variant=has_variant):
+                                                                label_prefix=label_prefix + label[:len(char)]):
                         yield char.cp + perm_cps, perm_disp, False, [char] + perm_chars
                 else:
                     yield char.cp, frozenset(), False, [char]
@@ -2065,7 +2009,7 @@ class LGR(object):
                         continue
                 except NotInLGR:
                     # LGR is not valid
-                    rule_logger.error("Invalid LGR: variant %s is not par of repertoire", format_cp(var.cp))
+                    rule_logger.error("Invalid LGR: variant %s is not part of repertoire", format_cp(var.cp))
                     raise
 
                 rule_logger.debug("Variant %s", format_cp(var.cp))
@@ -2087,13 +2031,12 @@ class LGR(object):
                 else:
                     var_disp = frozenset([var.type])
 
-                if len(label) > len(char):
+                if len(label) > len(char) or len(variant) > len(var_char):
                     # Generate variants for reminder of label
                     for (perm_cps, perm_disp, perm_only_variants, perm_chars) in \
                             self._generate_variant_dispositions(label[len(char):],
                                                                 variant[len(var_char):],
-                                                                label_prefix=label_prefix + var.cp,
-                                                                has_variant=True):
+                                                                label_prefix=label_prefix + var.cp):
                         yield (var.cp + perm_cps,
                                # Construct new set of types
                                perm_disp | var_disp,
@@ -2102,7 +2045,7 @@ class LGR(object):
                 else:
                     yield var.cp, var_disp, True, [var]
 
-    def _apply_actions(self, label, disp_set, only_variants):
+    def _apply_actions(self, label, disp_set, only_variants) -> tuple[str | None, int]:
         """
         Apply the defined action of an LGR to a label and its dispositions.
 
@@ -2126,7 +2069,7 @@ class LGR(object):
                              action_list.index(action), action)
             disp = action.apply(label, disp_set, only_variants,
                                 self.rules_lookup, self.classes_lookup,
-                                self._unicode_database, )
+                                self._unicode_database)
             if disp is not None:
                 rule_logger.info("Action %d (%s) triggered",
                                  action_list.index(action),

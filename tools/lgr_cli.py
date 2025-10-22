@@ -23,7 +23,7 @@ def check_label(lgr, label, invalid, test):
 
     logger.info("- Code points: %s", label_display)
 
-    (eligible, label_parts, label_invalid_parts, disp, action_idx, logs) = lgr.test_label_eligible(label_cp)
+    (eligible, label_parts, label_invalid_parts, disp, action_idx, logs, _) = lgr.test_label_eligible(label_cp)
     logger.info("- Eligible: %s", eligible)
     logger.info("- Disposition: %s", disp)
     is_default_action = action_idx > len(lgr.actions)
