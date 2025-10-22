@@ -449,7 +449,7 @@ class WholeLabelEvaluationRulesCheck:
         return is_language
 
     def test_label(self, label):
-        result, a, b, c, d, e = self.idn_table.test_label_eligible(label)
+        result, _, _, _, _, _, _ = self.idn_table.test_label_eligible(label)
         return result
 
     def additional_cp_report(self) -> List[Dict]:

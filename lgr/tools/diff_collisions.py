@@ -110,7 +110,7 @@ def _generate_indexes(lgr, labels: List, tlds=None, keep=False, quiet=False, cac
                  variant_disp,
                  variant_invalid_parts,
                  action_idx, _,
-                 log) in lgr.compute_label_disposition(label_cp,
+                 log) in lgr.compute_label_disposition(label_cp,  # TODO replace with compute_variant_disposition in a loop when using with_labels
                                                        include_invalid=True,
                                                        collect_log=not quiet,
                                                        with_labels=[l['cp'] for l in primaries] if not keep else None):
