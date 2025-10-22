@@ -1442,23 +1442,13 @@ class LGR:
         :return: A list of label partitions, as lists of chars. An empty list if label in invalid.
         """
         all_partitions = []
-        cp = label[0]
         prefix = prefix or ()
-        original_label = prefix + tuple(label)
 
-        try:
-            char_list = self.repertoire.get_chars_from_prefix(cp)
-        except NotInLGR:
-            return []
-
-        for char in char_list:
-            if not char.is_prefix_of(label):
-                continue
-            if not self._test_context_rules(char, original_label, len(prefix)):
-                # As per Root Zone Label Generation Rules (RZ LGR-6) Overview and Summary, section 5.5.4, step 2.b,
-                # "Further evaluation is skipped for any [partition] that have a code point context rule and do not
-                #  satisfy that rule for the input label at that location."
-                continue
+        # As per Root Zone Label Generation Rules (RZ LGR-6) Overview and Summary, section 5.5.4, step 2.b,
+        # "Further evaluation is skipped for any [partition] that have a code point context rule and do not
+        #  satisfy that rule for the input label at that location."
+        # This is done in _list_label_prefixes
+        for char in self._list_label_prefixes(label, prefix):
             if len(label) > len(char):
                 partitions = self._generate_label_partitions(label[len(char):], prefix=prefix + char.cp)
                 if not partitions:
@@ -1754,8 +1744,7 @@ class LGR:
 
         return self._apply_actions(label, disp_set, only_variants)
 
-    # TODO refactors other with this (see where we use get_chars_from_prefix)
-    def _get_prefix_list(self, label: Label, label_prefix: tuple[int]) -> LabelPartition:
+    def _get_prefix_list(self, label: Label, label_prefix: tuple[int]) -> list[CharBase]:
         """
         Generate the list of characters with same prefix.
 
@@ -1766,6 +1755,7 @@ class LGR:
         :param label: The label to generate the variants of.
         :param label_prefix: The prefix of the label.
         :return: list of valid prefix characters.
+        :raises: NotInLGR when no char or sequence begins with label's first cp
         """
         prefix_list = []
         for prefix in self.repertoire.get_chars_from_prefix(label[0]):
@@ -1930,26 +1920,17 @@ class LGR:
                 for (char_perm, disp, is_variant, chars) in char_perms:
                     yield char_perm.cp, disp, is_variant, [char_perm]
 
-    def _list_label_prefixes(self, label: Label, label_prefix: tuple[int]) -> LabelPartition:
+    def _list_label_prefixes(self, label: Label, label_prefix: tuple[int]) -> list[CharBase]:
         try:
             same_prefix = self._get_prefix_list(label, label_prefix)
         except NotInLGR:
-            rule_logger.debug('Char is not in LGR,'
-                              'assume we are handling a sequence')
+            rule_logger.debug('Char is not in LGR, assume we are handling a sequence')
             # This is not an error: we might be handling code points
             # belonging to a sequence which is being decomposed by the
             # variant generation process.
             # The sequence is part of the LGR,
             # but not the individual code points.
             same_prefix = []
-        else:
-            if len(same_prefix) == 0:
-                # No code point in LGR with variants,
-                # stick to first one found (longest in label)
-                for cp in self.repertoire.get_chars_from_prefix(label[0]):
-                    if cp.is_prefix_of(label):
-                        same_prefix = [cp]
-                        break
 
         return same_prefix
 
