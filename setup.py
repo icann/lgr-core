@@ -32,6 +32,15 @@ setup(
     long_description=open('README.md', encoding='utf-8').read(),
     license="BSD",
     install_requires=['lxml', 'language-tags', 'pycountry', 'munidata', 'picu'],
+    classifiers=[
+        "Operating System :: OS Independent",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
+        "Topic :: Software Development :: Libraries"
+    ],
+    python_requires='>=3.10',
     packages=find_packages(),
     scripts=[
         'tools/lgr_cli.py',
@@ -53,14 +62,5 @@ setup(
     ],
     tests_require=['idna', 'pytest', 'pytest-cov'],
     cmdclass={'test': PyTest},
-    classifiers=[
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10',
-        'Topic :: Software Development :: Libraries'
-    ]
+
 )

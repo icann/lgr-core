@@ -10,42 +10,9 @@ This library was implemented by Viagenie (Julien Bernard, Michel Bernier, Guilla
 Marc Blanchet, Vincent Gonzalez, Audric Schiltknecht and Alexandre Taillon-Desrochers) 
 and Wil Tan on an ICANN contract.
 
-
-
-## License
-
-Copyright (c) 2015-2020 Internet Corporation for Assigned Names and
-Numbers (“ICANN”). All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-
-    * Neither the name of the ICANN nor the names of its contributors
-      may be used to endorse or promote products derived from this
-      software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY ICANN AND CONTRIBUTORS ``AS IS'' AND ANY
-EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL ICANN OR CONTRIBUTORS BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
-THE POSSIBILITY OF SUCH DAMAGE.
-
 ## Pre-Requisites
 
-* Python 3.6 and above
+* Python 3.10 and above
 * [LibXML2](http://www.xmlsoft.org/) [MIT License] used by the lxml Python bindings
 
 ### Python Dependencies
@@ -127,8 +94,8 @@ Other tools are available to manipulate LGR files and labels:
 
 Tests and coverage report can be run as follows:
 
-	(venv) $ pip install pytest pytest-cov
-	(venv) $ ./runtests.sh
+	(venv) $ pip install tox
+	(venv) $ tox
 
 Open `htmlcov/index.html` in a web browser for the coverage report.
 

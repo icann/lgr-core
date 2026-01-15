@@ -53,7 +53,6 @@
 - Add some new relevant information in IDN table reviews
 - Code cleaning
 
-
 ## 5.0.1 (2022-11-21)
 ### Fixes
 - Fix collision tools
