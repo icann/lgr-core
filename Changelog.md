@@ -1,5 +1,20 @@
 # Changelog for lgr-core
 
+## 7.0.0 (2026-01-15)
+### New features
+- Add support for Python 3.11 and 3.12
+- Drop support for Python 3.6, 3.7, 3.8 and 3.9
+- Add a method to compute a specific variant disposition without enumerating others 
+- Add index computation tool
+
+### Fixes
+- Fix the wrong description in test_label_eligible() for apply_reflexive_mapping
+- Fix sequences management in MixedScriptsVariantFilter
+- Skip generating label index if no label provided
+- Fix get_rz_label_script() to return the script from other characters when the label starts with characters from Common script
+- Handle specific case with U+3006 and U+30FC in get_rz_label_script()
+- Various fixes on index computation, mainly with sequences
+
 ## 6.1.3 (2025-08-01)
 ### New features
 - Made some test utilities available for use
