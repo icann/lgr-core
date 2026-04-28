@@ -1083,7 +1083,7 @@ class LGR:
     def compute_label_disposition(self, label: tuple[int], include_invalid=False,
                                   collect_log=True, hide_mixed_script_variants=False,
                                   with_labels=None, generate_chars=False) -> Iterator[tuple[
-        tuple[int], str | None, InvalidLabelParts, int, set[str] | None, str, Optional[LabelPartition]]]:
+        tuple[int], str, InvalidLabelParts, int, set[str] | None, str, Optional[LabelPartition]]]:
         """
         Given a label, compute its disposition and its variants.
 
@@ -1174,7 +1174,7 @@ class LGR:
         yield original_label
 
     def _check_label_disp(self, label: Label, variant_cp: Label, disp_set: set[str], only_variants: bool,
-                          collect_log: bool) -> tuple[str | None, InvalidLabelParts, int, StringIO]:
+                          collect_log: bool) -> tuple[str, InvalidLabelParts, int, StringIO]:
         # Configure log system to redirect logs to local attribute
         log_output = StringIO()
         if collect_log:

@@ -369,8 +369,11 @@ class XMLParser(LGRParser):
             self._parse_rule_helper(child, rule)
         
         if self._unicode_database:
-            rule.precalculate_patterns(self._lgr.rules_lookup, self._lgr.classes_lookup,
-                                    self._unicode_database)
+            try :
+                rule.precalculate_patterns(self._lgr.rules_lookup, self._lgr.classes_lookup,
+                                        self._unicode_database)
+            except Exception as e:
+                logger.warning("Cannot precompute patterns for rule %s: %s", rule.name, e)
 
         return rule
 
