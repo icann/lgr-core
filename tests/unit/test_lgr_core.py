@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import types
 import unittest
 
+from lgr.core import IndexComputationAlgorithm
 from lgr.char import Char, RangeChar
 from lgr.classes import TAG_CLASSNAME_PREFIX
 from lgr.core import LGR
@@ -522,7 +523,6 @@ class TestLGRCore(unittest.TestCase):
         self.assertEqual(self.lgr._test_preliminary_eligibility([0x0061, 0x0062, 0x0063, 0x0064]),
                          (True, [0x0061, 0x0062, 0x0063, 0x0064], [], [abc, d]))
 
-
     def test_label_eligibility_invalid_code_point_in_sequence(self):
         self.lgr.add_cp([0x0061])
         self.lgr.add_cp([0x0065])
@@ -535,7 +535,6 @@ class TestLGRCore(unittest.TestCase):
 
         self.assertEqual(self.lgr._test_preliminary_eligibility([0x0061, 0x0065, 0x0331, 0x006B]),
                          (True, [0x0061, 0x0065, 0x0331, 0x006B], [], [a, e_, k]))
-
 
     def test_label_delayed_eligibilty(self):
         self.lgr.add_cp([0x0061])
@@ -855,6 +854,105 @@ class TestLGRCore(unittest.TestCase):
         self.assertEqual((0x062, 0x0069, 0x0075, 0x0065),
                          self.lgr.generate_index_label([0x044B, 0x045F, 0x0435], max_recursion=1))
 
+
+    def test_generate_index_label_different_algos1(self):
+        self.lgr.add_cp([0x0061])
+        self.lgr.add_cp([0x0062])
+        self.lgr.add_cp([0x0063])
+        self.lgr.add_cp([0x0064])
+        self.lgr.add_cp([0x0065])
+        self.lgr.add_cp([0x0066])
+        self.lgr.add_cp([0x0067])
+        self.lgr.add_cp([0x0030])
+        self.lgr.add_cp([0x0031])
+        self.lgr.add_cp([0x0061, 0x0062, 0x0063])
+        self.lgr.add_cp([0x0062, 0x0063])
+        self.lgr.add_cp([0x0062, 0x0063, 0x0064, 0x0065])
+        self.lgr.add_cp([0x0064, 0x0065, 0x0066])
+
+        self.lgr.add_variant([0x0062, 0x0063], [0x0062])
+        self.lgr.add_variant([0x0062], [0x0062, 0x0063])
+        self.lgr.add_variant([0x0061, 0x0062, 0x0063], [0x0030])
+        self.lgr.add_variant([0x0030], [0x0061, 0x0062, 0x0063])
+        self.lgr.add_variant([0x0062, 0x0063, 0x0064, 0x0065], [0x0031])
+        self.lgr.add_variant([0x0031], [0x0062, 0x0063, 0x0064, 0x0065])
+        self.lgr.add_variant([0x0064, 0x0065, 0x0066], [0x0065])
+        self.lgr.add_variant([0x0065], [0x0064, 0x0065, 0x0066])
+
+        # partitions are {b}{c}{d} and {b,c}{d}, with possible indexes {b}{c}{d} and {b}{d}, however,
+        # {b}{c}{d} is lower in code point order
+        self.assertEqual((0x0062, 0x0063, 0x0064),
+                         self.lgr.generate_index_label([0x0062, 0x0063, 0x0064]))
+        # using non-default algorithm, {b,c}{d} is the partition with less char and longest char,
+        # and also has shortest index
+        for algo in [i for i in IndexComputationAlgorithm if i != IndexComputationAlgorithm.DEFAULT]:
+            self.assertEqual((0x0062, 0x0064),
+                             self.lgr.generate_index_label([0x0062, 0x0063, 0x0064],
+                                                           algo=algo))
+
+        # here partition for overall lowest index is {a b c}{d}{e}{f}{g},
+        # and lowest index is achieved when using variant {d e f} of {e}
+        self.assertEqual((0x0030, 0x0064, 0x0064, 0x0065, 0x0066, 0x0066, 0x0067),
+                         self.lgr.generate_index_label([0x0061, 0x0062, 0x0063, 0x0064, 0x0065, 0x0066, 0x0067],
+                                                       algo=IndexComputationAlgorithm.DEFAULT))
+        # here partition for less char is {a b c}{d e f}{g},
+        # and lowest index is {0}{d e f}{g}
+        self.assertEqual((0x0030, 0x0064, 0x0065, 0x0066, 0x0067),
+                         self.lgr.generate_index_label([0x0061, 0x0062, 0x0063, 0x0064, 0x0065, 0x0066, 0x0067],
+                                                       algo=IndexComputationAlgorithm.LESS_CHARS))
+        # longest sequence is {b c d e} with index {1}
+        self.assertEqual((0x0061, 0x0031, 0x0066, 0x0067),
+                         self.lgr.generate_index_label([0x0061, 0x0062, 0x0063, 0x0064, 0x0065, 0x0066, 0x0067],
+                                                       algo=IndexComputationAlgorithm.LONGEST_SEQUENCES))
+        # here we could expect {a b c}{d e f}{g} to end up with index {0}{e}{g}, but {e} is not an
+        # index for {d e f}, so we would actually get {0}{d e f}{g} which is not the shortest index
+        # shortest index is achieved with partition {a}{b c d e}{f}{g}
+        self.assertEqual((0x0061, 0x0031, 0x0066, 0x0067),
+                         self.lgr.generate_index_label([0x0061, 0x0062, 0x0063, 0x0064, 0x0065, 0x0066, 0x0067],
+                                                       algo=IndexComputationAlgorithm.SHORTEST_INDEX))
+
+    def test_generate_index_label_different_algos2(self):
+        self.lgr.add_cp([0x0061])
+        self.lgr.add_cp([0x0062])
+        self.lgr.add_cp([0x0063])
+        self.lgr.add_cp([0x0064])
+        self.lgr.add_cp([0x0065])
+        self.lgr.add_cp([0x0066])
+        self.lgr.add_cp([0x0067])
+        self.lgr.add_cp([0x0030])
+        self.lgr.add_cp([0x0031])
+        self.lgr.add_cp([0x0061, 0x0062, 0x0063])
+        self.lgr.add_cp([0x0062, 0x0063])
+        self.lgr.add_cp([0x0062, 0x0063, 0x0064, 0x0065])
+        self.lgr.add_cp([0x0064, 0x0065, 0x0066])
+
+        self.lgr.add_variant([0x0061, 0x0062, 0x0063], [0x0030])
+        self.lgr.add_variant([0x0030], [0x0061, 0x0062, 0x0063])
+        self.lgr.add_variant([0x0062, 0x0063, 0x0064, 0x0065], [0x0031])
+        self.lgr.add_variant([0x0031], [0x0062, 0x0063, 0x0064, 0x0065])
+        self.lgr.add_variant([0x0064, 0x0065, 0x0066], [0x0064])
+        self.lgr.add_variant([0x0064], [0x0064, 0x0065, 0x0066])
+
+        # here partition for overall lowest index is {a b c}{d}{e}{f}{g}
+        # since {d e f} would've ended with {0}{d}{g} which is greater than {0}{d}{e}{f}{g},
+        # and lowest index is therefore {0}{d}{e}{f}{g}
+        self.assertEqual((0x0030, 0x0064, 0x0065, 0x0066, 0x0067),
+                         self.lgr.generate_index_label([0x0061, 0x0062, 0x0063, 0x0064, 0x0065, 0x0066, 0x0067],
+                                                       algo=IndexComputationAlgorithm.DEFAULT))
+        # here partition for less char is {a b c}{d e f}{g},
+        # and lowest index is {0}{d}{g}
+        self.assertEqual((0x0030, 0x0064, 0x0067),
+                         self.lgr.generate_index_label([0x0061, 0x0062, 0x0063, 0x0064, 0x0065, 0x0066, 0x0067],
+                                                       algo=IndexComputationAlgorithm.LESS_CHARS))
+        # longest sequence is {b c d e} with index {1}
+        self.assertEqual((0x0061, 0x0031, 0x0066, 0x0067),
+                         self.lgr.generate_index_label([0x0061, 0x0062, 0x0063, 0x0064, 0x0065, 0x0066, 0x0067],
+                                                       algo=IndexComputationAlgorithm.LONGEST_SEQUENCES))
+        # in this case {a b c}{d e f}{g} gives the shortest index {0}{d}{g}
+        self.assertEqual((0x0030, 0x0064, 0x0067),
+                         self.lgr.generate_index_label([0x0061, 0x0062, 0x0063, 0x0064, 0x0065, 0x0066, 0x0067],
+                                                       algo=IndexComputationAlgorithm.SHORTEST_INDEX))
+
     def test_generate_index_label_sequence_and_rule(self):
         self.lgr.add_cp([0x092F])
         self.lgr.add_cp([0x093E])
@@ -917,7 +1015,6 @@ class TestLGRCore(unittest.TestCase):
             ((0x0070, 0x0072, 0x0072), frozenset(['type0', 'type2']), True, [p, r, r]),
         ], self.lgr._generate_variant_dispositions([0x0061, 0x0062, 0x0062], [0x0070, 0x0072, 0x0072]))
 
-
     def test_generate_variant_dispositions_sequence(self):
         self.lgr.add_cp([0x0061])
         self.lgr.add_cp([0x0062])
@@ -954,7 +1051,6 @@ class TestLGRCore(unittest.TestCase):
             ((0x0061, 0x0062, 0x0062), frozenset(['type5', 'type8']), True, [a, bb]),
         ], self.lgr._generate_variant_dispositions([0x0070, 0x0071], [0x0061, 0x0062, 0x0062]))
 
-
     def test_generate_variant_dispositions_reflexive(self):
         self.lgr.add_cp([0x0061])
         self.lgr.add_cp([0x0062])
@@ -969,7 +1065,6 @@ class TestLGRCore(unittest.TestCase):
         self.assertCountEqual([
             ((0x0061, 0x0062, 0x0061), frozenset(['type0']), False, [vara, b, vara]),
         ], self.lgr._generate_variant_dispositions([0x0061, 0x0062, 0x0061], [0x0061, 0x0062, 0x0061]))
-
 
 
 if __name__ == '__main__':

@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 import collections
 import logging
 from collections import OrderedDict
+from enum import Enum
 from io import StringIO
 from typing import Optional, Iterator
 
@@ -35,7 +36,8 @@ from lgr.utils import (
     INHERITED_SCRIPT,
     collapse_codepoints,
     format_cp,
-    is_idna_valid_cp_or_sequence)
+    is_idna_valid_cp_or_sequence,
+    shortest_in_list)
 from lgr.validate import validate_lgr
 
 logger = logging.getLogger(__name__)
@@ -79,6 +81,13 @@ PROTOCOL_LABEL_MAX_LENGTH = 63
 Label = tuple[int] | list[int]
 InvalidLabelParts = list[tuple[int, None | list[str]]] | None
 LabelPartition = list[CharBase]
+
+class IndexComputationAlgorithm(Enum):
+    DEFAULT = 'default'
+    LESS_CHARS = 'less characters'
+    SHORTEST_INDEX = 'shortest index'
+    LONGEST_SEQUENCES = 'longest sequence'
+
 
 
 class LGR:
@@ -1326,7 +1335,7 @@ class LGR:
                 variant_number *= len(vars_excl_reflexive(char)) + 1  # Take into account original code point
         return variant_number
 
-    def generate_index_label(self, label: Label, max_recursion=0) -> tuple[int]:
+    def generate_index_label(self, label: Label, max_recursion=0, algo=IndexComputationAlgorithm.DEFAULT) -> tuple[int]:
         """
         Generate the "index label" of a given label.
 
@@ -1366,6 +1375,14 @@ class LGR:
         partitions = self._generate_label_partitions(label)
         logger.debug("%d partition(s) found", len(partitions))
 
+        if algo == IndexComputationAlgorithm.LESS_CHARS:
+            partitions = shortest_in_list(partitions)
+        elif algo == IndexComputationAlgorithm.LONGEST_SEQUENCES:
+            longest_seq = max(len(c.cp) for p in partitions for c in p)
+            partitions = [p for p in partitions if any(len(c.cp) == longest_seq for c in p)]
+            # also take the one with the fewer characters
+            partitions = shortest_in_list(partitions)
+
         indexes = []
         # We compute the index label for each partition then select the lowest in code point order
         # Most cases would work by only computing the happy path, but some edge cases would prevent this.
@@ -1373,6 +1390,9 @@ class LGR:
         # full computation would bring 'abc' which is lower in code point order.
         for partition in partitions:
             indexes.append(self._generate_index_label_on_partition(partition))
+
+        if algo == IndexComputationAlgorithm.SHORTEST_INDEX:
+            indexes = shortest_in_list(indexes)
 
         index_label = min(indexes)
         logger.debug("Index label: '%s'", index_label)
@@ -1383,7 +1403,7 @@ class LGR:
             # same computation ends up with a different index label
             old_index_label = tuple(index_label)
             try:
-                index_label = self.generate_index_label(index_label, max_recursion=max_recursion - 1)
+                index_label = self.generate_index_label(index_label, max_recursion=max_recursion - 1, algo=algo)
                 if index_label != old_index_label:
                     logger.warning("Index label '%s' changed to '%s' after a new itertion", old_index_label,
                                    index_label)
@@ -1421,6 +1441,7 @@ class LGR:
                     continue
                 ids.append(list(var.cp))
             logger.debug('List of variant ids: %s', ids)
+
             index_label.extend(list(min(ids)))
             prefix += char.cp
             idx += len(char)
