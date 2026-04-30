@@ -5,6 +5,7 @@ utils.py - Set of utility functions to be used in module.
 from __future__ import unicode_literals
 
 import logging
+from typing import Iterable, List, Sized
 
 from language_tags import tags
 from pycountry import languages
@@ -242,6 +243,11 @@ def is_idna_valid_cp_or_sequence(cp_or_sequence, udata, check_all=False):
                 return False, all_invalid
     return len(all_invalid) == 0, all_invalid
 
+
+def shortest_in_list(list_of_list):
+    shortest_length = min(len(l) for l in list_of_list)
+    only_shortest = [s for s in list_of_list if len(s) == shortest_length]
+    return only_shortest
 
 if __name__ == "__main__":
     import doctest
