@@ -25,7 +25,7 @@ class PyTest(TestCommand):
 
 setup(
     name="lgr-core",
-    version='7.0.0',
+    version='7.0.1',
     author='Cofomo, Viagénie and Wil Tan',
     author_email='int-eng@cofomo.com',
     description="API for manipulating Label Generation Rules",
