@@ -1,5 +1,10 @@
 # Changelog for lgr-core
 
+## 7.0.1 (2026-05-21)
+### New features
+- Add support for multiple index computation algorithm
+- Add a tool to compute the indexes in a list of labels
+
 ## 7.0.0 (2026-01-15)
 ### New features
 - Add support for Python 3.11 and 3.12
