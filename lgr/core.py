@@ -1765,7 +1765,8 @@ class LGR:
 
         return self._apply_actions(label, disp_set, only_variants)
 
-    def _get_prefix_list(self, label: Label, label_prefix: tuple[int]) -> list[CharBase]:
+    def _get_prefix_list(self, label: Label, label_prefix: tuple[int],
+                         skip_rule_when_has_variants=False) -> list[CharBase]:
         """
         Generate the list of characters with same prefix.
 
@@ -1775,6 +1776,8 @@ class LGR:
 
         :param label: The label to generate the variants of.
         :param label_prefix: The prefix of the label.
+        :param skip_rule_when_has_variants: Whether we return the char regardless of the context rules
+                                            when char has variants
         :return: list of valid prefix characters.
         :raises: NotInLGR when no char or sequence begins with label's first cp
         """
@@ -1782,6 +1785,10 @@ class LGR:
         for prefix in self.repertoire.get_chars_from_prefix(label[0]):
             # Ensure prefix is valid for label
             if not prefix.is_prefix_of(label):
+                continue
+
+            if skip_rule_when_has_variants and prefix.has_variant():
+                prefix_list.append(prefix)
                 continue
 
             # Generate "prefixed label":
@@ -1858,7 +1865,7 @@ class LGR:
             mixed_script_filter = MixedScriptsVariantFilter(label, self.repertoire, unidb=self._unicode_database)
 
         # Iterate through characters matching the start of the label
-        for char in self._list_label_prefixes(label, label_prefix):
+        for char in self._list_label_prefixes(label, label_prefix, skip_rule_when_has_variants=True):
             rule_logger.debug("Char %s", format_cp(char.cp))
 
             has_reflexive_mapping = False
@@ -1941,9 +1948,11 @@ class LGR:
                 for (char_perm, disp, is_variant, chars) in char_perms:
                     yield char_perm.cp, disp, is_variant, [char_perm]
 
-    def _list_label_prefixes(self, label: Label, label_prefix: tuple[int]) -> list[CharBase]:
+    def _list_label_prefixes(self, label: Label, label_prefix: tuple[int],
+                             skip_rule_when_has_variants=False) -> list[CharBase]:
         try:
-            same_prefix = self._get_prefix_list(label, label_prefix)
+            same_prefix = self._get_prefix_list(label, label_prefix,
+                                                skip_rule_when_has_variants=skip_rule_when_has_variants)
         except NotInLGR:
             rule_logger.debug('Char is not in LGR, assume we are handling a sequence')
             # This is not an error: we might be handling code points

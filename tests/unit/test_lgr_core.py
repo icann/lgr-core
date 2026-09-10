@@ -7,9 +7,9 @@ from __future__ import unicode_literals
 import types
 import unittest
 
-from lgr.core import IndexComputationAlgorithm
 from lgr.char import Char, RangeChar
 from lgr.classes import TAG_CLASSNAME_PREFIX
+from lgr.core import IndexComputationAlgorithm
 from lgr.core import LGR
 from lgr.exceptions import (CharAlreadyExists,
                             VariantAlreadyExists,
@@ -618,6 +618,48 @@ class TestLGRCore(unittest.TestCase):
         self.assertCountEqual([((ord('á'), 0x0062), frozenset(['disp']), False, [aacute, b])],
                               self.lgr._generate_label_variants([0x0061, 0x0062], hide_mixed_script_variants=True))
 
+    def test_generate_label_variants_prefix_rule_fail(self):
+        self.maxDiff = None
+
+        self.lgr.add_cp([0x0061])
+        self.lgr.add_cp([0x0062])
+        self.lgr.add_cp([0x0063], when='only-b-before')
+        self.lgr.add_cp([0x0064])
+        self.lgr.add_cp([0x0065])
+
+        a = self.lgr.get_char([0x0061])
+        b = self.lgr.get_char([0x0062])
+        c = self.lgr.get_char([0x0063])
+        d = self.lgr.get_char([0x0064])
+        e = self.lgr.get_char([0x0065])
+
+        self.lgr.add_variant([0x0062], [0x0064])
+        self.lgr.add_variant([0x0064], [0x0062])
+
+        rule = Rule(name='only-b-before')
+        rule.add_child(AnchorMatcher())
+        look = LookAheadMatcher()
+        look.add_child(CharMatcher((0x0062,)))
+        rule.add_child(look)
+        self.lgr.add_rule(rule)
+
+        self.assertCountEqual([
+            # we don't get this one because 0x0063 can only happen after 0x0062
+            # ((0x0061, 0x0064, 0x0063), frozenset(), False, [a, d, c]),
+        ], self.lgr._generate_label_variants([0x0061, 0x0062, 0x0063]))
+
+        # however, if 0x0063 has variant, we still need to check with variants
+        self.lgr.add_variant([0x0063], [0x0065])
+        self.lgr.add_variant([0x0065], [0x0063])
+        self.assertCountEqual([
+            ((0x0061, 0x0062, 0x0063), frozenset(), False, [a, b, c]),
+            ((0x0061, 0x0062, 0x0065), frozenset(), False, [a, b, e]),
+            ((0x0061, 0x0064, 0x0063), frozenset(), False, [a, d, c]),
+            ((0x0061, 0x0064, 0x0065), frozenset(), False, [a, d, e]),
+        ], self.lgr._generate_label_variants([0x0061, 0x0062, 0x0063]))
+
+
+
     def test_generate_label_partitions(self):
         self.lgr.add_cp([0x0061])
         self.lgr.add_cp([0x0062])
@@ -853,7 +895,6 @@ class TestLGRCore(unittest.TestCase):
         # one more recursion will make the index label right
         self.assertEqual((0x062, 0x0069, 0x0075, 0x0065),
                          self.lgr.generate_index_label([0x044B, 0x045F, 0x0435], max_recursion=1))
-
 
     def test_generate_index_label_different_algos1(self):
         self.lgr.add_cp([0x0061])
