@@ -1,5 +1,11 @@
 # Changelog for lgr-core
 
+## 7.0.2 (2026-10-07)
+### Fixes
+
+- Fix variant computation algorithm that stopped when prefix evaluation failed
+- Bump PICU dependency: fix code points over U+FFFF
+
 ## 7.0.1 (2026-05-21)
 ### New features
 - Add support for multiple index computation algorithm
